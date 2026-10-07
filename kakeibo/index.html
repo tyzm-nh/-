@@ -104,6 +104,29 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .pm button:hover{border-color:var(--accent)}
 .pm button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .pm button small{display:block;font-size:10px;font-weight:500;opacity:.8}
+.foe4{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}
+.foe4 button{border:1.5px solid var(--line);border-left:6px solid var(--c);border-radius:10px;padding:8px 10px;text-align:left;background:var(--panel);cursor:pointer;color:var(--ink);display:flex;flex-direction:column;gap:1px;min-width:0}
+.foe4 button:hover{border-color:var(--c)}
+.foe4 b{font-size:14px}
+.foe4 span{font-size:11px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.foe4 em{font-style:normal;font-weight:700;color:var(--ink)}
+.nextbar{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:9px 14px;font-size:13px}
+.nextbar b{font-family:var(--num);font-size:16px}
+.nextbar .sp{flex:1}
+.nextbar.late{border-left-color:var(--bad)}
+.sch li{cursor:pointer}
+.sch li.skip{color:var(--mute)} .sch li.skip .a{text-decoration:line-through}
+.sch li.sel{background:var(--sunk);border-radius:8px}
+.chk.skp{border-style:dashed;color:var(--mute)}
+.sch li.ed{display:flex;flex-direction:column;gap:8px;cursor:default;background:var(--sunk);border-radius:0 0 8px 8px;padding:10px;margin-top:-2px}
+.sch li.ed .srow input[type=number]{width:8em;font-family:var(--num);font-size:16px;text-align:right}
+.sch li.ed label{font-size:12px;display:flex;gap:6px;align-items:center}
+.schsum{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);gap:8px;flex-wrap:wrap}
+.schsum b{font-family:var(--num);font-size:15px;color:var(--ink)}
+.pform{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:10px;padding:12px}
+.pform .row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
+.pform input,.pform select{width:100%}
+.unc{display:inline-block;font-size:10px;font-weight:700;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:0 5px;margin-left:4px;vertical-align:1px}
 .short{display:grid;grid-template-columns:7em minmax(0,1fr) auto;gap:8px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid var(--line)}
 .short code{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mute)}
 .warn{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700}
@@ -306,16 +329,19 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
 <!-- ホーム -->
 <div id="p-home" class="col">
   <div id="warn"></div>
+  <div id="next"></div>
   <section class="panel hero">
     <div class="herog">
       <div id="wk"></div>
       <div class="mo" id="mo"></div>
       <div class="qe">
-        <div class="ph"><h3>すぐ記録</h3><span class="hint">① 支払い方法 ② 金額 ③ 費目</span></div>
+        <div class="ph"><h3>すぐ記録</h3><span class="hint">支払い方法 → 金額 → 4つの敵</span></div>
         <div class="pm" id="qPaySeg" role="group" aria-label="支払い方法"></div>
         <div class="amtbox"><span>¥</span><input id="qAmt" inputmode="decimal" placeholder="金額" aria-label="すぐ記録する金額"></div>
-        <div class="qprev hint" id="qPrev">金額を入れて費目を押すと、今日の日付で記録します</div>
-        <div class="chips" id="qCats"></div>
+        <input type="text" id="qMemo" placeholder="お店・内容（入れると品目を自動で分けます）" list="memos" aria-label="お店・内容">
+        <div class="qprev hint" id="qPrev"></div>
+        <div class="foe4" id="qFoe" role="group" aria-label="4つの敵から選んで記録"></div>
+        <div class="srow"><button type="button" class="btn sm" id="qMore">品目を自分で選ぶ</button><span class="sp"></span><span id="qUnc"></span></div>
       </div>
     </div>
   </section>
@@ -328,9 +354,12 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
       </section>
     </div>
     <div class="col">
-      <section class="panel">
-        <div class="ph"><h2 id="schT">今月の支払い予定</h2><span class="hint">丸を押して記録</span></div>
+      <section class="panel" id="schP">
+        <div class="ph"><h2 id="schT">支払い予定</h2><div class="msw"><button class="icon-btn" data-smv="-1" type="button" aria-label="前の月"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b id="schM" style="min-width:5.5em"></b><button class="icon-btn" data-smv="1" type="button" aria-label="次の月"><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div></div>
+        <div id="schSum"></div>
         <ul class="plain sch" id="sch"></ul>
+        <div id="pForm"></div>
+        <div class="srow"><button class="btn sm" id="addPlan" type="button">＋ 予定を追加</button><span class="hint">丸で記録、行を押すと金額の変更・今月はなし</span></div>
       </section>
       <section class="panel">
         <div class="ph"><h2>最近の記録</h2><button class="btn sm" data-go="list" type="button">すべて見る</button></div>
@@ -500,7 +529,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
 const CATS=[
  ['food','食費','e2'],['trans','交通費','e2'],['beauty','美容費','e2'],['daily','日用品','e2'],['fun','娯楽','e2'],['med','医療','e2'],['cloth','被服','e2'],['other','その他','e2'],
  ['rent','家賃','e1'],['scholar','奨学金','e1'],['phone','携帯機種代','e1'],['net','通信費','e1'],['subs','サブスク','e1'],['ins','保険','e1'],
- ['tax','税金','e3'],['loan','ローン返済','e3'],['seymour','シーモア','e3'],['irr','その他(不定期)','e3'],
+ ['fix_other','その他(固定)','e1'],['tax','税金','e3'],['loan','ローン返済','e3'],['seymour','シーモア','e3'],['irr','その他(不定期)','e3'],
  ['travel','旅行','e4'],['appliance','家電・家具','e4'],['ceremony','冠婚葬祭','e4'],['gift','プレゼント','e4'],['self','自己投資','e4'],['special','その他特別費','e4'],
  ['salary','給料','inc'],['bonus','賞与','inc'],['refund','割り勘・返金','inc'],['back','未払給料','inc'],['inc_other','その他収入','inc'],
  ['card','カード引き落とし','mv'],['save','貯金・特別費へ','mv'],['nisa','NISA','mv'],['kcharge','Kyash個人へチャージ','mv'],['mv_other','その他の振替','mv']];
@@ -546,11 +575,11 @@ const svgCheck='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>'
 const NOWK=mkey(TODAY.getFullYear(),TODAY.getMonth()+1);
 
 // ===== 状態 =====
-let TX={},SNAP={},CONF={};
+let TX={},SNAP={},CONF={},PL={};
 let UI={tab:'home',lm:NOWK,rm:NOWK,lv:'list',lf:'all',day:null,q:'',pp:'road',rng:18,span:6};
 try{Object.assign(UI,JSON.parse(localStorage.getItem(LK+'-ui')||'{}'));UI.lm=NOWK;UI.rm=NOWK;UI.day=null;UI.q=''}catch(e){}
 const saveUI=()=>{try{localStorage.setItem(LK+'-ui',JSON.stringify({lv:UI.lv,pp:UI.pp,rng:UI.rng,span:UI.span}))}catch(e){}};
-try{const o=JSON.parse(localStorage.getItem(LK)||'{}');TX=o.tx||{};SNAP=o.snap||{};CONF=o.conf||{}}catch(e){}
+try{const o=JSON.parse(localStorage.getItem(LK)||'{}');TX=o.tx||{};SNAP=o.snap||{};CONF=o.conf||{};PL=o.plans||{}}catch(e){}
 // 前のダッシュボードで変えた条件を引き継ぐ
 if(!CONF.S){try{const old=JSON.parse(localStorage.getItem('road200e')||'null');if(old){CONF.S={};Object.keys(DEF).forEach(k=>{if(typeof old[k]=='number')CONF.S[k]=old[k]})}}catch(e){}}
 const ST={db:null,cloud:false,localTx:Object.keys(TX).length,loaded:false};
@@ -571,9 +600,9 @@ const defPay=cat=>DEFPAY[cat]||curPay();
 const cardLim=k=>{const y=KY(),b=bud(k);return CONF.cardLim?.[k]??(k=='2026-10'?47900:4880+(k>=y.start?(y.mode=='all'?0:bsum(b)-(+b.food||0)):bsum(b)))};
 
 // ===== 保存 =====
-function saveLocal(){if(ST.cloud)return;try{localStorage.setItem(LK,JSON.stringify({tx:TX,snap:SNAP,conf:CONF}))}catch(e){}}
+function saveLocal(){if(ST.cloud)return;try{localStorage.setItem(LK,JSON.stringify({tx:TX,snap:SNAP,conf:CONF,plans:PL}))}catch(e){}}
 async function write(col,id,obj){
-  const M=col=='tx'?TX:SNAP;
+  const M=col=='tx'?TX:col=='plans'?PL:SNAP;
   if(obj)M[id]=obj;else delete M[id];
   render();
   if(!ST.cloud)return saveLocal();
@@ -599,6 +628,7 @@ async function boot(){
   const localConf=CONF;
   db.collection('tx').onSnapshot(s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());TX=o;ST.loaded=true;render()},()=>{});
   db.collection('snaps').onSnapshot(s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());SNAP=o;render()},()=>{});
+  db.collection('plans').onSnapshot(s=>{const o={};s.docs.forEach(d=>o[d.id]=d.data());PL=o;render()},()=>{});
   let first=true;
   db.doc('conf/main').onSnapshot(d=>{
     if(d.exists)CONF=JSON.parse(JSON.stringify(d.data()));
@@ -611,6 +641,7 @@ async function migrate(){
   const ids=Object.keys(o.tx||{});let n=0;
   for(const id of ids){try{await ST.db.collection('tx').doc(id).set(o.tx[id]);n++}catch(e){}}
   for(const id of Object.keys(o.snap||{})){try{await ST.db.collection('snaps').doc(id).set(o.snap[id])}catch(e){}}
+  for(const id of Object.keys(o.plans||{})){try{await ST.db.collection('plans').doc(id).set(o.plans[id])}catch(e){}}
   if(n==ids.length){try{localStorage.removeItem(LK)}catch(e){}ST.localTx=0}
   toast(`${n}件をクラウドに移しました`);render();
 }
@@ -692,7 +723,8 @@ function cardDue(k){
 function sched(k){
   const i=pidx(k);if(i<0)return [];
   const [y,m]=mparts(k),{P,s,save5}=PLAN,L=[];
-  const add=(key,day,name,amt,cat,kind='out',note='')=>L.push({key,day,name,amt:Math.round(amt),cat,kind,note,id:`s-${k}-${key}`});
+  const add=(key,day,name,amt,cat,kind='out',note='',pay,plan)=>{const ov=CONF.ov?.[key];if(ov&&k>=ov.from&&key!='card')amt=ov.amt;
+    const id=`s-${k}-${key}`;L.push({key,day,name,amt:Math.round(amt),cat,kind,note,pay:pay||DEFPAY[cat]||'楽天銀行',plan,id,skip:!!CONF.skip?.[id]})};
   add('salary',10,'給料',i<3?s.now:i<6?P.p1.net:P.p2.net,'salary','in','残業代で変わるので明細の額に直して保存');
   add('rent',10,'家賃（Kyashへ入金）',50000,'rent');
   if(i>=3&&save5)add('save',10,'先取り貯金',save5,'save','mv','ドコモSMTBへ');
@@ -708,6 +740,13 @@ function sched(k){
   if(i<=3)add('inner',27,'補整下着のローン',4000,'beauty','out',i==3?'最終回の予定':'');
   add('ins',27,'生命保険',2838,'ins');
   if(i==1||i==4)add('jumin',dim(k),'住民税',25000,'tax','out',i==1?'12月10日以降にできないか窓口に相談':'');
+  // 想定している出費（カードで払うものは、使った月の予定として出す）
+  if(k=='2026-11'){add('hair',1,'美容室',13000,'beauty','out','11月に入ってからカードで（引き落としは12月27日）','楽天カード');add('trip',0,'旅行',50000,'travel','out','確定分。現地の食費などは別（引き落としは12月27日）','楽天カード')}
+  if(i>=1&&(m==4||m==7||m==11))add('seyb',0,'シーモアのまとめ買い',m==4?22000:44000,'seymour','out',`引き落としは${(m+1)%12+1}月27日`,'楽天カード');
+  // 自分で追加した予定
+  Object.entries(PL).forEach(([pid,q])=>{if(!q||!q.start)return;
+    const on=q.rep=='once'?k==q.start:q.rep=='y'?k>=q.start&&mparts(k)[1]==mparts(q.start)[1]:k>=q.start&&(!q.end||k<=q.end);
+    if(on)add('p_'+pid,Math.min(+q.day||0,dim(k)),q.name,+q.amt||0,q.cat,q.kind||'out',q.rep=='m'?'毎月':q.rep=='y'?'毎年':'',q.pay,pid)});
   return L.sort((a,b)=>(a.day||99)-(b.day||99));
 }
 
@@ -730,6 +769,28 @@ function kyBal(){const b=CONF.ky?.base;if(!b)return null;let v=b.amt;
   return v}
 const md=ds=>`${+ds.slice(5,7)}/${+ds.slice(8)}`;
 
+// 4つの敵だけ選べば、品目は「前に同じお店で選んだ品目」→「お店・内容の言葉」→「予定の金額」の順に自動で決める
+const KW=[[/家賃/,'rent'],[/奨学/,'scholar'],[/オリコ|機種/,'phone'],[/ドコモ|docomo|ahamo|povo|linemo|楽天モバイル|ソフトバンク|\bau\b|通信|wi-?fi/i,'net'],[/netflix|prime|プライム|spotify|apple ?music|youtube|icloud|disney|サブスク|hulu|u-?next/i,'subs'],[/保険/,'ins'],
+ [/税/,'tax'],[/ローン|返済/,'loan'],[/シーモア/,'seymour'],
+ [/旅行|ホテル|旅館|航空|ana|jal|じゃらん|トラベル|airbnb|新幹線/i,'travel'],[/家電|家具|ビック|ヨドバシ|ケーズ|ニトリ|ikea/i,'appliance'],[/結婚|祝儀|香典|葬/,'ceremony'],[/プレゼント|ギフト|誕生日|お祝い/,'gift'],[/セミナー|講座|資格|教材|自己投資|撮影|カメラ/,'self'],
+ [/美容|ヘア|カット|カラー|ネイル|まつ|化粧|コスメ|ロフト|cosme|下着|エステ|脱毛|サロン/i,'beauty'],
+ [/病院|クリニック|医院|歯科|薬局|処方|診察/,'med'],
+ [/マツキヨ|マツモトキヨシ|ウエルシア|ツルハ|スギ薬局|ドラッグ|ダイソー|セリア|キャンドゥ|ニトリ|無印|日用|洗剤|ティッシュ/,'daily'],
+ [/suica|pasmo|icoca|電車|jr|メトロ|地下鉄|バス|タクシー|交通|駐車|ガソリン|定期/i,'trans'],
+ [/ユニクロ|ジーユー|^gu$|しまむら|zara|服|靴|被服|アパレル/i,'cloth'],
+ [/映画|カラオケ|ゲーム|書店|本屋|漫画|ライブ|チケット|推し|グッズ|娯楽|飲み会|イベント|amazon/i,'fun'],
+ [/マクド|マック|吉野家|松屋|すき家|ガスト|サイゼ|スタバ|ドトール|タリーズ|コメダ|カフェ|ランチ|弁当|パン|ラーメン|うどん|そば|寿司|定食|居酒屋|焼肉|ご?はん|食|セブン|ローソン|ファミ|ミニストップ|スーパー|イオン|まいばす|ライフ|西友|コンビニ|uber|出前|飲み物/i,'food']];
+const FOE4=[['e1','敵①','毎月の固定費'],['e2','敵②','毎月の変動費'],['e3','敵③','不定期の固定費'],['e4','敵④','不定期の変動費']];
+const FALLBACK={e1:'fix_other',e2:'other',e3:'irr',e4:'special'};
+function guess(g,memo,amt,k=NOWK){
+  const mm=(memo||'').trim().toLowerCase(),inG=c=>(CAT[c]||{}).g==g;
+  if(mm){const cnt={};Object.values(TX).forEach(t=>{if(!t.auto&&(t.memo||'').trim().toLowerCase()==mm&&inG(t.cat))cnt[t.cat]=(cnt[t.cat]||0)+1});
+    const best=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];if(best)return {cat:best[0],how:'memo'};
+    const kw=KW.find(([re,c])=>inG(c)&&re.test(memo));if(kw)return {cat:kw[1],how:'kw'}}
+  if(amt&&(g=='e1'||g=='e3')){const x=sched(k).find(q=>q.kind=='out'&&inG(q.cat)&&q.amt==amt);if(x)return {cat:x.cat,how:'amt',sid:TX[x.id]?null:x.id}}
+  return {cat:FALLBACK[g],how:'none'};
+}
+
 // ===== 描画 =====
 function render(){
   PLAN=sim();
@@ -743,7 +804,7 @@ function render(){
 function txRow(t){
   const c=CAT[t.cat]||CAT.other,sign=t.kind=='in'?'+':t.kind=='mv'?'':'−';
   const [,mm,dd]=t.date.split('-');
-  return `<li data-id="${esc(t.id)}"><span class="cat" style="background:${ccol(c.k)}">${esc(c.n.slice(0,2))}</span><span class="m"><b>${esc(t.memo||c.n)}</b><span>${+mm}/${+dd}・${esc(c.n)}・${esc(t.pay||'')}</span></span><span class="a ${t.kind}">${sign}${yen(t.amt)}</span></li>`;
+  return `<li data-id="${esc(t.id)}"><span class="cat" style="background:${ccol(c.k)}">${esc(c.n.slice(0,2))}</span><span class="m"><b>${esc(t.memo||c.n)}${t.auto=='none'?'<span class="unc">品目を確認</span>':''}</b><span>${+mm}/${+dd}・${esc(c.n)}・${esc(t.pay||'')}</span></span><span class="a ${t.kind}">${sign}${yen(t.amt)}</span></li>`;
 }
 function emptyState(msg){return `<li class="empty" style="cursor:default">${msg}<button class="btn pri sm" type="button" data-add="1">＋ 最初の1件を記録</button></li>`}
 
@@ -764,7 +825,7 @@ function rHome(){
    <div class="meter-l"><span>上限 ${yen(lim0)}円</span><span>あと ${yen(lim0-A.card)}円</span></div>`;
   const cr=A.card/lim0,lv=cr>=1?3:cr>=.9?2:cr>=.7?1:0;
   $('warn').innerHTML=lv?`<div class="warn l${lv}"><b style="white-space:nowrap">楽天カードが上限の${Math.round(cr*100)}%</b><span>${lv==3?`上限を${yen(A.card-lim0)}円超えています。今月はもうカードを使わず、PayPayや現金で払ってください。`:lv==2?`あと${yen(lim0-A.card)}円で上限です。急ぎでない買い物は来月に回しましょう。`:`あと${yen(lim0-A.card)}円。残り${left}日なので1日${yen((lim0-A.card)/left)}円までのペースです。`}</span></div>`:'';
-  qPreview();rKy(A);
+  fillMemos();qPreview();rKy(A);
   // KPI
   const lim=cardLim(k),hit=PLAN.hit,snaps=Object.values(SNAP).sort((a,b)=>a.date<b.date?1:-1),last=snaps[0];
   const diff=last?last.amt-(planAt(last.date)??last.amt):null;
@@ -780,11 +841,7 @@ function rHome(){
     const a=A.cat[c]||0,b=+B[c]||0,r=b?a/b:1,over=a>b;
     return `<button class="brow" type="button" data-cat="${c}"><span class="nm"><i class="dot" style="background:${ccol(c)}"></i>${CAT[c].n}</span><span class="bar"><i style="width:${Math.min(100,r*100)}%;background:${over?'var(--bad)':ccol(c)}"></i></span><span class="amt"><span class="${over?'neg':''}">${yen(a)}</span><span> / ${yen(b)}</span></span></button>`}).join('')
    +(A.refund?`<div class="hint">割り勘の受け取り ${yen(A.refund)}円を変動費から差し引いています</div>`:'');
-  // 支払い予定
-  $('schT').textContent=`${m}月の支払い予定`;
-  const L=sched(k);
-  $('sch').innerHTML=L.length?L.map(s=>{const done=!!TX[s.id],late=!done&&s.day&&s.day<d;
-    return `<li class="${done?'done':''} ${late?'late':''}"><span class="d">${s.day?s.day+'<small>日</small>':'<small>未定</small>'}</span><span class="nm">${esc(s.name)}${s.note?`<span class="hint">${esc(s.note)}</span>`:''}</span><span class="a ${s.kind=='in'?'pos':''}">${s.kind=='in'?'+':''}${yen(done?TX[s.id].amt:s.amt)}</span><button class="chk ${done?'on':''}" type="button" data-sch="${s.key}" aria-label="${esc(s.name)}を${done?'記録済み':'記録する'}">${svgCheck}</button></li>`}).join(''):'<li class="hint">この月の予定はありません</li>';
+  rSched();
   // 最近
   const R=Object.entries(TX).map(([id,t])=>({id,...t})).sort((a,b)=>(b.date+(b.ts||0))>(a.date+(a.ts||0))?1:-1).slice(0,6);
   $('recent').innerHTML=R.length?R.map(txRow).join(''):emptyState(ST.loaded?'まだ記録がありません。お昼ごはんやカードで払ったものを入れていくと、上の予算が減っていきます。':'記録を読み込んでいます…');
@@ -831,17 +888,65 @@ function rKy(A){
   $('kyMode').onclick=e=>{const b=e.target.closest('[data-km]');if(!b)return;CONF.ky={...KY(),mode:b.dataset.km};saveConf()};
 }
 // すぐ記録：金額を入れて費目を押すだけ。入力中は「使ったら今週あといくら」を出す
-function qInit(){
-  $('qCats').innerHTML=VAR.map(c=>`<button type="button" class="chip" data-qc="${c}"><i class="dot" style="background:${ccol(c)}"></i>${CAT[c].n}</button>`).join('')+`<button type="button" class="chip q" id="qMore">詳しく</button>`;
-}
+function qInit(){}
+function fillMemos(){$('memos').innerHTML=[...new Set(Object.values(TX).map(x=>x.memo).filter(Boolean))].slice(-80).map(x=>`<option value="${esc(x)}">`).join('')}
 function qPaySeg(){const c=curPay(),y=KY();$('qPaySeg').innerHTML=MYP().map(p=>`<button type="button" data-qp="${p}" aria-pressed="${c==p}">${p}${p=='Kyash個人'&&NOWK>=y.start?'<small>変動費はこちら</small>':p=='楽天カード'&&NOWK>=y.start&&y.mode=='all'?'<small>固定費だけ</small>':''}</button>`).join('')}
 function qPreview(){
-  qPaySeg();const raw=$('qAmt').value.trim(),a=evalAmt(raw),W=week(),el=$('qPrev');
-  if(!raw){el.className='qprev hint';el.textContent=`金額を入れて費目を押すと、${curPay()}で今日の日付に記録します`;return}
+  qPaySeg();const raw=$('qAmt').value.trim(),a=evalAmt(raw),W=week(),el=$('qPrev'),memo=$('qMemo').value;
+  $('qFoe').innerHTML=FOE4.map(([g,n,d])=>{const q=guess(g,memo,a>0?a:0);return `<button type="button" data-qg="${g}" style="--c:var(${GC[g]})"><b>${n} ${d.replace('毎月の','').replace('不定期の','不定期')}</b><span>${q.how=='none'?(memo?'品目はあとで確認':'お店を入れると品目が決まります'):`→ <em>${CAT[q.cat].n}</em>`}</span></button>`}).join('');
+  const un=txOf(NOWK).filter(t=>t.auto=='none').length;
+  $('qUnc').innerHTML=un?`<button class="btn sm" type="button" id="toUnc">品目の確認 ${un}件</button>`:'';
+  if($('toUnc'))$('toUnc').onclick=()=>{UI.lm=NOWK;UI.lf='unc';UI.q='';$('q').value='';tab('list')};
+  if(!raw){el.className='qprev hint';el.textContent=`金額を入れて4つのどれかを押すと、${curPay()}で今日の日付に記録します`;return}
   if(!(a>0)){el.className='qprev neg';el.textContent='数字と＋−だけ使えます';return}
   const L=W.left-a,pd=L/W.dl;
   el.className='qprev '+(L<0?'neg':'');
   el.innerHTML=L<0?`使うと今週の予算を<b>${yen(-L)}円</b>超えます。本当に今必要か、もう一度考えてみてください`:`使うと今週あと<b>${yen(L)}円</b>・1日あたり${yen(pd)}円`;
+}
+// 支払い予定：月を切り替えて先の予定も見られる。行を押すと金額の変更・今月はなし・予定の編集
+function rSched(){
+  const k=UI.sm||NOWK,[,m]=mparts(k),L=sched(k),d=k==NOWK?TODAY.getDate():k<NOWK?99:0;
+  $('schT').textContent=k==NOWK?'今月の支払い予定':`${m}月の支払い予定`;$('schM').textContent=mlabel(k).replace('年','/').replace('月','');
+  const act=L.filter(x=>!x.skip),dn=act.filter(x=>TX[x.id]),rest=act.filter(x=>!TX[x.id]&&x.kind!='in').reduce((a,x)=>a+x.amt,0);
+  $('schSum').innerHTML=L.length?`<div class="schsum"><span>済み <b>${dn.length}</b> / ${act.length}件</span><span>まだの支払い <b>${yen(rest)}</b>円</span></div><div class="meter thin"><i style="width:${act.length?dn.length/act.length*100:0}%"></i></div>`:'';
+  const typing=document.activeElement?.tagName=='INPUT'&&$('sch').contains(document.activeElement);
+  if(!typing)$('sch').innerHTML=L.length?L.map(x=>{const done=!!TX[x.id],late=!done&&!x.skip&&x.day&&x.day<d,sel=UI.se==x.key;
+    let h=`<li class="${done?'done':''} ${late?'late':''} ${x.skip?'skip':''} ${sel?'sel':''}" data-sk="${x.key}"><span class="d">${x.day?x.day+'<small>日</small>':'<small>未定</small>'}</span><span class="nm">${esc(x.name)}${x.skip?'<span class="hint">今月はなし</span>':x.note?`<span class="hint">${esc(x.note)}</span>`:''}</span><span class="a ${x.kind=='in'?'pos':''}">${x.kind=='in'?'+':''}${yen(done?TX[x.id].amt:x.amt)}</span><button class="chk ${done?'on':''} ${x.skip?'skp':''}" type="button" data-sch="${x.key}" aria-label="${esc(x.name)}を${done?'取り消す':x.skip?'予定に戻す':'記録する'}">${x.skip?'':svgCheck}</button></li>`;
+    if(sel){const dt=done?TX[x.id].date:`${k}-${pad(x.day||Math.min(TODAY.getDate(),dim(k)))}`;
+      h+=`<li class="ed">${done?`<div class="srow"><span class="hint">${TX[x.id].date.replace(/-/g,'/')}に ${yen(TX[x.id].amt)}円で記録済み</span></div><div class="srow"><button class="btn sm" type="button" data-se="open">記録を直す</button><button class="btn sm" type="button" data-se="undo">記録を取り消す</button><button class="btn sm" type="button" data-se="close">閉じる</button></div>`:
+      `<div class="srow"><input type="number" id="seAmt" value="${x.amt}" inputmode="numeric" aria-label="金額"><span class="hint">円</span><input type="date" id="seDate" value="${dt}" aria-label="日付"></div>
+       ${x.key=='card'||x.key=='salary'||x.key=='bonus'||x.key=='back'?'':`<label><input type="checkbox" id="seKeep"> 次の月からもこの金額にする</label>`}
+       <div class="srow"><button class="btn pri sm" type="button" data-se="rec">この金額で記録</button><button class="btn sm" type="button" data-se="skip">今月はなし</button>${x.plan?'<button class="btn sm" type="button" data-se="edit">予定を編集</button>':''}<button class="btn sm" type="button" data-se="close">閉じる</button></div>`}</li>`}
+    return h}).join(''):'<li class="hint" style="cursor:default">この月の予定はありません</li>';
+  // 次の支払い（いつも上に出す）
+  const C=sched(NOWK).filter(x=>!x.skip&&!TX[x.id]),dd=TODAY.getDate(),late=C.filter(x=>x.day&&x.day<dd),nx=C.filter(x=>x.day>=dd)[0]||sched(madd(NOWK,1)).filter(x=>!x.skip&&!TX[x.id]&&x.day)[0];
+  const nxk=nx&&nx.id.slice(2,9),nxd=nx?new Date(nxk+'-'+pad(nx.day)+'T00:00'):null,dl=nx?Math.round((nxd-new Date(TD+'T00:00'))/864e5):0;
+  $('next').innerHTML=nx||late.length?`<div class="nextbar ${late.length?'late':''}">${late.length?`<span class="neg"><b>${late.length}</b>件の予定が日付を過ぎています</span>`:''}${nx?`<span>次：${+nxk.slice(5)}/${nx.day}（${dl==0?'今日':`あと${dl}日`}）${esc(nx.name)} <b>${nx.kind=='in'?'+':''}${yen(nx.amt)}</b>円</span>`:''}<span class="sp"></span><span class="hint">今月まだの支払い ${yen(C.filter(x=>x.kind!='in').reduce((a,x)=>a+x.amt,0))}円</span><button class="btn sm" type="button" id="toSch">予定を見る</button></div>`:'';
+  if($('toSch'))$('toSch').onclick=()=>{UI.sm=NOWK;rSched();$('schP').scrollIntoView({behavior:'smooth',block:'start'})};
+  rPForm();
+}
+function rPForm(force){
+  const f=UI.pf;if(!force&&f&&$('pForm')._f===f)return;$('pForm')._f=f;if(!f){$('pForm').innerHTML='';$('addPlan').hidden=false;return}$('addPlan').hidden=true;
+  const g=(CAT[f.cat]||CAT.other).g,cats=CATS.filter(c=>c[2]==g);
+  $('pForm').innerHTML=`<div class="pform"><h3>${f.id?'予定を編集':'予定を追加'}</h3>
+   <input type="text" id="pfName" value="${esc(f.name)}" placeholder="名前（例：美容室、Netflix）" aria-label="名前">
+   <div class="row2"><input type="number" id="pfAmt" value="${f.amt||''}" placeholder="金額" inputmode="numeric" aria-label="金額"><select id="pfDay" aria-label="日">${[0,...Array.from({length:31},(_,j)=>j+1)].map(x=>`<option value="${x}" ${x==f.day?'selected':''}>${x?x+'日':'日付未定'}</option>`).join('')}</select></div>
+   <div class="seg" id="pfFoe">${FOE4.map(([e,a,n])=>`<button type="button" data-pg="${e}" aria-pressed="${g==e}">${a} ${n.replace('毎月の','').replace('不定期の','不定期')}</button>`).join('')}</div>
+   <div class="row2"><select id="pfCat" aria-label="品目">${cats.map(([c,n])=>`<option value="${c}" ${c==f.cat?'selected':''}>品目：${n}</option>`).join('')}</select><select id="pfPay" aria-label="支払い方法">${PAYS.map(x=>`<option ${x==f.pay?'selected':''}>${x}</option>`).join('')}</select></div>
+   <div class="seg" id="pfRep">${[['m','毎月'],['once',mlabel(f.start)+'だけ'],['y','毎年'+mparts(f.start)[1]+'月']].map(([v,n])=>`<button type="button" data-pr="${v}" aria-pressed="${f.rep==v}">${n}</button>`).join('')}</div>
+   ${f.rep=='m'?`<div class="srow"><span class="hint">終わりの月（なければ空）</span><input type="month" id="pfEnd" value="${f.end||''}" aria-label="終わりの月"></div>`:''}
+   <div class="sact">${f.id?`<button class="btn danger sm" type="button" id="pfDel">削除</button>`:''}<span class="sp"></span><button class="btn sm" type="button" id="pfCancel">閉じる</button><button class="btn pri sm" type="button" id="pfSave">保存</button></div></div>`;
+  const sync=()=>{f.name=$('pfName').value;f.amt=evalAmt($('pfAmt').value)||'';f.day=+$('pfDay').value;f.cat=$('pfCat').value;f.pay=$('pfPay').value;if($('pfEnd'))f.end=$('pfEnd').value};
+  $('pfName').onchange=()=>{sync();if(!f.catTouched){f.cat=guess(g,f.name,f.amt).cat;rPForm(true)}};
+  $('pfCat').onchange=()=>{f.catTouched=true;sync()};
+  $('pfFoe').onclick=e=>{const b=e.target.closest('[data-pg]');if(!b)return;sync();f.cat=guess(b.dataset.pg,f.name,f.amt).cat;f.catTouched=false;rPForm(true)};
+  $('pfRep').onclick=e=>{const b=e.target.closest('[data-pr]');if(!b)return;sync();f.rep=b.dataset.pr;rPForm(true)};
+  $('pfCancel').onclick=()=>{UI.pf=null;rPForm(true)};
+  $('pfSave').onclick=()=>{sync();if(!f.name.trim()||!(f.amt>0)){toast('名前と金額を入れてください');return}
+    const id=f.id||('p'+Date.now().toString(36)),o={name:f.name.trim().slice(0,40),amt:f.amt,day:f.day,cat:f.cat,kind:'out',pay:f.pay,rep:f.rep,start:f.start,end:f.rep=='m'?(f.end||''):'',ts:Date.now()};
+    UI.pf=null;write('plans',id,o);toast(`「${o.name}」を予定に入れました`)};
+  if($('pfDel'))$('pfDel').onclick=()=>{if(!f.armed){f.armed=true;$('pfDel').classList.add('armed');$('pfDel').textContent='もう一度押すと削除';return}
+    const id=f.id,old=PL[id];UI.pf=null;write('plans',id,null);toast('予定を削除しました',()=>write('plans',id,old))};
 }
 const kpi=(k,v,u,s)=>`<div class="kpi"><div class="k">${k}</div><div class="v">${v}<small>${u}</small></div><div class="s">${s}</div></div>`;
 const act=(c,q,a,p)=>`<div class="act" style="--c:var(${c})"><i></i><div><div class="q">${q}</div><div class="a">${a}</div><p>${p}</p></div></div>`;
@@ -851,10 +956,10 @@ function rList(){
   document.querySelectorAll('#lView button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v==UI.lv));
   const A=agg(k);
   $('lSum').innerHTML=`<div><div class="k">収入</div><div class="v pos">+${yen(A.inc)}</div></div><div><div class="k">支出</div><div class="v">−${yen(A.out)}</div></div><div><div class="k">収支</div><div class="v ${A.inc-A.out<0?'neg':''}">${yen(A.inc-A.out)}</div></div>`;
-  const F=[['all','すべて'],['e2','変動費'],['e1','固定費'],['e3','不定期の固定費'],['e4','特別費'],['inc','収入'],['mv','振替']];
+  const F=[['all','すべて'],['unc','品目を確認'],['e2','変動費'],['e1','固定費'],['e3','不定期の固定費'],['e4','特別費'],['inc','収入'],['mv','振替']];
   $('lFilter').innerHTML=F.map(([v,n])=>`<button type="button" data-f="${v}" aria-pressed="${UI.lf==v}">${n}</button>`).join('');
   let L=txOf(k);
-  if(UI.lf!='all')L=L.filter(t=>(CAT[t.cat]||CAT.other).g==UI.lf);
+  if(UI.lf=='unc')L=L.filter(t=>t.auto=='none');else if(UI.lf!='all')L=L.filter(t=>(CAT[t.cat]||CAT.other).g==UI.lf);
   if(UI.q){const q=UI.q.toLowerCase();L=L.filter(t=>((t.memo||'')+(CAT[t.cat]?.n||'')+(t.pay||'')).toLowerCase().includes(q))}
   // カレンダー
   $('calP').hidden=UI.lv!='cal';
@@ -1025,7 +1130,7 @@ function rSet(){if(!setBuilt){fillSettings();setBuilt=true}
   const my=MYP();
   $('myPays').innerHTML=PAYS.map(p=>`<button type="button" class="chip" data-mp="${p}" aria-pressed="${my.includes(p)}">${p}</button>`).join('');
   $('shorts').innerHTML=`<label style="margin-top:8px;display:block">支払い方法ごとの記録リンク</label><span class="hint">スマホのホーム画面やブックマークに置くと、押した瞬間にその支払い方法で金額入力が始まります。</span>`+
-    my.map(p=>`<div class="short"><b>${p}で記録</b><code>${ART}#${SHORTK[p]}</code><button class="btn sm" type="button" data-copy="${ART}#${SHORTK[p]}">コピー</button></div>`).join('');
+    my.map(p=>`<div class="short"><b>${p}で記録</b><code>${ART}#${SHORTK[p]}</code><button class="btn sm" type="button" data-copy="${ART}#${SHORTK[p]}">コピー</button></div>`).join('')+`<p class="hint">iPhoneのショートカットのオートメーションから開くときは、最後に「.金額」を付けると金額も入った状態で開きます（例：${ART}#card.980）。お店の名前はさらに「.」のあとにBase64で付けられます。</p>`;
   $('storeNote').textContent=ST.cloud?'記録はこのページのクラウド保存領域に入っています。リンクを知っている人がいても、あなた以外には見えない設定です。':'いまはこのブラウザの中だけに保存しています。消えると困るので、ときどきCSVで書き出してください。';
 }
 function fillSettings(){
@@ -1095,7 +1200,7 @@ const frequent=()=>{const m={};Object.entries(TX).filter(([id,t])=>!id.startsWit
   return Object.values(m).sort((a,b)=>b.n-a.n).slice(0,6).map(o=>o.t)};
 function openSheet(t,id){
   ED=t?{...t,id,amt:String(t.amt)}:{kind:'out',amt:'',cat:'food',date:UI.tab=='list'&&UI.day?UI.day:TD,pay:defPay('food'),memo:'',id:null};
-  ED.more=!!(t&&!['e2','inc','mv'].includes((CAT[t.cat]||CAT.other).g));ED.payTouched=!!t;ED.armed=false;ED.allPay=false;
+  ED.more=!!(t&&!['e2','inc','mv'].includes((CAT[t.cat]||CAT.other).g));ED.payTouched=!!t;ED.armed=false;ED.allPay=false;ED.cat0=ED.cat;
   $('shT').textContent=id?'記録を直す':'記録する';$('del').hidden=!id;$('del').className='btn danger';$('del').textContent='削除';$('saveNext').hidden=!!id;
   $('amt').value=ED.amt;$('dt').value=ED.date;$('memo').value=ED.memo||'';
   $('memos').innerHTML=[...new Set(Object.values(TX).map(x=>x.memo).filter(Boolean))].slice(-60).map(x=>`<option value="${esc(x)}">`).join('');
@@ -1121,6 +1226,7 @@ async function saveSheet(next){
   if(!(a>0)){$('amtHint').innerHTML='<span class="neg">金額を入れてください（数字と＋−だけ使えます）</span>';$('amt').focus();return}
   const t={date:$('dt').value||TD,amt:a,kind:ED.kind,cat:ED.cat,pay:ED.pay,memo:$('memo').value.trim().slice(0,80),ts:ED.ts||Date.now()};
   if(ED.src)t.src=ED.src;
+  if(ED.auto&&ED.cat==ED.cat0&&ED.auto!='none')t.auto=ED.auto;
   const id=ED.id||('t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
   $('amtHint').textContent='「1200+380」のような足し算・引き算もできます';
   write('tx',id,t);
@@ -1147,7 +1253,7 @@ $('quick').onclick=e=>{const j=e.target.closest('[data-q]')?.dataset.q;if(j==nul
 
 // ===== トースト =====
 let toastT;
-function toast(msg,undo){$('toastT').textContent=msg;$('toastB').hidden=!undo;$('toastB').onclick=()=>{undo();$('toast').hidden=true};$('toast').hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>$('toast').hidden=true,undo?6000:2600)}
+function toast(msg,undo,label='元に戻す'){$('toastT').textContent=msg;$('toastB').hidden=!undo;$('toastB').textContent=label;$('toastB').onclick=()=>{undo();$('toast').hidden=true};$('toast').hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>$('toast').hidden=true,undo?6000:2600)}
 
 // ===== 画面の切り替えと操作 =====
 function tab(t){if(!$('p-'+t))t='home';UI.tab=t;
@@ -1165,11 +1271,22 @@ document.addEventListener('click',e=>{
   const li=e.target.closest('li[data-id]');if(li){openSheet(TX[li.dataset.id],li.dataset.id);return}
   const mv=e.target.closest('[data-mv]');if(mv){const key=UI.tab=='list'?'lm':'rm';UI[key]=madd(UI[key],+mv.dataset.mv);UI.day=null;render();return}
   const br=e.target.closest('.brow');if(br){UI.lm=NOWK;UI.lf='e2';UI.q=CAT[br.dataset.cat].n;$('q').value=UI.q;tab('list');return}
-  const sc=e.target.closest('[data-sch]');if(sc){const s=sched(NOWK).find(x=>x.key==sc.dataset.sch);if(!s)return;
-    if(TX[s.id]){const old=TX[s.id];write('tx',s.id,null);toast(`${s.name}の記録を取り消しました`,()=>write('tx',s.id,old))}
-    else if(s.key=='salary'||s.day==0){openSheet({date:s.day?`${NOWK}-${pad(s.day)}`:TD,amt:s.amt,kind:s.kind,cat:s.cat,pay:DEFPAY[s.cat]||'楽天銀行',memo:s.name},null);ED.id=s.id;ED.isNew=true}
-    else{write('tx',s.id,{date:`${NOWK}-${pad(s.day)}`,amt:s.amt,kind:s.kind,cat:s.cat,pay:DEFPAY[s.cat]||'楽天銀行',memo:s.name,ts:Date.now()});toast(`${s.name} ${yen(s.amt)}円を記録しました`)}
-    return}
+  const smv=e.target.closest('[data-smv]');if(smv){UI.sm=madd(UI.sm||NOWK,+smv.dataset.smv);UI.se=null;rSched();return}
+  const sc=e.target.closest('[data-sch]');if(sc){const k=UI.sm||NOWK,x=sched(k).find(q=>q.key==sc.dataset.sch);if(!x)return;
+    if(x.skip){delete CONF.skip[x.id];saveConf();return}
+    if(TX[x.id]){const old=TX[x.id];write('tx',x.id,null);toast(`${x.name}の記録を取り消しました`,()=>write('tx',x.id,old));return}
+    if(x.key=='salary'||!x.day){UI.se=x.key;rSched();$('seAmt')?.select();return}
+    recSched(x,k,x.amt,`${k}-${pad(x.day)}`);return}
+  const se=e.target.closest('[data-se]');if(se){const k=UI.sm||NOWK,x=sched(k).find(q=>q.key==UI.se);if(!x)return;const op=se.dataset.se;
+    if(op=='close'){UI.se=null;rSched();return}
+    if(op=='open'){openSheet(TX[x.id],x.id);return}
+    if(op=='undo'){const old=TX[x.id];UI.se=null;write('tx',x.id,null);toast(`${x.name}の記録を取り消しました`,()=>write('tx',x.id,old));return}
+    if(op=='skip'){CONF.skip={...(CONF.skip||{}),[x.id]:1};UI.se=null;saveConf();toast(`${x.name}を今月はなしにしました`);return}
+    if(op=='edit'){const q=PL[x.plan];UI.pf={...q,id:x.plan,catTouched:true};UI.se=null;rSched();return}
+    if(op=='rec'){const a=evalAmt($('seAmt').value);if(!(a>0)){toast('金額を入れてください');return}
+      if($('seKeep')?.checked){if(x.plan)write('plans',x.plan,{...PL[x.plan],amt:a});else{CONF.ov={...(CONF.ov||{}),[x.key]:{from:k,amt:a}};saveConf()}}
+      UI.se=null;recSched(x,k,a,$('seDate').value||TD);return}}
+  const sk=e.target.closest('li[data-sk]');if(sk){UI.se=UI.se==sk.dataset.sk?null:sk.dataset.sk;rSched();return}
   const f=e.target.closest('#lFilter [data-f]');if(f){UI.lf=f.dataset.f;render();return}
   const v=e.target.closest('#lView [data-v]');if(v){UI.lv=v.dataset.v;UI.day=null;saveUI();render();return}
   const dd=e.target.closest('#cal [data-day]');if(dd){UI.day=UI.day==dd.dataset.day?null:dd.dataset.day;render();return}
@@ -1185,13 +1302,18 @@ $('shorts').onclick=async e=>{const b=e.target.closest('[data-copy]');if(!b)retu
   catch(_){const c=b.previousElementSibling,r=document.createRange();r.selectNodeContents(c);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);toast('リンクを選択しました。コピーしてください')}};
 $('qAmt').oninput=qPreview;
 $('qPaySeg').onclick=e=>{const b=e.target.closest('[data-qp]');if(!b)return;setPay(b.dataset.qp);$('qAmt').focus()};
+function recSched(x,k,a,date){write('tx',x.id,{date,amt:a,kind:x.kind,cat:x.cat,pay:x.pay,memo:x.name,ts:Date.now()});toast(`${x.name} ${yen(a)}円を記録しました`,()=>write('tx',x.id,null))}
+$('addPlan').onclick=()=>{UI.pf={name:'',amt:'',day:0,cat:'other',pay:curPay(),rep:'m',start:UI.sm||NOWK,end:''};rPForm(true);$('pfName').focus()};
 function setPay(p){QP=p;if(CONF.lastPay!=p){CONF.lastPay=p;saveConf()}else qPreview()}
-$('qCats').onclick=e=>{
-  if(e.target.closest('#qMore')){const a=evalAmt($('qAmt').value);openSheet();if(a>0)$('amt').value=a;$('qAmt').value='';qPreview();return}
-  const c=e.target.closest('[data-qc]')?.dataset.qc;if(!c)return;const a=evalAmt($('qAmt').value);
+$('qMemo').oninput=qPreview;
+$('qMore').onclick=()=>{const a=evalAmt($('qAmt').value),m=$('qMemo').value;openSheet();if(a>0)$('amt').value=a;$('memo').value=m;$('qAmt').value='';$('qMemo').value='';qPreview()};
+$('qFoe').onclick=e=>{
+  const g=e.target.closest('[data-qg]')?.dataset.qg;if(!g)return;const a=evalAmt($('qAmt').value),memo=$('qMemo').value.trim().slice(0,80);
   if(!(a>0)){$('qAmt').focus();$('qPrev').className='qprev neg';$('qPrev').textContent='先に金額を入れてください';return}
-  const id='t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),t={date:TD,amt:a,kind:'out',cat:c,pay:curPay(),memo:'',ts:Date.now()};
-  $('qAmt').value='';write('tx',id,t);toast(`${CAT[c].n} ${yen(a)}円（${t.pay}）を記録しました`,()=>write('tx',id,null));
+  const q=guess(g,memo,a),id=q.sid||('t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),t={date:TD,amt:a,kind:'out',cat:q.cat,pay:DEFPAY[q.cat]&&g!='e2'?DEFPAY[q.cat]:curPay(),memo,ts:Date.now()};
+  if(q.how!='memo')t.auto=q.how;
+  $('qAmt').value='';$('qMemo').value='';write('tx',id,t);
+  toast(`${FOE4.find(f=>f[0]==g)[1]}・${CAT[q.cat].n} ${yen(a)}円（${t.pay}）${q.how=='none'?'。品目はあとで確認できます':''}`,()=>openSheet(TX[id],id),'直す');
 };
 $('snSave').onclick=()=>{const d=$('snD').value,a=evalAmt($('snA').value);if(!d||isNaN(a)){toast('日付と金額を入れてください');return}
   write('snaps',d,{date:d,amt:a,ts:Date.now()});$('snA').value='';toast(`${d.replace(/-/g,'/')}の残高 ${yen(a)}円を記録しました`)};
@@ -1201,8 +1323,13 @@ document.addEventListener('keydown',e=>{
   if((e.key=='n'||e.key=='N')&&!e.metaKey&&!e.ctrlKey){e.preventDefault();openSheet()}});
 qInit();
 const H0=location.hash.slice(1);
-tab(H0=='add'||SHORT[H0]?'home':H0||'home');
+tab(H0=='add'||SHORT[H0.split('.')[0]]?'home':H0||'home');
 if(H0=='add')openSheet();
-if(SHORT[H0]){QP=SHORT[H0];qPreview();$('qAmt').focus();$('qAmt').scrollIntoView({block:'center'})}
+// ショートカット用：#card.980 や #kyash.980.<お店の名前をBase64にしたもの>
+{const P=H0.split('.'),k0=P[0];
+ if(SHORT[k0]){QP=SHORT[k0];
+  if(/^\d+$/.test(P[1]||'')){$('qAmt').value=P[1];let mi=2;if(/^\d{1,2}$/.test(P[2]||''))mi=3;
+    if(P[mi]){try{const b=atob(P[mi].replace(/-/g,'+').replace(/_/g,'/').replace(/~/g,'='));$('qMemo').value=new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0))).slice(0,80)}catch(e){}}}
+  tab('home');qPreview();($('qAmt').value?$('qMemo'):$('qAmt')).focus();$('qAmt').scrollIntoView({block:'center'})}}
 boot();
 </script>
