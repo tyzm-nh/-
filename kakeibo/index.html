@@ -28,6 +28,12 @@
   --shadow:0 10px 30px rgba(0,0,0,.5); color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
+/* スマホで画面が横に動かないように：はみ出しは表の中だけで横スクロール */
+html,body{max-width:100%;overflow-x:hidden;overscroll-behavior-x:none}
+.app{overflow-x:clip}
+.panel,.kpi,.col{min-width:0;max-width:100%}
+/* iPhoneは16px未満の入力欄をタップすると画面が拡大されて動くので、スマホでは16px以上にする */
+@media (max-width:720px){input,select,textarea{font-size:16px!important}}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.55}
 .app{max-width:1200px;margin:0 auto;padding-inline:16px;padding-block:14px 40px;display:flex;flex-direction:column;gap:14px}
 header.top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -133,7 +139,7 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .ask{display:block;color:var(--warn);font-weight:700}
 .unc{display:inline-block;font-size:10px;font-weight:700;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:0 5px;margin-left:4px;vertical-align:1px}
 .short{display:grid;grid-template-columns:7em minmax(0,1fr) auto;gap:8px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid var(--line)}
-.short code{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mute)}
+.short code{min-width:0;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mute)}
 .warn{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700}
 .warn.l1{background:var(--gold-soft);color:var(--gold)} .warn.l2{background:var(--warn-soft);color:var(--warn)} .warn.l3{background:var(--bad);color:var(--panel)}
 .warn span{font-weight:500}
