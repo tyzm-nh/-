@@ -126,6 +126,11 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .pform{display:flex;flex-direction:column;gap:8px;border:1px solid var(--line);border-radius:10px;padding:12px}
 .pform .row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
 .pform input,.pform select{width:100%}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.ssT td{white-space:normal}
+.ssT select{font-size:12px;padding:3px 5px}
+.ssT tr.dup td{color:var(--mute)}
+.ask{display:block;color:var(--warn);font-weight:700}
 .unc{display:inline-block;font-size:10px;font-weight:700;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:0 5px;margin-left:4px;vertical-align:1px}
 .short{display:grid;grid-template-columns:7em minmax(0,1fr) auto;gap:8px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid var(--line)}
 .short code{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mute)}
@@ -387,7 +392,14 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
     <div class="seg" id="lView"><button data-v="list" type="button">リスト</button><button data-v="cal" type="button">カレンダー</button></div>
     <span class="sp"></span>
     <input type="search" id="q" placeholder="メモ・費目で検索" aria-label="検索">
+    <button class="btn sm" id="ssOpen" type="button">スクショから取り込む</button>
   </div>
+  <section class="panel" id="ssP" hidden>
+    <div class="ph"><h2>明細のスクリーンショットから取り込む</h2><button class="btn sm" id="ssClose" type="button">閉じる</button></div>
+    <p class="hint">楽天カード・Kyash・PayPayアプリの利用履歴の画面をスクリーンショットして選ぶと、Claudeが日付・金額・お店を読み取ります。取り込む前に一覧で確認でき、記録済みのものには印が付きます。</p>
+    <div class="srow"><span class="hint">どの明細？</span><select id="ssPay" aria-label="明細の支払い方法"></select><label class="btn pri sm" for="ssFile">画像を選ぶ</label><input type="file" id="ssFile" class="vh" accept="image/*" multiple></div>
+    <div id="ssOut"></div>
+  </section>
   <div class="sum3" id="lSum"></div>
   <div class="seg" id="lFilter"></div>
   <section class="panel" id="calP" hidden><div class="cal" id="cal"></div><p class="hint">数字はその日の変動費。1日あたりの予算を超えた日は赤字です。日付を押すとその日の記録だけ表示します。</p></section>
@@ -890,18 +902,20 @@ function rKy(A){
 // すぐ記録：金額を入れて費目を押すだけ。入力中は「使ったら今週あといくら」を出す
 function qInit(){}
 function fillMemos(){$('memos').innerHTML=[...new Set(Object.values(TX).map(x=>x.memo).filter(Boolean))].slice(-80).map(x=>`<option value="${esc(x)}">`).join('')}
-function qPaySeg(){const c=curPay(),y=KY();$('qPaySeg').innerHTML=MYP().map(p=>`<button type="button" data-qp="${p}" aria-pressed="${c==p}">${p}${p=='Kyash個人'&&NOWK>=y.start?'<small>変動費はこちら</small>':p=='楽天カード'&&NOWK>=y.start&&y.mode=='all'?'<small>固定費だけ</small>':''}</button>`).join('')}
+function qPaySeg(){const c=curPay(),y=KY(),PL0=MYP().slice();if(/^Kyash/.test(c))['Kyash個人','Kyash共通'].forEach(x=>{if(!PL0.includes(x))PL0.push(x)});$('qPaySeg').innerHTML=PL0.map(p=>`<button type="button" data-qp="${p}" aria-pressed="${c==p}">${p}${p=='Kyash個人'&&NOWK>=y.start?'<small>変動費はこちら</small>':p=='楽天カード'&&NOWK>=y.start&&y.mode=='all'?'<small>固定費だけ</small>':''}</button>`).join('')}
 function qPreview(){
   qPaySeg();const raw=$('qAmt').value.trim(),a=evalAmt(raw),W=week(),el=$('qPrev'),memo=$('qMemo').value;
   $('qFoe').innerHTML=FOE4.map(([g,n,d])=>{const q=guess(g,memo,a>0?a:0);return `<button type="button" data-qg="${g}" style="--c:var(${GC[g]})"><b>${n} ${d.replace('毎月の','').replace('不定期の','不定期')}</b><span>${q.how=='none'?(memo?'品目はあとで確認':'お店を入れると品目が決まります'):`→ <em>${CAT[q.cat].n}</em>`}</span></button>`}).join('');
   const un=txOf(NOWK).filter(t=>t.auto=='none').length;
   $('qUnc').innerHTML=un?`<button class="btn sm" type="button" id="toUnc">品目の確認 ${un}件</button>`:'';
   if($('toUnc'))$('toUnc').onclick=()=>{UI.lm=NOWK;UI.lf='unc';UI.q='';$('q').value='';tab('list')};
+  const ask=UI.kyAsk?`<span class="ask">Kyashは個人・共通どちらで払いましたか？（いまは${curPay()}）</span>`:'';
+  if(ask&&!raw){el.className='qprev';el.innerHTML=ask+'金額を入れて4つのどれかを押してください';return}
   if(!raw){el.className='qprev hint';el.textContent=`金額を入れて4つのどれかを押すと、${curPay()}で今日の日付に記録します`;return}
   if(!(a>0)){el.className='qprev neg';el.textContent='数字と＋−だけ使えます';return}
   const L=W.left-a,pd=L/W.dl;
   el.className='qprev '+(L<0?'neg':'');
-  el.innerHTML=L<0?`使うと今週の予算を<b>${yen(-L)}円</b>超えます。本当に今必要か、もう一度考えてみてください`:`使うと今週あと<b>${yen(L)}円</b>・1日あたり${yen(pd)}円`;
+  el.innerHTML=ask+(L<0?`使うと今週の予算を<b>${yen(-L)}円</b>超えます。本当に今必要か、もう一度考えてみてください`:`使うと今週あと<b>${yen(L)}円</b>・1日あたり${yen(pd)}円`);
 }
 // 支払い予定：月を切り替えて先の予定も見られる。行を押すと金額の変更・今月はなし・予定の編集
 function rSched(){
@@ -1302,9 +1316,62 @@ $('shorts').onclick=async e=>{const b=e.target.closest('[data-copy]');if(!b)retu
   catch(_){const c=b.previousElementSibling,r=document.createRange();r.selectNodeContents(c);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);toast('リンクを選択しました。コピーしてください')}};
 $('qAmt').oninput=qPreview;
 $('qPaySeg').onclick=e=>{const b=e.target.closest('[data-qp]');if(!b)return;setPay(b.dataset.qp);$('qAmt').focus()};
+// ===== 明細のスクショ取り込み（Claudeが画像を読む） =====
+function autoFoe(memo,amt){
+  const g2=guess('e2',memo,amt);if(g2.how!='none')return ['e2',g2];
+  const kw=KW.find(([re])=>re.test(memo||''));if(kw){const g=CAT[kw[1]].g;return [g,guess(g,memo,amt)]}
+  for(const g of ['e1','e3']){const q=guess(g,'',amt);if(q.how=='amt')return [g,q]}
+  return ['e2',g2];
+}
+let SS=null;
+$('ssOpen').onclick=()=>{$('ssP').hidden=false;$('ssPay').innerHTML=['楽天カード','Kyash個人','Kyash共通','PayPay'].map(x=>`<option ${x==curPay()?'selected':''}>${x}</option>`).join('')};
+$('ssClose').onclick=()=>{$('ssP').hidden=true;SS=null;$('ssOut').innerHTML=''};
+$('ssFile').onchange=async e=>{
+  const files=[...e.target.files];e.target.value='';if(!files.length)return;const out=$('ssOut');
+  const sample=window.claude?.use?await window.claude.use('sample').catch(()=>null):null;
+  const lim=sample?await sample.limits().catch(()=>null):null;
+  if(!lim?.images){out.innerHTML='<p class="hint neg">この画面では画像を読み取れません。claude.aiにログインした状態で開いてください。</p>';return}
+  const F=files.slice(0,lim.images.maxCount);
+  out.innerHTML=`<p class="hint">${F.length}枚を読み取っています…（数十秒かかることがあります）${files.length>F.length?`。一度に読めるのは${F.length}枚までです`:''}</p>`;
+  const prompt=`These images are screenshots of a Japanese payment app's transaction history (${$('ssPay').value}). Today is ${TD}.
+Extract every transaction row you can read. Return ONLY JSON: {"rows":[{"date":"YYYY-MM-DD","amount":<positive integer yen>,"merchant":"<store or description as written>","type":"payment"|"charge"|"refund"}]}
+- "charge" = money added to the wallet (チャージ/入金). "refund" = money returned (返金/キャンセル/割り勘の受け取り). Everything paid out is "payment".
+- If the year is not shown, pick the year that makes the date on or before today.
+- Skip balances, point totals, headers and anything you cannot read clearly. Do not invent rows.`;
+  try{
+    const r=await sample.json(prompt,{images:F,modelTier:'default'});
+    const pay=$('ssPay').value;
+    const rows=(Array.isArray(r?.rows)?r.rows:[]).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x?.date)&&+x.amount>0).map(x=>{
+      const amt=Math.round(+x.amount),memo=String(x.merchant||'').slice(0,80),type=['charge','refund'].includes(x.type)?x.type:'payment';
+      const dup=Object.values(TX).some(t=>t.date==x.date&&+t.amt==amt);
+      const [g,q]=autoFoe(memo,amt);
+      let h=0;for(const ch of memo)h=(h*31+ch.charCodeAt(0))|0;
+      return {date:x.date,amt,memo,type,g,cat:q.cat,how:q.how,dup,on:!dup,id:`ss-${x.date}-${amt}-${(h>>>0).toString(36)}`}});
+    if(!rows.length){out.innerHTML='<p class="hint">読み取れる明細がありませんでした。履歴の一覧が写っている画面で試してください。</p>';return}
+    SS={pay,rows};rSS();
+  }catch(err){
+    const m={not_granted:'画像の読み取りが許可されませんでした。',rate_limited:'続けて使いすぎました。少し時間をおいてから試してください。',image_rejected:'この画像の形式は読めません。スクリーンショット（PNG・JPEG）を選んでください。',invalid_json:'うまく読み取れませんでした。画像を減らしてもう一度試してください。',cancelled:'読み取りを止めました。'};
+    out.innerHTML=`<p class="hint neg">${m[err?.code]||'読み取れませんでした。もう一度試してください。'}</p>`}
+};
+function rSS(){
+  if(!SS)return;const n=SS.rows.filter(r=>r.on).length;
+  $('ssOut').innerHTML=`<div class="scroll"><table class="ssT"><thead><tr><th></th><th>日付</th><th>お店・内容</th><th>金額</th><th>分類</th></tr></thead><tbody>${SS.rows.map((r,j)=>`<tr class="${r.dup?'dup':''}"><td><input type="checkbox" data-ssc="${j}" ${r.on?'checked':''} aria-label="取り込む"></td><td class="n">${md(r.date)}</td><td>${esc(r.memo)}${r.dup?'<span class="unc">記録済みかも</span>':''}</td><td class="n">${r.type=='payment'?'−':'+'}${yen(r.amt)}</td><td>${r.type=='charge'?'チャージ（振替）':r.type=='refund'?'返金・割り勘（収入）':`<select data-ssg="${j}" aria-label="4つの敵">${FOE4.map(([g,a,d])=>`<option value="${g}" ${g==r.g?'selected':''}>${a} ${d.replace('毎月の','').replace('不定期の','不定期')}</option>`).join('')}</select> <span class="hint">→ ${CAT[r.cat].n}${r.how=='none'?'（あとで確認）':''}</span>`}</td></tr>`).join('')}</tbody></table></div>
+   <div class="sact"><span class="hint">支払い方法：${esc(SS.pay)}</span><span class="sp"></span><button class="btn pri sm" type="button" id="ssGo" ${n?'':'disabled'}>選んだ${n}件を取り込む</button></div>`;
+  $('ssGo').onclick=ssImport;
+}
+$('ssOut').addEventListener('change',e=>{if(!SS)return;const c=e.target.dataset.ssc,g=e.target.dataset.ssg;
+  if(c!=null){SS.rows[c].on=e.target.checked;rSS()}
+  if(g!=null){const r=SS.rows[g];r.g=e.target.value;const q=guess(r.g,r.memo,r.amt);r.cat=q.cat;r.how=q.how;rSS()}});
+async function ssImport(){
+  const L=SS.rows.filter(r=>r.on),pay=SS.pay;SS=null;$('ssOut').innerHTML=`<p class="hint">取り込み中…</p>`;let n=0;
+  for(const r of L){const t=r.type=='charge'?{kind:'mv',cat:'kcharge'}:r.type=='refund'?{kind:'in',cat:'refund'}:{kind:'out',cat:r.cat};
+    const o={date:r.date,amt:r.amt,...t,pay,memo:r.memo,src:'ss',ts:Date.now()};if(r.type=='payment'&&r.how!='memo')o.auto=r.how;
+    await write('tx',r.id,o);n++}
+  $('ssOut').innerHTML=`<p class="hint">${n}件を取り込みました。「品目を確認」の絞り込みで、自動で決められなかったものを直せます。</p>`;
+}
 function recSched(x,k,a,date){write('tx',x.id,{date,amt:a,kind:x.kind,cat:x.cat,pay:x.pay,memo:x.name,ts:Date.now()});toast(`${x.name} ${yen(a)}円を記録しました`,()=>write('tx',x.id,null))}
 $('addPlan').onclick=()=>{UI.pf={name:'',amt:'',day:0,cat:'other',pay:curPay(),rep:'m',start:UI.sm||NOWK,end:''};rPForm(true);$('pfName').focus()};
-function setPay(p){QP=p;if(CONF.lastPay!=p){CONF.lastPay=p;saveConf()}else qPreview()}
+function setPay(p){QP=p;UI.kyAsk=false;if(/^Kyash/.test(p))CONF.lastKy=p;if(CONF.lastPay!=p){CONF.lastPay=p;saveConf()}else{saveConf()}}
 $('qMemo').oninput=qPreview;
 $('qMore').onclick=()=>{const a=evalAmt($('qAmt').value),m=$('qMemo').value;openSheet();if(a>0)$('amt').value=a;$('memo').value=m;$('qAmt').value='';$('qMemo').value='';qPreview()};
 $('qFoe').onclick=e=>{
@@ -1312,7 +1379,7 @@ $('qFoe').onclick=e=>{
   if(!(a>0)){$('qAmt').focus();$('qPrev').className='qprev neg';$('qPrev').textContent='先に金額を入れてください';return}
   const q=guess(g,memo,a),id=q.sid||('t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),t={date:TD,amt:a,kind:'out',cat:q.cat,pay:DEFPAY[q.cat]&&g!='e2'?DEFPAY[q.cat]:curPay(),memo,ts:Date.now()};
   if(q.how!='memo')t.auto=q.how;
-  $('qAmt').value='';$('qMemo').value='';write('tx',id,t);
+  UI.kyAsk=false;$('qAmt').value='';$('qMemo').value='';write('tx',id,t);
   toast(`${FOE4.find(f=>f[0]==g)[1]}・${CAT[q.cat].n} ${yen(a)}円（${t.pay}）${q.how=='none'?'。品目はあとで確認できます':''}`,()=>openSheet(TX[id],id),'直す');
 };
 $('snSave').onclick=()=>{const d=$('snD').value,a=evalAmt($('snA').value);if(!d||isNaN(a)){toast('日付と金額を入れてください');return}
@@ -1327,7 +1394,7 @@ tab(H0=='add'||SHORT[H0.split('.')[0]]?'home':H0||'home');
 if(H0=='add')openSheet();
 // ショートカット用：#card.980 や #kyash.980.<お店の名前をBase64にしたもの>
 {const P=H0.split('.'),k0=P[0];
- if(SHORT[k0]){QP=SHORT[k0];
+ if(SHORT[k0]){QP=k0=='kyash'?(CONF.lastKy||'Kyash個人'):SHORT[k0];if(k0=='kyash')UI.kyAsk=true;
   if(/^\d+$/.test(P[1]||'')){$('qAmt').value=P[1];let mi=2;if(/^\d{1,2}$/.test(P[2]||''))mi=3;
     if(P[mi]){try{const b=atob(P[mi].replace(/-/g,'+').replace(/_/g,'/').replace(/~/g,'='));$('qMemo').value=new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0))).slice(0,80)}catch(e){}}}
   tab('home');qPreview();($('qAmt').value?$('qMemo'):$('qAmt')).focus();$('qAmt').scrollIntoView({block:'center'})}}
