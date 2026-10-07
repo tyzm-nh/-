@@ -396,7 +396,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
   </div>
   <section class="panel" id="ssP" hidden>
     <div class="ph"><h2>明細のスクリーンショットから取り込む</h2><button class="btn sm" id="ssClose" type="button">閉じる</button></div>
-    <p class="hint">楽天カード・Kyash・PayPayアプリの利用履歴の画面をスクリーンショットして選ぶと、Claudeが日付・金額・お店を読み取ります。取り込む前に一覧で確認でき、記録済みのものには印が付きます。</p>
+    <p class="hint">楽天カード・Kyash（個人）・PayPayアプリの利用履歴の画面をスクリーンショットして選ぶと、Claudeが日付・金額・お店を読み取ります。取り込む前に一覧で確認でき、記録済みのものには印が付きます。</p>
     <div class="srow"><span class="hint">どの明細？</span><select id="ssPay" aria-label="明細の支払い方法"></select><label class="btn pri sm" for="ssFile">画像を選ぶ</label><input type="file" id="ssFile" class="vh" accept="image/*" multiple></div>
     <div id="ssOut"></div>
   </section>
@@ -902,20 +902,20 @@ function rKy(A){
 // すぐ記録：金額を入れて費目を押すだけ。入力中は「使ったら今週あといくら」を出す
 function qInit(){}
 function fillMemos(){$('memos').innerHTML=[...new Set(Object.values(TX).map(x=>x.memo).filter(Boolean))].slice(-80).map(x=>`<option value="${esc(x)}">`).join('')}
-function qPaySeg(){const c=curPay(),y=KY(),PL0=MYP().slice();if(/^Kyash/.test(c))['Kyash個人','Kyash共通'].forEach(x=>{if(!PL0.includes(x))PL0.push(x)});$('qPaySeg').innerHTML=PL0.map(p=>`<button type="button" data-qp="${p}" aria-pressed="${c==p}">${p}${p=='Kyash個人'&&NOWK>=y.start?'<small>変動費はこちら</small>':p=='楽天カード'&&NOWK>=y.start&&y.mode=='all'?'<small>固定費だけ</small>':''}</button>`).join('')}
+function qPaySeg(){const c=curPay(),y=KY(),PL0=MYP().slice();$('qPaySeg').innerHTML=PL0.map(p=>`<button type="button" data-qp="${p}" aria-pressed="${c==p}">${p}${p=='Kyash個人'&&NOWK>=y.start?'<small>変動費はこちら</small>':p=='楽天カード'&&NOWK>=y.start&&y.mode=='all'?'<small>固定費だけ</small>':''}</button>`).join('')}
 function qPreview(){
   qPaySeg();const raw=$('qAmt').value.trim(),a=evalAmt(raw),W=week(),el=$('qPrev'),memo=$('qMemo').value;
   $('qFoe').innerHTML=FOE4.map(([g,n,d])=>{const q=guess(g,memo,a>0?a:0);return `<button type="button" data-qg="${g}" style="--c:var(${GC[g]})"><b>${n} ${d.replace('毎月の','').replace('不定期の','不定期')}</b><span>${q.how=='none'?(memo?'品目はあとで確認':'お店を入れると品目が決まります'):`→ <em>${CAT[q.cat].n}</em>`}</span></button>`}).join('');
   const un=txOf(NOWK).filter(t=>t.auto=='none').length;
   $('qUnc').innerHTML=un?`<button class="btn sm" type="button" id="toUnc">品目の確認 ${un}件</button>`:'';
   if($('toUnc'))$('toUnc').onclick=()=>{UI.lm=NOWK;UI.lf='unc';UI.q='';$('q').value='';tab('list')};
-  const ask=UI.kyAsk?`<span class="ask">Kyashは個人・共通どちらで払いましたか？（いまは${curPay()}）</span>`:'';
-  if(ask&&!raw){el.className='qprev';el.innerHTML=ask+'金額を入れて4つのどれかを押してください';return}
+  const ask=UI.kyAsk?`<span class="ask">Kyash個人として記録します。共通で払ったときは記録しなくてOK <button class="btn sm" type="button" id="kySkip">共通なので記録しない</button></span>`:'';
+  if(ask&&!raw){el.className='qprev';el.innerHTML=ask+'金額を入れて4つのどれかを押してください';bindKySkip();return}
   if(!raw){el.className='qprev hint';el.textContent=`金額を入れて4つのどれかを押すと、${curPay()}で今日の日付に記録します`;return}
   if(!(a>0)){el.className='qprev neg';el.textContent='数字と＋−だけ使えます';return}
   const L=W.left-a,pd=L/W.dl;
   el.className='qprev '+(L<0?'neg':'');
-  el.innerHTML=ask+(L<0?`使うと今週の予算を<b>${yen(-L)}円</b>超えます。本当に今必要か、もう一度考えてみてください`:`使うと今週あと<b>${yen(L)}円</b>・1日あたり${yen(pd)}円`);
+  el.innerHTML=ask+(L<0?`使うと今週の予算を<b>${yen(-L)}円</b>超えます。本当に今必要か、もう一度考えてみてください`:`使うと今週あと<b>${yen(L)}円</b>・1日あたり${yen(pd)}円`);bindKySkip();
 }
 // 支払い予定：月を切り替えて先の予定も見られる。行を押すと金額の変更・今月はなし・予定の編集
 function rSched(){
@@ -1324,7 +1324,7 @@ function autoFoe(memo,amt){
   return ['e2',g2];
 }
 let SS=null;
-$('ssOpen').onclick=()=>{$('ssP').hidden=false;$('ssPay').innerHTML=['楽天カード','Kyash個人','Kyash共通','PayPay'].map(x=>`<option ${x==curPay()?'selected':''}>${x}</option>`).join('')};
+$('ssOpen').onclick=()=>{$('ssP').hidden=false;$('ssPay').innerHTML=['楽天カード','Kyash個人','PayPay'].map(x=>`<option ${x==curPay()?'selected':''}>${x}</option>`).join('')};
 $('ssClose').onclick=()=>{$('ssP').hidden=true;SS=null;$('ssOut').innerHTML=''};
 $('ssFile').onchange=async e=>{
   const files=[...e.target.files];e.target.value='';if(!files.length)return;const out=$('ssOut');
@@ -1371,6 +1371,7 @@ async function ssImport(){
 }
 function recSched(x,k,a,date){write('tx',x.id,{date,amt:a,kind:x.kind,cat:x.cat,pay:x.pay,memo:x.name,ts:Date.now()});toast(`${x.name} ${yen(a)}円を記録しました`,()=>write('tx',x.id,null))}
 $('addPlan').onclick=()=>{UI.pf={name:'',amt:'',day:0,cat:'other',pay:curPay(),rep:'m',start:UI.sm||NOWK,end:''};rPForm(true);$('pfName').focus()};
+function bindKySkip(){if($('kySkip'))$('kySkip').onclick=()=>{UI.kyAsk=false;$('qAmt').value='';$('qMemo').value='';qPreview();toast('Kyash共通の支払いなので記録しませんでした')}}
 function setPay(p){QP=p;UI.kyAsk=false;if(/^Kyash/.test(p))CONF.lastKy=p;if(CONF.lastPay!=p){CONF.lastPay=p;saveConf()}else{saveConf()}}
 $('qMemo').oninput=qPreview;
 $('qMore').onclick=()=>{const a=evalAmt($('qAmt').value),m=$('qMemo').value;openSheet();if(a>0)$('amt').value=a;$('memo').value=m;$('qAmt').value='';$('qMemo').value='';qPreview()};
@@ -1394,7 +1395,7 @@ tab(H0=='add'||SHORT[H0.split('.')[0]]?'home':H0||'home');
 if(H0=='add')openSheet();
 // ショートカット用：#card.980 や #kyash.980.<お店の名前をBase64にしたもの>
 {const P=H0.split('.'),k0=P[0];
- if(SHORT[k0]){QP=k0=='kyash'?(CONF.lastKy||'Kyash個人'):SHORT[k0];if(k0=='kyash')UI.kyAsk=true;
+ if(SHORT[k0]){QP=SHORT[k0];if(k0=='kyash')UI.kyAsk=true;
   if(/^\d+$/.test(P[1]||'')){$('qAmt').value=P[1];let mi=2;if(/^\d{1,2}$/.test(P[2]||''))mi=3;
     if(P[mi]){try{const b=atob(P[mi].replace(/-/g,'+').replace(/_/g,'/').replace(/~/g,'='));$('qMemo').value=new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0))).slice(0,80)}catch(e){}}}
   tab('home');qPreview();($('qAmt').value?$('qMemo'):$('qAmt')).focus();$('qAmt').scrollIntoView({block:'center'})}}
