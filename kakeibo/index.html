@@ -99,6 +99,13 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .qe .amtbox input{font-size:30px}
 .qe .chips .chip{padding:7px 12px}
 .qprev{font-size:12px;min-height:1.6em}
+.pm{display:grid;grid-template-columns:repeat(auto-fit,minmax(5.5em,1fr));gap:6px}
+.pm button{border:1.5px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 6px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink);line-height:1.2}
+.pm button:hover{border-color:var(--accent)}
+.pm button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.pm button small{display:block;font-size:10px;font-weight:500;opacity:.8}
+.short{display:grid;grid-template-columns:7em minmax(0,1fr) auto;gap:8px;align-items:center;font-size:12px;padding:6px 0;border-bottom:1px solid var(--line)}
+.short code{font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mute)}
 .warn{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700}
 .warn.l1{background:var(--gold-soft);color:var(--gold)} .warn.l2{background:var(--warn-soft);color:var(--warn)} .warn.l3{background:var(--bad);color:var(--panel)}
 .warn span{font-weight:500}
@@ -304,7 +311,8 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
       <div id="wk"></div>
       <div class="mo" id="mo"></div>
       <div class="qe">
-        <div class="ph"><h3>すぐ記録</h3><div class="seg" id="qPaySeg"></div></div>
+        <div class="ph"><h3>すぐ記録</h3><span class="hint">① 支払い方法 ② 金額 ③ 費目</span></div>
+        <div class="pm" id="qPaySeg" role="group" aria-label="支払い方法"></div>
         <div class="amtbox"><span>¥</span><input id="qAmt" inputmode="decimal" placeholder="金額" aria-label="すぐ記録する金額"></div>
         <div class="qprev hint" id="qPrev">金額を入れて費目を押すと、今日の日付で記録します</div>
         <div class="chips" id="qCats"></div>
@@ -448,6 +456,12 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
         <div id="mfPrev"></div>
       </div>
       <div class="f">
+        <label>いつも使う支払い方法</label>
+        <div class="chips" id="myPays"></div>
+        <span class="hint">選んだものだけが記録画面に出ます。最後に使った支払い方法は次回も選ばれたままになります。</span>
+        <div id="shorts"></div>
+      </div>
+      <div class="f">
         <label>書き出し</label>
         <div class="srow"><button class="btn" id="expCsv" type="button">記録をCSVで保存</button><span class="hint" id="expNote"></span></div>
         <span class="hint" id="storeNote"></span>
@@ -545,8 +559,14 @@ const bud=k=>pidx(k)<3?{...BUD0,...(CONF.bud0||{})}:{...BUD1,...(CONF.bud1||{})}
 const bsum=b=>VAR.reduce((a,c)=>a+(+b[c]||0),0);
 // Kyashへの切り替え（start＝変動費をKyash個人で払い始める月、mode＝all か food）
 const KY=()=>({start:'2026-12',mode:'all',...(CONF.ky||{})});
-const kyOn=(cat,k=NOWK)=>{const y=KY();return k>=y.start&&(y.mode=='all'?(CAT[cat]||CAT.other).g=='e2':cat=='food')};
-const defPay=(cat,k)=>DEFPAY[cat]||(kyOn(cat,k)?'Kyash個人':'楽天カード');
+// 支払い方法は「いつも使うもの」から最後に選んだものを使う。家賃・奨学金など決まった支払いだけは費目で決める
+const MYP=()=>{const a=(CONF.myPays||['楽天カード','Kyash個人','PayPay']).filter(p=>PAYS.includes(p));return a.length?a:['楽天カード']};
+const SHORT={card:'楽天カード',kyash:'Kyash個人',kyashk:'Kyash共通',paypay:'PayPay',cash:'現金',bank:'楽天銀行',smtb:'ドコモSMTB'};
+const SHORTK=Object.fromEntries(Object.entries(SHORT).map(([k,v])=>[v,k]));
+const ART='https://claude.ai/artifact/VV3rr8MEV4FAhXBiNFd5zw';
+let QP=null;
+const curPay=()=>QP||(MYP().includes(CONF.lastPay)?CONF.lastPay:MYP()[0]);
+const defPay=cat=>DEFPAY[cat]||curPay();
 // Kyashに切り替えた月からは、カードに残るのは決まった支払い（サブスク・通信 4,880円）と切り替えていない費目だけ
 const cardLim=k=>{const y=KY(),b=bud(k);return CONF.cardLim?.[k]??(k=='2026-10'?47900:4880+(k>=y.start?(y.mode=='all'?0:bsum(b)-(+b.food||0)):bsum(b)))};
 
@@ -811,14 +831,13 @@ function rKy(A){
   $('kyMode').onclick=e=>{const b=e.target.closest('[data-km]');if(!b)return;CONF.ky={...KY(),mode:b.dataset.km};saveConf()};
 }
 // すぐ記録：金額を入れて費目を押すだけ。入力中は「使ったら今週あといくら」を出す
-let QP='auto';
 function qInit(){
   $('qCats').innerHTML=VAR.map(c=>`<button type="button" class="chip" data-qc="${c}"><i class="dot" style="background:${ccol(c)}"></i>${CAT[c].n}</button>`).join('')+`<button type="button" class="chip q" id="qMore">詳しく</button>`;
 }
-function qPaySeg(){$('qPaySeg').innerHTML=[['auto','自動'],['楽天カード','カード'],['Kyash個人','Kyash'],['PayPay','PayPay']].map(([v,n])=>`<button type="button" data-qp="${v}" aria-pressed="${QP==v}">${n}</button>`).join('')}
+function qPaySeg(){const c=curPay(),y=KY();$('qPaySeg').innerHTML=MYP().map(p=>`<button type="button" data-qp="${p}" aria-pressed="${c==p}">${p}${p=='Kyash個人'&&NOWK>=y.start?'<small>変動費はこちら</small>':p=='楽天カード'&&NOWK>=y.start&&y.mode=='all'?'<small>固定費だけ</small>':''}</button>`).join('')}
 function qPreview(){
   qPaySeg();const raw=$('qAmt').value.trim(),a=evalAmt(raw),W=week(),el=$('qPrev');
-  if(!raw){el.className='qprev hint';el.textContent=`金額を入れて費目を押すと、今日の日付で記録します（支払い：${QP=='auto'?'費目に合わせて自動':QP}）`;return}
+  if(!raw){el.className='qprev hint';el.textContent=`金額を入れて費目を押すと、${curPay()}で今日の日付に記録します`;return}
   if(!(a>0)){el.className='qprev neg';el.textContent='数字と＋−だけ使えます';return}
   const L=W.left-a,pd=L/W.dl;
   el.className='qprev '+(L<0?'neg':'');
@@ -1003,6 +1022,10 @@ function rPay(){
 // ===== 設定 =====
 let setBuilt=false;
 function rSet(){if(!setBuilt){fillSettings();setBuilt=true}
+  const my=MYP();
+  $('myPays').innerHTML=PAYS.map(p=>`<button type="button" class="chip" data-mp="${p}" aria-pressed="${my.includes(p)}">${p}</button>`).join('');
+  $('shorts').innerHTML=`<label style="margin-top:8px;display:block">支払い方法ごとの記録リンク</label><span class="hint">スマホのホーム画面やブックマークに置くと、押した瞬間にその支払い方法で金額入力が始まります。</span>`+
+    my.map(p=>`<div class="short"><b>${p}で記録</b><code>${ART}#${SHORTK[p]}</code><button class="btn sm" type="button" data-copy="${ART}#${SHORTK[p]}">コピー</button></div>`).join('');
   $('storeNote').textContent=ST.cloud?'記録はこのページのクラウド保存領域に入っています。リンクを知っている人がいても、あなた以外には見えない設定です。':'いまはこのブラウザの中だけに保存しています。消えると困るので、ときどきCSVで書き出してください。';
 }
 function fillSettings(){
@@ -1072,7 +1095,7 @@ const frequent=()=>{const m={};Object.entries(TX).filter(([id,t])=>!id.startsWit
   return Object.values(m).sort((a,b)=>b.n-a.n).slice(0,6).map(o=>o.t)};
 function openSheet(t,id){
   ED=t?{...t,id,amt:String(t.amt)}:{kind:'out',amt:'',cat:'food',date:UI.tab=='list'&&UI.day?UI.day:TD,pay:defPay('food'),memo:'',id:null};
-  ED.more=!!(t&&!['e2','inc','mv'].includes((CAT[t.cat]||CAT.other).g));ED.payTouched=!!t;ED.armed=false;
+  ED.more=!!(t&&!['e2','inc','mv'].includes((CAT[t.cat]||CAT.other).g));ED.payTouched=!!t;ED.armed=false;ED.allPay=false;
   $('shT').textContent=id?'記録を直す':'記録する';$('del').hidden=!id;$('del').className='btn danger';$('del').textContent='削除';$('saveNext').hidden=!!id;
   $('amt').value=ED.amt;$('dt').value=ED.date;$('memo').value=ED.memo||'';
   $('memos').innerHTML=[...new Set(Object.values(TX).map(x=>x.memo).filter(Boolean))].slice(-60).map(x=>`<option value="${esc(x)}">`).join('');
@@ -1084,7 +1107,8 @@ function drawSheet(){
   const g=ED.kind=='in'?['inc']:ED.kind=='mv'?['mv']:ED.more?['e2','e1','e3','e4']:['e2'];
   $('cats').innerHTML=g.map(x=>(g.length>1?`<span class="glab">${GN[x]}</span>`:'')+CATS.filter(c=>c[2]==x).map(([k,n])=>`<button type="button" class="chip" data-c="${k}" aria-pressed="${ED.cat==k}"><i class="dot" style="background:${ccol(k)}"></i>${n}</button>`).join('')).join('')+
     (ED.kind=='out'?`<button type="button" class="chip q" id="more">${ED.more?'変動費だけ表示':'固定費・特別費も表示'}</button>`:'');
-  $('pays').innerHTML=PAYS.map(p=>`<button type="button" class="chip" data-p="${p}" aria-pressed="${ED.pay==p}">${p}</button>`).join('');
+  const PL=ED.allPay?PAYS:[...new Set([...MYP(),...(ED.pay?[ED.pay]:[])])];
+  $('pays').innerHTML=PL.map(p=>`<button type="button" class="chip" data-p="${p}" aria-pressed="${ED.pay==p}">${esc(p)}</button>`).join('')+(ED.allPay?'':`<button type="button" class="chip q" data-p="_all">ほかの支払い方法</button>`);
   document.querySelectorAll('#dSeg button').forEach(b=>{const d=new Date();d.setDate(d.getDate()+ +b.dataset.d);b.setAttribute('aria-pressed',dstr(d)==ED.date)});
   const Q=ED.id||ED.kind!='out'?[]:frequent();
   $('quick').innerHTML=Q.map((t,j)=>`<button type="button" class="chip q" data-q="${j}"><i class="dot" style="background:${ccol(t.cat)}"></i>${esc(t.memo)} <b>${yen(t.amt)}</b></button>`).join('');
@@ -1100,7 +1124,8 @@ async function saveSheet(next){
   const id=ED.id||('t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
   $('amtHint').textContent='「1200+380」のような足し算・引き算もできます';
   write('tx',id,t);
-  toast(`${CAT[t.cat].n} ${yen(a)}円を記録しました`);
+  if(t.kind=='out'&&!DEFPAY[t.cat]&&MYP().includes(t.pay)&&CONF.lastPay!=t.pay){QP=t.pay;CONF.lastPay=t.pay;saveConf()}
+  toast(`${CAT[t.cat].n} ${yen(a)}円（${t.pay}）を記録しました`);
   if(next){ED.amt='';$('amt').value='';$('memo').value='';ED.id=null;drawSheet();$('amt').focus()}else closeSheet();
 }
 function closeSheet(){$('ov').hidden=true;ED=null}
@@ -1113,9 +1138,9 @@ $('del').onclick=()=>{
   const id=ED.id,old=TX[id];write('tx',id,null);closeSheet();
   toast('削除しました',()=>write('tx',id,old));
 };
-$('kSeg').onclick=e=>{const k=e.target.closest('[data-k]')?.dataset.k;if(!k)return;ED.kind=k;ED.cat=k=='in'?'salary':k=='mv'?'card':'food';if(!ED.payTouched)ED.pay=defPay(ED.cat,(ED.date||TD).slice(0,7));drawSheet()};
-$('cats').onclick=e=>{if(e.target.closest('#more')){ED.more=!ED.more;drawSheet();return}const c=e.target.closest('[data-c]')?.dataset.c;if(!c)return;ED.cat=c;if(!ED.payTouched)ED.pay=defPay(c,(ED.date||TD).slice(0,7));drawSheet()};
-$('pays').onclick=e=>{const p=e.target.closest('[data-p]')?.dataset.p;if(!p)return;ED.pay=p;ED.payTouched=true;drawSheet()};
+$('kSeg').onclick=e=>{const k=e.target.closest('[data-k]')?.dataset.k;if(!k)return;ED.kind=k;ED.cat=k=='in'?'salary':k=='mv'?'card':'food';if(!ED.payTouched)ED.pay=defPay(ED.cat);drawSheet()};
+$('cats').onclick=e=>{if(e.target.closest('#more')){ED.more=!ED.more;drawSheet();return}const c=e.target.closest('[data-c]')?.dataset.c;if(!c)return;ED.cat=c;if(!ED.payTouched)ED.pay=defPay(c);drawSheet()};
+$('pays').onclick=e=>{const p=e.target.closest('[data-p]')?.dataset.p;if(!p)return;if(p=='_all'){ED.allPay=true;drawSheet();return}ED.pay=p;ED.payTouched=true;if(ED.kind=='out'&&MYP().includes(p)&&!DEFPAY[ED.cat])QP=p;drawSheet()};
 $('dSeg').onclick=e=>{const b=e.target.closest('[data-d]');if(!b)return;const d=new Date();d.setDate(d.getDate()+ +b.dataset.d);ED.date=dstr(d);$('dt').value=ED.date;drawSheet()};
 $('dt').onchange=()=>{ED.date=$('dt').value;drawSheet()};
 $('quick').onclick=e=>{const j=e.target.closest('[data-q]')?.dataset.q;if(j==null)return;const t=$('quick')._Q[j];ED.cat=t.cat;ED.pay=t.pay;ED.payTouched=true;$('amt').value=t.amt;$('memo').value=t.memo;drawSheet();$('amt').select()};
@@ -1153,13 +1178,19 @@ document.addEventListener('click',e=>{
   const sp=e.target.closest('#span [data-n]');if(sp){UI.span=+sp.dataset.n;saveUI();render();return}
 });
 $('q').oninput=e=>{UI.q=e.target.value.trim();render()};
+$('myPays').onclick=e=>{const b=e.target.closest('[data-mp]');if(!b)return;const my=MYP(),p=b.dataset.mp;
+  const n=PAYS.filter(x=>x==p?!my.includes(p):my.includes(x));if(!n.length){toast('1つは選んでください');return}CONF.myPays=n;if(!n.includes(QP))QP=null;saveConf()};
+$('shorts').onclick=async e=>{const b=e.target.closest('[data-copy]');if(!b)return;
+  try{await navigator.clipboard.writeText(b.dataset.copy);toast('リンクをコピーしました')}
+  catch(_){const c=b.previousElementSibling,r=document.createRange();r.selectNodeContents(c);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);toast('リンクを選択しました。コピーしてください')}};
 $('qAmt').oninput=qPreview;
-$('qPaySeg').onclick=e=>{const b=e.target.closest('[data-qp]');if(!b)return;QP=b.dataset.qp;qPreview()};
+$('qPaySeg').onclick=e=>{const b=e.target.closest('[data-qp]');if(!b)return;setPay(b.dataset.qp);$('qAmt').focus()};
+function setPay(p){QP=p;if(CONF.lastPay!=p){CONF.lastPay=p;saveConf()}else qPreview()}
 $('qCats').onclick=e=>{
   if(e.target.closest('#qMore')){const a=evalAmt($('qAmt').value);openSheet();if(a>0)$('amt').value=a;$('qAmt').value='';qPreview();return}
   const c=e.target.closest('[data-qc]')?.dataset.qc;if(!c)return;const a=evalAmt($('qAmt').value);
   if(!(a>0)){$('qAmt').focus();$('qPrev').className='qprev neg';$('qPrev').textContent='先に金額を入れてください';return}
-  const id='t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),t={date:TD,amt:a,kind:'out',cat:c,pay:QP=='auto'?defPay(c):QP,memo:'',ts:Date.now()};
+  const id='t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),t={date:TD,amt:a,kind:'out',cat:c,pay:curPay(),memo:'',ts:Date.now()};
   $('qAmt').value='';write('tx',id,t);toast(`${CAT[c].n} ${yen(a)}円（${t.pay}）を記録しました`,()=>write('tx',id,null));
 };
 $('snSave').onclick=()=>{const d=$('snD').value,a=evalAmt($('snA').value);if(!d||isNaN(a)){toast('日付と金額を入れてください');return}
@@ -1170,7 +1201,8 @@ document.addEventListener('keydown',e=>{
   if((e.key=='n'||e.key=='N')&&!e.metaKey&&!e.ctrlKey){e.preventDefault();openSheet()}});
 qInit();
 const H0=location.hash.slice(1);
-tab(H0=='add'?'home':H0||'home');
+tab(H0=='add'||SHORT[H0]?'home':H0||'home');
 if(H0=='add')openSheet();
+if(SHORT[H0]){QP=SHORT[H0];qPreview();$('qAmt').focus();$('qAmt').scrollIntoView({block:'center'})}
 boot();
 </script>
