@@ -86,6 +86,33 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .hero .big small{font-family:var(--body);font-size:15px;font-weight:700;margin-left:3px}
 .hero .row{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
 .perday{text-align:right}
+.herog{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.1fr);gap:18px}
+@media(max-width:1000px){.herog{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.herog .qe{grid-column:1/-1}}
+@media(max-width:720px){.herog{grid-template-columns:minmax(0,1fr)}}
+.herog>div{display:flex;flex-direction:column;gap:8px;min-width:0}
+.herog .mo{border-left:1px solid var(--line);padding-left:18px}
+@media(max-width:720px){.herog .mo{border-left:none;padding-left:0;border-top:1px solid var(--line);padding-top:12px}}
+.mo .mv{font-family:var(--num);font-size:26px;font-weight:600;line-height:1.1}
+.mo .mv small{font-family:var(--body);font-size:12px;margin-left:2px}
+.meter.thin{height:7px}
+.qe{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.qe .amtbox input{font-size:30px}
+.qe .chips .chip{padding:7px 12px}
+.qprev{font-size:12px;min-height:1.6em}
+.warn{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700}
+.warn.l1{background:var(--gold-soft);color:var(--gold)} .warn.l2{background:var(--warn-soft);color:var(--warn)} .warn.l3{background:var(--bad);color:var(--panel)}
+.warn span{font-weight:500}
+ol.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+ol.steps li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:8px;font-size:12px;align-items:start}
+ol.steps li>i{width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:700;color:var(--mute)}
+ol.steps li.done>i{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+ol.steps li.now>i{border-color:var(--accent);color:var(--accent)}
+ol.steps li b{display:block;font-size:13px}
+ol.steps li.done b{color:var(--mute)}
+.kyb{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap;background:var(--sunk);border-radius:10px;padding:10px 12px}
+.kyb .v{font-family:var(--num);font-size:26px;font-weight:600}
+.share{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--sunk);gap:2px}
+.share i{display:block;height:100%}
 .perday b{font-family:var(--num);font-size:24px;font-weight:600}
 .meter{position:relative;height:12px;border-radius:6px;background:var(--sunk);overflow:visible}
 .meter>i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;background:var(--accent)}
@@ -271,10 +298,22 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
 
 <!-- ホーム -->
 <div id="p-home" class="col">
+  <div id="warn"></div>
+  <section class="panel hero">
+    <div class="herog">
+      <div id="wk"></div>
+      <div class="mo" id="mo"></div>
+      <div class="qe">
+        <div class="ph"><h3>すぐ記録</h3><div class="seg" id="qPaySeg"></div></div>
+        <div class="amtbox"><span>¥</span><input id="qAmt" inputmode="decimal" placeholder="金額" aria-label="すぐ記録する金額"></div>
+        <div class="qprev hint" id="qPrev">金額を入れて費目を押すと、今日の日付で記録します</div>
+        <div class="chips" id="qCats"></div>
+      </div>
+    </div>
+  </section>
   <div class="kpis" id="kpis"></div>
   <div class="grid home">
     <div class="col">
-      <section class="panel hero" id="hero"></section>
       <section class="panel">
         <div class="ph"><h2 id="budT">変動費の予算</h2><button class="btn sm" data-go="report" type="button">レポート</button></div>
         <div class="brows" id="brows"></div>
@@ -291,6 +330,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
       </section>
     </div>
     <div class="col">
+      <section class="panel" id="kyP"></section>
       <section class="panel">
         <h2>どう動けばいいか</h2>
         <div class="acts" id="acts"></div>
@@ -391,7 +431,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
     <section class="panel">
       <div class="ph"><h2>変動費の予算（費目ごと）</h2><span class="hint">合計が月の予算になります</span></div>
       <div class="scroll"><table class="budt" id="budt"></table></div>
-      <div class="f"><label for="cardLim">今月の楽天カード利用の上限</label><div class="in"><input type="number" id="cardLim" step="100" inputmode="numeric"><span class="u">円</span></div><span class="hint">サブスク・通信費も含めたカード払いの合計。10月は47,900円（できれば45,000円）</span></div>
+      <div class="f"><label for="cardLim">今月の楽天カード利用の上限</label><div class="in"><input type="number" id="cardLim" step="100" inputmode="numeric"><span class="u">円</span></div><span class="hint">サブスク・通信費も含めたカード払いの合計。10月は47,900円（できれば45,000円）。70%・90%・100%でホームに警告が出ます</span></div>
     </section>
     <section class="panel">
       <div class="ph"><h2>計画の条件</h2><button class="btn sm" id="reset" type="button">おすすめの計画に戻す</button></div>
@@ -449,15 +489,15 @@ const CATS=[
  ['tax','税金','e3'],['loan','ローン返済','e3'],['seymour','シーモア','e3'],['irr','その他(不定期)','e3'],
  ['travel','旅行','e4'],['appliance','家電・家具','e4'],['ceremony','冠婚葬祭','e4'],['gift','プレゼント','e4'],['self','自己投資','e4'],['special','その他特別費','e4'],
  ['salary','給料','inc'],['bonus','賞与','inc'],['refund','割り勘・返金','inc'],['back','未払給料','inc'],['inc_other','その他収入','inc'],
- ['card','カード引き落とし','mv'],['save','貯金・特別費へ','mv'],['nisa','NISA','mv'],['mv_other','その他の振替','mv']];
+ ['card','カード引き落とし','mv'],['save','貯金・特別費へ','mv'],['nisa','NISA','mv'],['kcharge','Kyash個人へチャージ','mv'],['mv_other','その他の振替','mv']];
 const CAT={};CATS.forEach(([k,n,g])=>CAT[k]={k,n,g});
 const VAR=CATS.filter(c=>c[2]=='e2').map(c=>c[0]);
 const GN={inc:'収入',e1:'敵① 毎月の固定費',e2:'敵② 毎月の変動費',e3:'敵③ 不定期の固定費',e4:'敵④ 不定期の変動費',inv:'投資',mv:'振替'};
 const GS={e1:'固定費',e2:'変動費',e3:'不定期の固定費',e4:'特別費',inc:'収入',mv:'振替'};
 const GC={e1:'--accent',e2:'--gold',e3:'--e3',e4:'--warn',inc:'--good',inv:'--mute',mv:'--mute'};
 const ccol=k=>{const c=CAT[k];if(!c)return 'var(--mute)';return c.g=='e2'?`var(--c-${k})`:`var(${GC[c.g]})`};
-const PAYS=['楽天カード','楽天銀行','Kyash','PayPay','現金','ドコモSMTB'];
-const DEFPAY={rent:'Kyash',refund:'PayPay'};['scholar','phone','ins','tax','loan','card','save','nisa','salary','bonus','back','inc_other','mv_other'].forEach(k=>DEFPAY[k]='楽天銀行');
+const PAYS=['楽天カード','Kyash個人','Kyash共通','楽天銀行','PayPay','現金','ドコモSMTB'];
+const DEFPAY={rent:'Kyash共通',refund:'PayPay'};['scholar','phone','ins','tax','loan','card','save','nisa','salary','bonus','back','inc_other','mv_other','kcharge'].forEach(k=>DEFPAY[k]='楽天銀行');
 // 7〜9月の実績平均
 const AVG={trans:17333,beauty:15212,food:12596,daily:8112,fun:7745,med:4077,cloth:2657,other:0};
 const BUD0={food:11000,trans:16000,beauty:13000,daily:6000,fun:4500,med:2500,cloth:2000,other:0};
@@ -503,7 +543,12 @@ const ST={db:null,cloud:false,localTx:Object.keys(TX).length,loaded:false};
 const S=()=>({...DEF,...(CONF.S||{})});
 const bud=k=>pidx(k)<3?{...BUD0,...(CONF.bud0||{})}:{...BUD1,...(CONF.bud1||{})};
 const bsum=b=>VAR.reduce((a,c)=>a+(+b[c]||0),0);
-const cardLim=k=>CONF.cardLim?.[k]??(k=='2026-10'?47900:bsum(bud(k))+4880);
+// Kyashへの切り替え（start＝変動費をKyash個人で払い始める月、mode＝all か food）
+const KY=()=>({start:'2026-12',mode:'all',...(CONF.ky||{})});
+const kyOn=(cat,k=NOWK)=>{const y=KY();return k>=y.start&&(y.mode=='all'?(CAT[cat]||CAT.other).g=='e2':cat=='food')};
+const defPay=(cat,k)=>DEFPAY[cat]||(kyOn(cat,k)?'Kyash個人':'楽天カード');
+// Kyashに切り替えた月からは、カードに残るのは決まった支払い（サブスク・通信 4,880円）と切り替えていない費目だけ
+const cardLim=k=>{const y=KY(),b=bud(k);return CONF.cardLim?.[k]??(k=='2026-10'?47900:4880+(k>=y.start?(y.mode=='all'?0:bsum(b)-(+b.food||0)):bsum(b)))};
 
 // ===== 保存 =====
 function saveLocal(){if(ST.cloud)return;try{localStorage.setItem(LK,JSON.stringify({tx:TX,snap:SNAP,conf:CONF}))}catch(e){}}
@@ -635,6 +680,7 @@ function sched(k){
   if(i>=3&&s.nisa)add('nisa',10,'NISAの積立',s.nisa,'nisa','mv');
   if((m==12&&i>=2)||(m==7&&i>=9))add('bonus',0,'賞与',s.bonus,'bonus','in','支給日は未確認');
   if(i==1&&s.back)add('back',0,'未払給料',s.back,'back','in','入ったら全額を貯金へ');
+  {const y=KY();if(k>=y.start)add('kcharge',10,'Kyash個人へチャージ',y.mode=='all'?bsum(bud(k)):+bud(k).food||0,'kcharge','mv',k==y.start?'切り替えの最初の月。毎週に分けてもOK':'毎週に分けるなら1週あたり'+yen((y.mode=='all'?bsum(bud(k)):+bud(k).food||0)/dim(k)*7)+'円')}
   const cd=cardDue(k);add('card',27,'楽天カード引き落とし',cd.amt,'card','mv',cd.note);
   add('scholar',27,'奨学金',39312,'scholar');
   if(i<=6)add('phone',27,'携帯機種代（オリコ）',5150+(i==2?10000:0),'phone','out',i==2?'ボーナス払い＋10,000円':'');
@@ -644,6 +690,25 @@ function sched(k){
   if(i==1||i==4)add('jumin',dim(k),'住民税',25000,'tax','out',i==1?'12月10日以降にできないか窓口に相談':'');
   return L.sort((a,b)=>(a.day||99)-(b.day||99));
 }
+
+// 週の予算：月の変動費予算を日割りし、月曜〜日曜の7日分。今月の先週までの余り・超過を持ち越す
+const addDays=(ds,n)=>{const d=new Date(ds+'T00:00');d.setDate(d.getDate()+n);return dstr(d)};
+const dayRate=ds=>{const k=ds.slice(0,7);return bsum(bud(k))/dim(k)};
+function varOn(from,to){let v=0;Object.values(TX).forEach(t=>{if(!t.date||t.date<from||t.date>to)return;const c=CAT[t.cat]||CAT.other;
+  if(t.kind=='out'&&c.g=='e2')v+=+t.amt||0;if(t.kind=='in'&&t.cat=='refund')v-=+t.amt||0});return v}
+function week(){
+  const dow=(TODAY.getDay()+6)%7,ws=addDays(TD,-dow),we=addDays(ws,6),ms=NOWK+'-01';
+  let base=0;for(let j=0;j<7;j++)base+=dayRate(addDays(ws,j));
+  let carry=0;if(ws>ms){const pe=addDays(ws,-1);let b=0;for(let d=ms;d<=pe;d=addDays(d,1))b+=dayRate(d);carry=b-varOn(ms,pe)}
+  const spent=varOn(ws,we),tot=base+carry,left=tot-spent,dl=7-dow;
+  return {ws,we,base,carry,tot,spent,left,dl,dow,perDay:left/dl,pace:tot*(dow+1)/7};
+}
+// Kyash個人の残高：合わせた時点の残高＋その後のチャージ−その後のKyash個人払い
+function kyBal(){const b=CONF.ky?.base;if(!b)return null;let v=b.amt;
+  Object.values(TX).forEach(t=>{if(!t.date)return;const after=t.date>b.date||(t.date==b.date&&(t.ts||0)>b.ts);if(!after)return;
+    if(t.kind=='mv'&&t.cat=='kcharge')v+=+t.amt||0;else if(t.pay=='Kyash個人'){if(t.kind=='out')v-=+t.amt||0;if(t.kind=='in')v+=+t.amt||0}});
+  return v}
+const md=ds=>`${+ds.slice(5,7)}/${+ds.slice(8)}`;
 
 // ===== 描画 =====
 function render(){
@@ -665,18 +730,28 @@ function emptyState(msg){return `<li class="empty" style="cursor:default">${msg}
 function rHome(){
   const k=NOWK,A=agg(k),B=bud(k),budget=bsum(B),[y,m]=mparts(k),days=dim(k),d=TODAY.getDate();
   const rest=budget-A.var,left=days-d+1,perDay=rest/left,pace=budget*d/days;
-  const st=A.var>budget?['ng','予算オーバー']:A.var>pace*1.1?['mid','ペースが速め']:['ok','ペース通り'];
-  $('hero').innerHTML=`<div class="row"><div><div class="lbl">${m}月の変動費 あと使えるお金</div><div class="big ${rest<0?'neg':''}">${yen(rest)}<small>円</small></div></div>
-   <div class="perday"><span class="pill ${st[0]}">${st[1]}</span><div class="hint">残り${left}日・1日あたり</div><b class="${perDay<0?'neg':''}">${yen(Math.max(perDay,0))}</b><span class="hint"> 円</span></div></div>
-   <div class="meter"><i class="${A.var>budget?'over':''}" style="width:${Math.min(100,A.var/budget*100||0)}%"></i><b style="left:${d/days*100}%" title="今日の位置"></b></div>
-   <div class="meter-l"><span>使った ${yen(A.var)}円</span><span>│ 今日の目安 ${yen(pace)}円</span><span>予算 ${yen(budget)}円</span></div>`;
+  const st=A.var>budget?['ng','予算オーバー']:A.var>pace*1.1?['mid','ペースが速め']:['ok','ペース通り'],lim0=cardLim(k);
+  const W=week(),wst=W.left<0?['ng','今週の予算オーバー']:W.spent>W.pace*1.1?['mid','ペースが速め']:['ok','ペース通り'];
+  $('wk').innerHTML=`<div class="row" style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap"><div><div class="lbl">今週あと使えるお金（${md(W.ws)}〜${md(W.we)}）</div><div class="big ${W.left<0?'neg':''}">${yen(W.left)}<small>円</small></div></div>
+   <div class="perday"><span class="pill ${wst[0]}">${wst[1]}</span><div class="hint">残り${W.dl}日・1日あたり</div><b class="${W.perDay<0?'neg':''}">${yen(Math.max(W.perDay,0))}</b><span class="hint"> 円</span></div></div>
+   <div class="meter"><i class="${W.left<0?'over':''}" style="width:${Math.min(100,W.spent/W.tot*100||0)}%"></i><b style="left:${(W.dow+1)/7*100}%" title="今日の位置"></b></div>
+   <div class="meter-l"><span>使った ${yen(W.spent)}円</span><span>今週の予算 ${yen(W.tot)}円${W.carry?`（先週までの${W.carry>0?'余り +':'超過 '}${yen(W.carry)}円込み）`:''}</span></div>`;
+  $('mo').innerHTML=`<div class="lbl">${m}月の変動費 あと</div><div class="mv ${rest<0?'neg':''}">${yen(rest)}<small>円</small> <span class="pill ${st[0]}" style="vertical-align:4px">${st[1]}</span></div>
+   <div class="meter thin"><i class="${A.var>budget?'over':''}" style="width:${Math.min(100,A.var/budget*100||0)}%"></i><b style="left:${d/days*100}%"></b></div>
+   <div class="meter-l"><span>使った ${yen(A.var)}円</span><span>予算 ${yen(budget)}円</span></div>
+   <div class="lbl" style="margin-top:6px">楽天カードの利用（${m}月）</div><div class="mv ${A.card>lim0?'neg':''}">${yen(A.card)}<small>円</small></div>
+   <div class="meter thin"><i class="${A.card>lim0*.9?'over':''}" style="width:${Math.min(100,A.card/lim0*100||0)}%"></i></div>
+   <div class="meter-l"><span>上限 ${yen(lim0)}円</span><span>あと ${yen(lim0-A.card)}円</span></div>`;
+  const cr=A.card/lim0,lv=cr>=1?3:cr>=.9?2:cr>=.7?1:0;
+  $('warn').innerHTML=lv?`<div class="warn l${lv}"><b style="white-space:nowrap">楽天カードが上限の${Math.round(cr*100)}%</b><span>${lv==3?`上限を${yen(A.card-lim0)}円超えています。今月はもうカードを使わず、PayPayや現金で払ってください。`:lv==2?`あと${yen(lim0-A.card)}円で上限です。急ぎでない買い物は来月に回しましょう。`:`あと${yen(lim0-A.card)}円。残り${left}日なので1日${yen((lim0-A.card)/left)}円までのペースです。`}</span></div>`:'';
+  qPreview();rKy(A);
   // KPI
   const lim=cardLim(k),hit=PLAN.hit,snaps=Object.values(SNAP).sort((a,b)=>a.date<b.date?1:-1),last=snaps[0];
   const diff=last?last.amt-(planAt(last.date)??last.amt):null;
   $('kpis').innerHTML=
    kpi('今月の収入',yen(A.inc),'円',A.n?`記録 ${A.n}件`:'まだ記録がありません')+
    kpi('今月の支出',yen(A.out),'円',`固定 ${yen(A.e1)}・変動 ${yen(A.e2)}・特別 ${yen(A.e3+A.e4)}`)+
-   kpi('楽天カードの利用',`<span class="${A.card>lim?'neg':''}">${yen(A.card)}</span>`,'円',`上限 ${yen(lim)}円・あと ${yen(lim-A.card)}円`)+
+   kpi('今月の収支',`<span class="${A.inc-A.out<0?'neg':''}">${yen(A.inc-A.out)}</span>`,'円','収入−支出（振替は除く）')+
    kpi('200万円に届く月',hit>=0?(()=>{const[a,b]=ym(hit);return `${a}<small>年</small>${b}`})():'未定',hit>=0?'月':'',
      diff==null?'計画タブで実際の残高を記録すると比べられます':`計画より ${diff>=0?'+':''}${yen(diff)}円（${+last.date.slice(5,7)}/${+last.date.slice(8)}時点）`);
   // 予算
@@ -697,7 +772,7 @@ function rHome(){
   const {save5,s,P}=PLAN,i=pidx(k);
   $('acts').innerHTML=
    act('--accent','貯金はいくらするべきか',i<3?`今は<b>不足を出さない</b>ことが最優先`:`毎月 <b>${yen(save5)}</b>円を給料日に先取り`,i<3?`1月の昇給後から毎月${yen(save5)}円を先取り。賞与は全額、未払給料も入ったら全額貯金へ。`:'賞与は全額貯金へ。未払給料が入ったら全額。')+
-   act('--gold','変動費はいくらまでか',`${m}月は <b>${yen(budget)}</b>円まで`,`カード払いの合計は${yen(lim)}円まで。${i<3?`1月からは月${yen(bsum(bud('2027-01')))}円に増やせます。`:''}`)+
+   act('--gold','変動費はいくらまでか',`今週は <b>${yen(Math.max(W.left,0))}</b>円まで`,`${m}月全体では${yen(budget)}円。カード払いの合計は${yen(lim)}円まで。${i<3?`1月からは月${yen(bsum(bud('2027-01')))}円に増やせます。`:''}`)+
    act('--warn','敵④の対策',i<3?`11月の旅行は<b>12月の賞与</b>から`:`特別費に毎月 <b>${yen(s.res)}</b>円`,i<3?`1月から特別費の口座（ドコモSMTB）に毎月${yen(s.res)}円。旅行・家電・冠婚葬祭はそこからだけ払う。`:'旅行・家電・冠婚葬祭・プレゼントは特別費の口座からだけ。足りなければ時期をずらす。');
   const rows=PLAN.rows,short=rows[1]&&rows[1].bal<0;
   const T=[];
@@ -707,6 +782,47 @@ function rHome(){
   if(i<=3)T.push(`<b>1月：</b>昇給後の最初の給料日に、貯金${yen(save5)}円と特別費${yen(s.res)}円の自動振替を設定。NISAは月${yen(s.nisa)}円から。`);
   if(i>3)T.push(`<b>毎月：</b>10日に先取り貯金${yen(save5)}円・特別費${yen(s.res)}円・NISA${yen(s.nisa)}円。月末に実際の残高を計画タブで記録。`);
   $('todo').innerHTML=T.slice(0,3).map(x=>`<li>${x}</li>`).join('');
+}
+function rKy(A){
+  const y=KY(),i=pidx(y.start),[sy,sm]=mparts(y.start),nk=madd(y.start,1),[ny,nm]=mparts(nk),fund=y.mode=='all'?bsum(bud(y.start)):+bud(y.start).food||0;
+  const src=y.start=='2026-11'?'未払給料':y.start=='2026-12'?'12月の賞与':'給料';
+  const charged=Object.values(TX).some(t=>t.cat=='kcharge'&&t.date>=madd(y.start,-1)+'-01');
+  const kyv=Object.values(txOf(NOWK)).filter(t=>t.kind=='out'&&(y.mode=='all'?(CAT[t.cat]||CAT.other).g=='e2':t.cat=='food'));
+  const tot=kyv.reduce((a,t)=>a+(+t.amt||0),0),kys=kyv.filter(t=>t.pay=='Kyash個人').reduce((a,t)=>a+(+t.amt||0),0),sh=tot?kys/tot:0;
+  const after=NOWK>=y.start,paid=TD>=`${nk}-27`;
+  const steps=[
+   [after,`${sm==1?sy-1+'年':''}${mparts(madd(y.start,-1))[1]}月まで：楽天カードのまま週の予算で管理`,`上の「今週あと」を見ながら使う。カードの上限は${yen(cardLim(NOWK))}円`],
+   [charged,`${sm}月：${src}から${yen(fund)}円をKyash個人へチャージ`,`切り替えの1か月だけ必要なお金。${nm}月27日の引き落としが減るので、そこで戻ってきます`],
+   [after&&tot>0&&sh>=.8,`${sm}月から：${y.mode=='all'?'変動費':'食費'}はKyash個人で払う`,after?`今月の${y.mode=='all'?'変動費':'食費'}のKyash払い ${Math.round(sh*100)}%（${yen(kys)} / ${yen(tot)}円）`:'楽天カードはサブスク・通信費・機種代などの決まった支払いだけに'],
+   [paid,`${nm}月27日：カードの引き落としが${y.mode=='all'?'固定費だけ':'食費の分だけ減る'}`,`${yen(fund)}円が手元に戻る。以後は給料日（できれば毎週）にKyash個人へチャージ`]];
+  const cur=steps.findIndex(x=>!x[0]);
+  const bal=kyBal(),W=week(),need=bal==null?null:Math.max(0,Math.round(W.left)-bal);
+  $('kyP').innerHTML=`<div class="ph"><h2>Kyashへの切り替え</h2><span class="pill ${after?'ok':'n'}">${after?'切り替え中':`${sy}年${sm}月から`}</span></div>
+   <ol class="steps">${steps.map((x,j)=>`<li class="${x[0]?'done':j==cur?'now':''}"><i>${x[0]?'✓':j+1}</i><span><b>${x[1]}</b><span class="hint">${x[2]}</span></span></li>`).join('')}</ol>
+   ${after&&tot?`<div class="share" title="Kyash個人 ${Math.round(sh*100)}%"><i style="width:${sh*100}%;background:var(--accent)"></i><i style="flex:1;background:var(--gold)"></i></div><div class="legend"><span><i style="background:var(--accent)"></i>Kyash個人</span><span><i style="background:var(--gold)"></i>楽天カードなど</span></div>`:''}
+   <div class="kyb"><div><div class="hint">Kyash個人の残高</div><div class="v">${bal==null?'—':yen(bal)+'<small style="font-family:var(--body);font-size:12px"> 円</small>'}</div></div>
+    <div class="hint" style="max-width:15em">${bal==null?'今の残高を入れると、チャージと支払いの記録から計算します':need>0?`今週の分まであと${yen(need)}円チャージ`:'今週の分はチャージ済み'}</div></div>
+   <div class="srow"><input type="number" id="kyIn" placeholder="残高" inputmode="numeric" aria-label="Kyash個人の今の残高" style="flex:1;min-width:6em;font-family:var(--num);font-size:15px;text-align:right"><button class="btn sm" id="kyFix" type="button">残高を合わせる</button><button class="btn sm pri" id="kyCh" type="button">チャージを記録</button></div>
+   <div class="srow"><span class="hint">始める月</span><select id="kyStart" aria-label="切り替えを始める月">${['2026-11','2026-12','2027-01','2027-02'].map(x=>`<option value="${x}" ${x==y.start?'selected':''}>${mlabel(x)}</option>`).join('')}</select>
+    <div class="seg" id="kyMode"><button type="button" data-km="food" aria-pressed="${y.mode=='food'}">食費から</button><button type="button" data-km="all" aria-pressed="${y.mode=='all'}">変動費すべて</button></div></div>`;
+  $('kyFix').onclick=()=>{const v=evalAmt($('kyIn').value);if(isNaN(v)){toast('Kyashアプリに出ている残高を入れてください');return}CONF.ky={...KY(),base:{date:TD,amt:v,ts:Date.now()}};saveConf();toast(`Kyash個人の残高を${yen(v)}円に合わせました`)};
+  $('kyCh').onclick=()=>{openSheet({date:TD,amt:need||Math.round(Math.max(W.left,0))||'',kind:'mv',cat:'kcharge',pay:'楽天銀行',memo:'Kyash個人へチャージ'},null);ED.payTouched=true};
+  $('kyStart').onchange=e=>{CONF.ky={...KY(),start:e.target.value};saveConf()};
+  $('kyMode').onclick=e=>{const b=e.target.closest('[data-km]');if(!b)return;CONF.ky={...KY(),mode:b.dataset.km};saveConf()};
+}
+// すぐ記録：金額を入れて費目を押すだけ。入力中は「使ったら今週あといくら」を出す
+let QP='auto';
+function qInit(){
+  $('qCats').innerHTML=VAR.map(c=>`<button type="button" class="chip" data-qc="${c}"><i class="dot" style="background:${ccol(c)}"></i>${CAT[c].n}</button>`).join('')+`<button type="button" class="chip q" id="qMore">詳しく</button>`;
+}
+function qPaySeg(){$('qPaySeg').innerHTML=[['auto','自動'],['楽天カード','カード'],['Kyash個人','Kyash'],['PayPay','PayPay']].map(([v,n])=>`<button type="button" data-qp="${v}" aria-pressed="${QP==v}">${n}</button>`).join('')}
+function qPreview(){
+  qPaySeg();const raw=$('qAmt').value.trim(),a=evalAmt(raw),W=week(),el=$('qPrev');
+  if(!raw){el.className='qprev hint';el.textContent=`金額を入れて費目を押すと、今日の日付で記録します（支払い：${QP=='auto'?'費目に合わせて自動':QP}）`;return}
+  if(!(a>0)){el.className='qprev neg';el.textContent='数字と＋−だけ使えます';return}
+  const L=W.left-a,pd=L/W.dl;
+  el.className='qprev '+(L<0?'neg':'');
+  el.innerHTML=L<0?`使うと今週の予算を<b>${yen(-L)}円</b>超えます。本当に今必要か、もう一度考えてみてください`:`使うと今週あと<b>${yen(L)}円</b>・1日あたり${yen(pd)}円`;
 }
 const kpi=(k,v,u,s)=>`<div class="kpi"><div class="k">${k}</div><div class="v">${v}<small>${u}</small></div><div class="s">${s}</div></div>`;
 const act=(c,q,a,p)=>`<div class="act" style="--c:var(${c})"><i></i><div><div class="q">${q}</div><div class="a">${a}</div><p>${p}</p></div></div>`;
@@ -928,7 +1044,7 @@ $('mfFile').onchange=async e=>{
     const txt2=(r[I.mid]||'')+' '+(r[I.big]||''),isMv=I.mv>=0&&r[I.mv]==='1',kind=isMv?'mv':a<0?'out':'in';
     let cat=kind=='mv'?(/カード/.test(r[I.memo]||'')?'card':'mv_other'):kind=='in'?((IMAP.find(([re])=>re.test(txt2))||[0,'inc_other'])[1]):(MAP.find(([re])=>re.test(txt2))||[0,null])[1];
     if(!cat)cat=/④/.test(txt2)?'special':/③/.test(txt2)?'irr':'other';
-    const bank=r[I.bank]||'',payv=/楽天カード/.test(bank)?'楽天カード':/楽天銀行/.test(bank)?'楽天銀行':/Kyash/i.test(bank)?'Kyash':/PayPay/i.test(bank)?'PayPay':/ドコモ|SMTB|住信/.test(bank)?'ドコモSMTB':bank.slice(0,20);
+    const bank=r[I.bank]||'',payv=/楽天カード/.test(bank)?'楽天カード':/楽天銀行/.test(bank)?'楽天銀行':/Kyash/i.test(bank)?'Kyash個人':/PayPay/i.test(bank)?'PayPay':/ドコモ|SMTB|住信/.test(bank)?'ドコモSMTB':bank.slice(0,20);
     const id='mf-'+((r[I.id]||'').replace(/[^A-Za-z0-9_-]/g,'')||(d+'-'+n));
     out.push([id,{date:d,amt:Math.abs(a),kind,cat,pay:payv,memo:[r[I.memo],r[I.note]].filter(Boolean).join(' ').slice(0,80),src:'mf',ts:Date.now()}])});
   MF=out;const ds=out.map(x=>x[1].date).sort(),dup=out.filter(x=>TX[x[0]]).length,cnt={};out.forEach(x=>cnt[x[1].cat]=(cnt[x[1].cat]||0)+1);
@@ -955,7 +1071,7 @@ let ED=null;
 const frequent=()=>{const m={};Object.entries(TX).filter(([id,t])=>!id.startsWith('s-')&&t.kind=='out'&&t.memo).map(([,t])=>t).forEach(t=>{const key=t.cat+'|'+t.memo;const o=m[key]||(m[key]={n:0,t});o.n++;if((t.date+(t.ts||0))>(o.t.date+(o.t.ts||0)))o.t=t});
   return Object.values(m).sort((a,b)=>b.n-a.n).slice(0,6).map(o=>o.t)};
 function openSheet(t,id){
-  ED=t?{...t,id,amt:String(t.amt)}:{kind:'out',amt:'',cat:'food',date:UI.tab=='list'&&UI.day?UI.day:TD,pay:'楽天カード',memo:'',id:null};
+  ED=t?{...t,id,amt:String(t.amt)}:{kind:'out',amt:'',cat:'food',date:UI.tab=='list'&&UI.day?UI.day:TD,pay:defPay('food'),memo:'',id:null};
   ED.more=!!(t&&!['e2','inc','mv'].includes((CAT[t.cat]||CAT.other).g));ED.payTouched=!!t;ED.armed=false;
   $('shT').textContent=id?'記録を直す':'記録する';$('del').hidden=!id;$('del').className='btn danger';$('del').textContent='削除';$('saveNext').hidden=!!id;
   $('amt').value=ED.amt;$('dt').value=ED.date;$('memo').value=ED.memo||'';
@@ -997,8 +1113,8 @@ $('del').onclick=()=>{
   const id=ED.id,old=TX[id];write('tx',id,null);closeSheet();
   toast('削除しました',()=>write('tx',id,old));
 };
-$('kSeg').onclick=e=>{const k=e.target.closest('[data-k]')?.dataset.k;if(!k)return;ED.kind=k;ED.cat=k=='in'?'salary':k=='mv'?'card':'food';if(!ED.payTouched)ED.pay=DEFPAY[ED.cat]||'楽天カード';drawSheet()};
-$('cats').onclick=e=>{if(e.target.closest('#more')){ED.more=!ED.more;drawSheet();return}const c=e.target.closest('[data-c]')?.dataset.c;if(!c)return;ED.cat=c;if(!ED.payTouched)ED.pay=DEFPAY[c]||'楽天カード';drawSheet()};
+$('kSeg').onclick=e=>{const k=e.target.closest('[data-k]')?.dataset.k;if(!k)return;ED.kind=k;ED.cat=k=='in'?'salary':k=='mv'?'card':'food';if(!ED.payTouched)ED.pay=defPay(ED.cat,(ED.date||TD).slice(0,7));drawSheet()};
+$('cats').onclick=e=>{if(e.target.closest('#more')){ED.more=!ED.more;drawSheet();return}const c=e.target.closest('[data-c]')?.dataset.c;if(!c)return;ED.cat=c;if(!ED.payTouched)ED.pay=defPay(c,(ED.date||TD).slice(0,7));drawSheet()};
 $('pays').onclick=e=>{const p=e.target.closest('[data-p]')?.dataset.p;if(!p)return;ED.pay=p;ED.payTouched=true;drawSheet()};
 $('dSeg').onclick=e=>{const b=e.target.closest('[data-d]');if(!b)return;const d=new Date();d.setDate(d.getDate()+ +b.dataset.d);ED.date=dstr(d);$('dt').value=ED.date;drawSheet()};
 $('dt').onchange=()=>{ED.date=$('dt').value;drawSheet()};
@@ -1037,12 +1153,24 @@ document.addEventListener('click',e=>{
   const sp=e.target.closest('#span [data-n]');if(sp){UI.span=+sp.dataset.n;saveUI();render();return}
 });
 $('q').oninput=e=>{UI.q=e.target.value.trim();render()};
+$('qAmt').oninput=qPreview;
+$('qPaySeg').onclick=e=>{const b=e.target.closest('[data-qp]');if(!b)return;QP=b.dataset.qp;qPreview()};
+$('qCats').onclick=e=>{
+  if(e.target.closest('#qMore')){const a=evalAmt($('qAmt').value);openSheet();if(a>0)$('amt').value=a;$('qAmt').value='';qPreview();return}
+  const c=e.target.closest('[data-qc]')?.dataset.qc;if(!c)return;const a=evalAmt($('qAmt').value);
+  if(!(a>0)){$('qAmt').focus();$('qPrev').className='qprev neg';$('qPrev').textContent='先に金額を入れてください';return}
+  const id='t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),t={date:TD,amt:a,kind:'out',cat:c,pay:QP=='auto'?defPay(c):QP,memo:'',ts:Date.now()};
+  $('qAmt').value='';write('tx',id,t);toast(`${CAT[c].n} ${yen(a)}円（${t.pay}）を記録しました`,()=>write('tx',id,null));
+};
 $('snSave').onclick=()=>{const d=$('snD').value,a=evalAmt($('snA').value);if(!d||isNaN(a)){toast('日付と金額を入れてください');return}
   write('snaps',d,{date:d,amt:a,ts:Date.now()});$('snA').value='';toast(`${d.replace(/-/g,'/')}の残高 ${yen(a)}円を記録しました`)};
 document.addEventListener('keydown',e=>{
   if(e.key=='Escape'&&!$('ov').hidden){closeSheet();return}
   if(!$('ov').hidden||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName))return;
   if((e.key=='n'||e.key=='N')&&!e.metaKey&&!e.ctrlKey){e.preventDefault();openSheet()}});
-tab(location.hash.slice(1)||'home');
+qInit();
+const H0=location.hash.slice(1);
+tab(H0=='add'?'home':H0||'home');
+if(H0=='add')openSheet();
 boot();
 </script>
