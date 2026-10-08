@@ -128,6 +128,17 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .tk-p{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:10px;background:var(--ink);padding:1px 6px;border-radius:6px;opacity:.85}
 @media (prefers-reduced-motion:reduce){.tk-track{animation:none}.ticker{overflow-x:auto}}
 #banner:empty,#warn:empty,#next:empty{display:none}
+.wfl{display:flex;flex-direction:column;gap:8px}
+.wfi{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;background:var(--sunk);border-radius:10px;padding:8px 10px;font-size:13px}
+.wfi b{font-family:var(--num);font-size:15px}
+.wfi .sp{flex:1}
+.wfadd{display:flex;flex-direction:column;gap:8px;border:1px dashed var(--line);border-radius:10px;padding:10px}
+.wfadd select,.wfadd input{min-width:0;max-width:100%}
+.wfmsg{display:flex;flex-direction:column;gap:6px}
+.wfmsg div{border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700}
+.wfmsg .ng{background:var(--bad-soft);color:var(--bad)} .wfmsg .ok{background:var(--good-soft);color:var(--good)} .wfmsg .n{background:var(--sunk);color:var(--ink)}
+.wft td.chg{font-weight:700}
+.wft tr.aff td{background:var(--sunk)}
 .nextbar{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:9px 14px;font-size:13px}
 .nextbar b{font-family:var(--num);font-size:16px}
 .nextbar .sp{flex:1}
@@ -445,7 +456,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
 
 <!-- 計画 -->
 <div id="p-plan" class="col" hidden>
-  <div class="seg" id="pSeg"><button data-p="road" type="button">ロードマップ</button><button data-p="sheet" type="button">支出管理表</button><button data-p="foes" type="button">4つの敵</button><button data-p="pay" type="button">給与</button></div>
+  <div class="seg" id="pSeg"><button data-p="road" type="button">ロードマップ</button><button data-p="whatif" type="button">もしも</button><button data-p="sheet" type="button">支出管理表</button><button data-p="foes" type="button">4つの敵</button><button data-p="pay" type="button">給与</button></div>
   <div id="pp-road" class="col">
     <div class="kpis" id="pKpis"></div>
     <div class="grid g21">
@@ -464,6 +475,13 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
         <section class="panel"><h2>ロードマップ</h2><ol class="road" id="road"></ol></section>
       </div>
     </div>
+  </div>
+  <div id="pp-whatif" class="col" hidden>
+    <section class="panel">
+      <div class="ph"><h2>もしも別の月に払ったら</h2><button class="btn sm" id="wfClear" type="button">リセット</button></div>
+      <p class="hint">支払い予定を前倒し・後ろ倒ししたときや、臨時の出費・収入があったときに、毎月末の残高がどう変わるかを計画と比べます。楽天カード払いのものは、引き落とされる月（翌月、シーモアは翌々月）で計算します。</p>
+      <div id="wf"></div>
+    </section>
   </div>
   <div id="pp-sheet" class="col" hidden>
     <section class="panel">
@@ -962,7 +980,7 @@ function rSched(){
       h+=`<li class="ed">${done?`<div class="srow"><span class="hint">${TX[x.id].date.replace(/-/g,'/')}に ${yen(TX[x.id].amt)}円で記録済み</span></div><div class="srow"><button class="btn sm" type="button" data-se="open">記録を直す</button><button class="btn sm" type="button" data-se="undo">記録を取り消す</button><button class="btn sm" type="button" data-se="close">閉じる</button></div>`:
       `<div class="srow"><input type="number" id="seAmt" value="${x.amt}" inputmode="numeric" aria-label="金額"><span class="hint">円</span><input type="date" id="seDate" value="${dt}" aria-label="日付"></div>
        ${x.key=='card'||x.key=='salary'||x.key=='bonus'||x.key=='back'?'':`<label><input type="checkbox" id="seKeep"> 次の月からもこの金額にする</label>`}
-       <div class="srow"><button class="btn pri sm" type="button" data-se="rec">この金額で記録</button><button class="btn sm" type="button" data-se="skip">今月はなし</button>${x.plan?'<button class="btn sm" type="button" data-se="edit">予定を編集</button>':''}<button class="btn sm" type="button" data-se="close">閉じる</button></div>`}</li>`}
+       <div class="srow"><button class="btn pri sm" type="button" data-se="rec">この金額で記録</button><button class="btn sm" type="button" data-se="skip">今月はなし</button><button class="btn sm" type="button" data-se="wf">別の月に払ったら？</button>${x.plan?'<button class="btn sm" type="button" data-se="edit">予定を編集</button>':''}<button class="btn sm" type="button" data-se="close">閉じる</button></div>`}</li>`}
     return h}).join(''):'<li class="hint" style="cursor:default">この月の予定はありません</li>';
   // 次の支払い（いつも上に出す）
   const C=sched(NOWK).filter(x=>!x.skip&&!TX[x.id]),dd=TODAY.getDate(),late=C.filter(x=>x.day&&x.day<dd),nx=C.filter(x=>x.day>=dd)[0]||sched(madd(NOWK,1)).filter(x=>!x.skip&&!TX[x.id]&&x.day)[0];
@@ -1102,6 +1120,7 @@ function rPlan(){
   if(UI.pp=='sheet')rSheet();
   if(UI.pp=='foes')rFoes();
   if(UI.pp=='pay')rPay();
+  if(UI.pp=='whatif')rWhatIf();
 }
 function roadChart(rows,lv){
   const W=760,H=320,L=50,R=14,T=16,B=34,n=rows.length;
@@ -1135,6 +1154,70 @@ function roadChart(rows,lv){
     s+=`<rect x="${x(r.i)}" y="${T}" width="${x(1)-x(0)}" height="${H-T-B}" fill="transparent" data-tip="${yy}年${mm}月末の計画<br><b>${yen(r.bal)}</b>円${snap?`<br>実際 ${yen(snap[1])}円（${snap[2].slice(5).replace('-','/')}）`:''}"/>`});
   return s+'</svg>';
 }
+// ===== もしも：予定を別の月に動かす・臨時の出費／収入を足す =====
+const cashMonth=(x,k)=>x.kind=='out'&&x.pay=='楽天カード'?madd(k,x.cat=='seymour'?2:1):k;
+function wfItems(){const L=[];for(let j=0;j<12;j++){const k=madd(NOWK,j);sched(k).forEach(x=>{if(x.skip||TX[x.id])return;if(x.kind=='mv'&&x.key!='card')return;L.push({k,x})})}return L}
+function wfCalc(list){
+  const rows=PLAN.rows,n=rows.length,d=new Array(n).fill(0),lab=[];
+  list.forEach(c=>{
+    if(c.t=='mv'){const x=sched(c.from).find(q=>q.key==c.key);if(!x)return;const sg=x.kind=='in'?-1:1,a=pidx(cashMonth(x,c.from)),b=pidx(cashMonth(x,c.to));
+      if(a>=0&&a<n)d[a]+=sg*x.amt;if(b>=0&&b<n)d[b]-=sg*x.amt;lab.push(c)}
+    if(c.t=='ex'){const a=pidx(c.k);if(a>=0&&a<n)d[a]+=c.amt}});
+  let acc=0;const N=rows.map((r,i)=>{acc+=d[i];return r.bal+acc});
+  return {d,N};
+}
+function rWhatIf(){
+  UI.wf=UI.wf||{list:[]};const W=UI.wf,items=wfItems(),{d,N}=wfCalc(W.list),rows=PLAN.rows,now=Math.max(0,pidx(NOWK));
+  const ml=k=>{const[y,m]=mparts(k);return (y!=TODAY.getFullYear()?String(y).slice(2)+'/':'')+m+'月'};
+  // 変更の一覧
+  const li=W.list.map((c,j)=>{if(c.t=='mv'){const x=sched(c.from).find(q=>q.key==c.key);if(!x)return '';
+      return `<div class="wfi"><span>${esc(x.name)} <b>${yen(x.amt)}</b>円</span><span>${ml(c.from)} →</span><select data-wto="${j}" aria-label="動かす先の月">${[...Array(15)].map((_,o)=>madd(NOWK,o-2)).filter(k=>pidx(k)>=0&&k!=c.from).map(k=>`<option value="${k}" ${k==c.to?'selected':''}>${ml(k)}</option>`).join('')}</select><span class="sp"></span><button class="btn sm" type="button" data-wdel="${j}">外す</button></div>`}
+    return `<div class="wfi"><span>${esc(c.name||'臨時')} <b class="${c.amt<0?'neg':'pos'}">${c.amt<0?'−':'+'}${yen(Math.abs(c.amt))}</b>円</span><span>${ml(c.k)}</span><span class="sp"></span><button class="btn sm" type="button" data-wdel="${j}">外す</button></div>`}).join('');
+  const opt=items.map((q,j)=>`<option value="${j}">${ml(q.k)} ${esc(q.x.name)} ${q.x.kind=='in'?'+':''}${yen(q.x.amt)}円</option>`).join('');
+  const mopt=sel=>[...Array(14)].map((_,o)=>madd(NOWK,o)).map(k=>`<option value="${k}" ${k==sel?'selected':''}>${ml(k)}</option>`).join('');
+  // 結果
+  const aff=d.map((v,i)=>v!=0?i:-1).filter(i=>i>=0),last=Math.min(rows.length-1,Math.max(now+5,(aff.length?Math.max(...aff):0)+2));
+  const R=rows.slice(now,last+1);
+  const neg=(arr)=>R.filter(r=>arr[r.i]<0).map(r=>r.i);
+  const B=rows.map(r=>r.bal),nb=neg(B),nn=neg(N),msg=[];
+  if(W.list.length){
+    const newly=nn.filter(i=>!nb.includes(i)),gone=nb.filter(i=>!nn.includes(i));
+    newly.forEach(i=>msg.push(['ng',`${ml(madd('2026-10',i))}末の残高が ${yen(N[i])}円 になり、お金が足りなくなります`]));
+    gone.forEach(i=>msg.push(['ok',`${ml(madd('2026-10',i))}末の不足（${yen(B[i])}円）がなくなります`]));
+    nn.filter(i=>nb.includes(i)).forEach(i=>{if(N[i]!=B[i])msg.push([N[i]<B[i]?'ng':'ok',`${ml(madd('2026-10',i))}末の不足は ${yen(B[i])}円 → ${yen(N[i])}円`])});
+    if(!newly.length&&!nn.length)msg.push(['ok','どの月も残高はマイナスになりません']);
+    const lb=R.reduce((a,r)=>B[r.i]<B[a.i]?r:a,R[0]),lnw=R.reduce((a,r)=>N[r.i]<N[a.i]?r:a,R[0]);
+    msg.push(['n',`いちばん苦しい月：${ml(madd('2026-10',lnw.i))}末 ${yen(N[lnw.i])}円（計画では ${ml(madd('2026-10',lb.i))}末 ${yen(B[lb.i])}円）`]);
+    const hitN=N.findIndex(v=>v>=GOAL);if(hitN!=PLAN.hit&&hitN>=0){const[a,b]=ym(hitN);msg.push(['n',`200万円に届く月：${a}年${b}月（計画は${ym(PLAN.hit).join('年')}月）`])}
+  }
+  $('wf').innerHTML=`<div class="wfl">${li||'<p class="hint">まだ何も動かしていません。下から予定を選んでください。</p>'}</div>
+   <div class="wfadd"><b style="font-size:13px">予定を別の月に動かす</b>
+    <div class="srow"><select id="wfItem" aria-label="動かす予定" style="flex:1">${opt}</select></div>
+    <div class="srow"><span class="hint">動かす先</span><select id="wfTo" aria-label="動かす先の月">${mopt(NOWK)}</select><button class="btn pri sm" type="button" id="wfAdd">試す</button></div></div>
+   <div class="wfadd"><b style="font-size:13px">臨時の出費・収入を足す</b>
+    <div class="srow"><div class="seg" id="wfSign"><button type="button" data-ws="-1" aria-pressed="${(W.sign||-1)<0}">出費</button><button type="button" data-ws="1" aria-pressed="${W.sign>0}">収入</button></div><select id="wfExK" aria-label="月">${mopt(NOWK)}</select></div>
+    <div class="srow"><input type="text" id="wfExN" placeholder="名前（例：美容室）" aria-label="名前" style="flex:1"><input type="number" id="wfExA" placeholder="金額" inputmode="numeric" aria-label="金額" style="width:7.5em;text-align:right"><button class="btn sm" type="button" id="wfExAdd">足す</button></div></div>
+   ${msg.length?`<div class="wfmsg">${msg.map(([c,t])=>`<div class="${c}">${t}</div>`).join('')}</div>`:''}
+   <div class="scroll"><table class="wft"><thead><tr><th>月末</th><th>計画</th><th>変えた場合</th><th>差</th></tr></thead><tbody>${R.map(r=>{const df=N[r.i]-B[r.i];
+     return `<tr class="${d[r.i]?'aff':''}"><td>${ml(madd('2026-10',r.i))}</td><td class="n ${B[r.i]<0?'neg':''}">${yen(B[r.i])}</td><td class="n chg ${N[r.i]<0?'neg':''}">${yen(N[r.i])}</td><td class="n ${df<0?'neg':df>0?'pos':''}">${df?(df>0?'+':'')+yen(df):''}</td></tr>`}).join('')}</tbody></table></div>
+   <p class="hint">色の付いた行は、お金の出入りが変わる月です。この画面で試しても、支払い予定や記録は変わりません。</p>
+   ${W.list.some(c=>c.t=='mv')?`<div class="sact"><span class="sp"></span><button class="btn sm" type="button" id="wfApply">動かした予定を支払い予定に反映する</button></div>`:''}`;
+  $('wfAdd').onclick=()=>{const q=items[+$('wfItem').value];if(!q)return;const to=$('wfTo').value;if(to==q.k){toast('別の月を選んでください');return}
+    if(W.list.some(c=>c.t=='mv'&&c.from==q.k&&c.key==q.x.key)){toast('その予定はもう動かしています');return}
+    W.list.push({t:'mv',from:q.k,key:q.x.key,to});rWhatIf()};
+  $('wfSign').onclick=e=>{const b=e.target.closest('[data-ws]');if(!b)return;W.sign=+b.dataset.ws;rWhatIf()};
+  $('wfExAdd').onclick=()=>{const a=evalAmt($('wfExA').value);if(!(a>0)){toast('金額を入れてください');return}
+    W.list.push({t:'ex',k:$('wfExK').value,amt:a*((W.sign||-1)<0?-1:1),name:$('wfExN').value.trim().slice(0,30)});rWhatIf()};
+  $('wf').querySelectorAll('[data-wdel]').forEach(b=>b.onclick=()=>{W.list.splice(+b.dataset.wdel,1);rWhatIf()});
+  $('wf').querySelectorAll('[data-wto]').forEach(sl=>sl.onchange=()=>{W.list[+sl.dataset.wto].to=sl.value;rWhatIf()});
+  if($('wfApply'))$('wfApply').onclick=()=>{
+    if(!W.armed){W.armed=true;$('wfApply').classList.add('pri');$('wfApply').textContent='もう一度押すと反映します';return}
+    W.list.filter(c=>c.t=='mv').forEach(c=>{const x=sched(c.from).find(q=>q.key==c.key);if(!x)return;
+      CONF.skip={...(CONF.skip||{}),[x.id]:1};const[,fm]=mparts(c.from);
+      write('plans','p'+Date.now().toString(36)+Math.random().toString(36).slice(2,5),{name:`${x.name}（${fm}月から移動）`,amt:x.amt,day:Math.min(x.day||0,dim(c.to)),cat:x.cat,kind:x.kind,pay:x.pay,rep:'once',start:c.to,end:'',ts:Date.now()})});
+    saveConf();UI.wf={list:W.list.filter(c=>c.t=='ex')};toast('支払い予定に反映しました。元の月は「今月はなし」になっています');render()};
+}
+$('wfClear').onclick=()=>{UI.wf={list:[]};rWhatIf()};
 function rSheet(){
   const {rows}=PLAN,R=rows.slice(0,UI.span);
   document.querySelectorAll('#span button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.n==UI.span));
@@ -1328,6 +1411,7 @@ document.addEventListener('click',e=>{
     if(op=='open'){openSheet(TX[x.id],x.id);return}
     if(op=='undo'){const old=TX[x.id];UI.se=null;write('tx',x.id,null);toast(`${x.name}の記録を取り消しました`,()=>write('tx',x.id,old));return}
     if(op=='skip'){CONF.skip={...(CONF.skip||{}),[x.id]:1};UI.se=null;saveConf();toast(`${x.name}を今月はなしにしました`);return}
+    if(op=='wf'){UI.wf={list:[{t:'mv',from:k,key:x.key,to:madd(k,-1)}]};UI.se=null;UI.pp='whatif';tab('plan');return}
     if(op=='edit'){const q=PL[x.plan];UI.pf={...q,id:x.plan,catTouched:true};UI.se=null;rSched();return}
     if(op=='rec'){const a=evalAmt($('seAmt').value);if(!(a>0)){toast('金額を入れてください');return}
       if($('seKeep')?.checked){if(x.plan)write('plans',x.plan,{...PL[x.plan],amt:a});else{CONF.ov={...(CONF.ov||{}),[x.key]:{from:k,amt:a}};saveConf()}}
