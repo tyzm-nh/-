@@ -139,9 +139,6 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .wfmsg div{border-radius:10px;padding:9px 12px;font-size:13px;font-weight:700}
 .wfmsg .ng{background:var(--bad-soft);color:var(--bad)} .wfmsg .ok{background:var(--good-soft);color:var(--good)} .wfmsg .n{background:var(--sunk);color:var(--ink)}
 .wft td.chg{font-weight:700}
-/* 前の値は斜めの取り消し線で消して、新しい値をすぐ横に出す（矢印は使わない） */
-.ds{position:relative;display:inline-block;color:var(--mute);font-weight:500;margin-right:6px}
-.ds::after{content:"";position:absolute;inset:2px -1px;background:linear-gradient(to top right,transparent calc(50% - 1px),var(--bad) calc(50% - 1px),var(--bad) calc(50% + .5px),transparent calc(50% + .5px));pointer-events:none}
 .wft tr.aff td{background:var(--sunk)}
 .nextbar{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:9px 14px;font-size:13px}
 .nextbar b{font-family:var(--num);font-size:16px}
@@ -1173,14 +1170,14 @@ function wfCalc(list){
 // 動かしたときに「なぜ残高が変わるか」を言葉にする
 function wfWhy(x,from,to){
   const a=cashMonth(x,from),b=cashMonth(x,to),[,am]=mparts(a),[,bm]=mparts(b);
-  return x.kind=='out'&&x.pay=='楽天カード'?`引き落とし <span class="ds">${am}/27</span>${bm}/27`:`<span class="ds">${am}月</span>${bm}月`;
+  return x.kind=='out'&&x.pay=='楽天カード'?`引き落とし ${am}/27 → ${bm}/27`:`${am}月 → ${bm}月`;
 }
 function rWhatIf(){
   UI.wf=UI.wf||{list:[]};const W=UI.wf,items=wfItems().filter(q=>!W.list.some(c=>c.t=='mv'&&c.from==q.k&&c.key==q.x.key)),{d,N}=wfCalc(W.list),rows=PLAN.rows,now=Math.max(0,pidx(NOWK));
   const ml=k=>{const[y,m]=mparts(k);return (y!=TODAY.getFullYear()?String(y).slice(2)+'/':'')+m+'月'};
   // 変更の一覧
   const li=W.list.map((c,j)=>{if(c.t=='mv'){const x=sched(c.from).find(q=>q.key==c.key);if(!x)return '';
-      return `<div class="wfi"><span>${esc(x.name)} <b>${yen(x.amt)}</b>円</span><span class="ds">${ml(c.from)}</span><select data-wto="${j}" aria-label="動かす先の月">${[...Array(15)].map((_,o)=>madd(NOWK,o-2)).filter(k=>pidx(k)>=0&&k!=c.from).map(k=>`<option value="${k}" ${k==c.to?'selected':''}>${ml(k)}</option>`).join('')}</select><span class="sp"></span><button class="btn sm" type="button" data-wdel="${j}">外す</button><span class="why">${wfWhy(x,c.from,c.to)}</span></div>`}
+      return `<div class="wfi"><span>${esc(x.name)} <b>${yen(x.amt)}</b>円</span><span>${ml(c.from)} →</span><select data-wto="${j}" aria-label="動かす先の月">${[...Array(15)].map((_,o)=>madd(NOWK,o-2)).filter(k=>pidx(k)>=0&&k!=c.from).map(k=>`<option value="${k}" ${k==c.to?'selected':''}>${ml(k)}</option>`).join('')}</select><span class="sp"></span><button class="btn sm" type="button" data-wdel="${j}">外す</button><span class="why">${wfWhy(x,c.from,c.to)}</span></div>`}
     return `<div class="wfi"><span>${esc(c.name||'臨時')} <b class="${c.amt<0?'neg':'pos'}">${c.amt<0?'−':'+'}${yen(Math.abs(c.amt))}</b>円</span><span>${ml(c.k)}</span><span class="sp"></span><button class="btn sm" type="button" data-wdel="${j}">外す</button></div>`}).join('');
   let si=items.findIndex(q=>q.k+'|'+q.x.key==W.sel);if(si<0)si=0;const selK=items[si]?.k;
   const opt=items.map((q,j)=>`<option value="${j}" ${j==si?'selected':''}>${ml(q.k)} ${esc(q.x.name)} ${q.x.kind=='in'?'+':''}${yen(q.x.amt)}円</option>`).join('');
@@ -1194,16 +1191,16 @@ function rWhatIf(){
     const mm=i=>ml(madd('2026-10',i));
     const newly=nn.filter(i=>!nb.includes(i)),gone=nb.filter(i=>!nn.includes(i));
     newly.forEach(i=>msg.push(['ng',`${mm(i)}末 ${yen(N[i])}円　足りなくなる`]));
-    nn.filter(i=>nb.includes(i)&&N[i]!=B[i]).forEach(i=>msg.push([N[i]<B[i]?'ng':'ok',`${mm(i)}末の不足　<span class="ds">${yen(B[i])}</span>${yen(N[i])}円`]));
+    nn.filter(i=>nb.includes(i)&&N[i]!=B[i]).forEach(i=>msg.push([N[i]<B[i]?'ng':'ok',`${mm(i)}末の不足　${yen(B[i])} → ${yen(N[i])}円`]));
     gone.forEach(i=>msg.push(['ok',`${mm(i)}末の不足がなくなる`]));
     if(!nn.length)msg.push(['ok','マイナスになる月はなし']);
-    const hitN=N.findIndex(v=>v>=GOAL);if(hitN!=PLAN.hit&&hitN>=0&&PLAN.hit>=0){const[a2,b2]=ym(hitN);msg.push(['n',`200万円に届く月　<span class="ds">${ym(PLAN.hit).join('年')}月</span>${a2}年${b2}月`])}
+    const hitN=N.findIndex(v=>v>=GOAL);if(hitN!=PLAN.hit&&hitN>=0&&PLAN.hit>=0){const[a2,b2]=ym(hitN);msg.push(['n',`200万円：${a2}年${b2}月に（計画 ${ym(PLAN.hit).join('年')}月）`])}
   }
   // 月ごとに「出ていくお金」がどう動いたか（マイナスで表示。計画から外れた支払いは取り消し線）
   const notes={};const nt=(i,h)=>{(notes[i]=notes[i]||[]).push(h)};
   W.list.forEach(c=>{
     if(c.t=='mv'){const x=sched(c.from).find(q=>q.key==c.key);if(!x)return;const sg=x.kind=='in'?'+':'−',a=pidx(cashMonth(x,c.from)),b=pidx(cashMonth(x,c.to));if(a==b)return;
-      nt(a,`<span class="hint">${esc(x.name)}</span> <span class="ds" style="white-space:nowrap">${sg}${yen(x.amt)}</span>`);nt(b,`<span class="${x.kind=='in'?'pos':'neg'}">${esc(x.name)} ${sg}${yen(x.amt)}</span>`)}
+      nt(a,`<s>${esc(x.name)} ${sg}${yen(x.amt)}</s>`);nt(b,`<span class="${x.kind=='in'?'pos':'neg'}">${esc(x.name)} ${sg}${yen(x.amt)}</span>`)}
     if(c.t=='ex')nt(pidx(c.k),`<span class="${c.amt<0?'neg':'pos'}">${esc(c.name||'臨時')} ${c.amt<0?'−':'+'}${yen(Math.abs(c.amt))}</span>`)});
   $('wf').innerHTML=`<div class="wfl">${li||'<p class="hint">まだ何も動かしていません。下から予定を選んでください。</p>'}</div>
    <div class="wfadd"><b style="font-size:13px">予定を別の月に動かす</b>
@@ -1214,7 +1211,7 @@ function rWhatIf(){
     <div class="srow"><input type="text" id="wfExN" placeholder="名前（例：美容室）" aria-label="名前" style="flex:1"><input type="number" id="wfExA" placeholder="金額" inputmode="numeric" aria-label="金額" style="width:7.5em;text-align:right"><button class="btn sm" type="button" id="wfExAdd">足す</button></div></div>
    ${msg.length?`<div class="wfmsg">${msg.map(([c,t])=>`<div class="${c}">${t}</div>`).join('')}</div>`:''}
    <div class="scroll"><table class="wft"><thead><tr><th>月</th><th>動いた支払い</th><th>月末の残高</th></tr></thead><tbody>${R.map(r=>{const ch=N[r.i]!=B[r.i];
-     return `<tr class="${notes[r.i]?'aff':''}"><td>${ml(madd('2026-10',r.i))}</td><td style="white-space:normal">${(notes[r.i]||[]).join('<br>')}</td><td class="n">${ch?`<span class="ds">${yen(B[r.i])}</span>`:''}<span class="${N[r.i]<0?'neg':''}" style="font-weight:700">${yen(N[r.i])}</span></td></tr>`}).join('')}</tbody></table></div>
+     return `<tr class="${notes[r.i]?'aff':''}"><td>${ml(madd('2026-10',r.i))}</td><td style="white-space:normal">${(notes[r.i]||[]).join('<br>')}</td><td class="n">${ch?`<span class="hint ${B[r.i]<0?'neg':''}">${yen(B[r.i])}</span> → `:''}<span class="${N[r.i]<0?'neg':''}" style="font-weight:700">${yen(N[r.i])}</span></td></tr>`}).join('')}</tbody></table></div>
    <p class="hint">試すだけなら予定は変わりません。</p>
    ${W.list.some(c=>c.t=='mv')?`<div class="sact"><span class="sp"></span><button class="btn sm" type="button" id="wfApply">動かした予定を支払い予定に反映する</button></div>`:''}`;
   if($('wfItem'))$('wfItem').onchange=()=>{const q=items[+$('wfItem').value];W.sel=q.k+'|'+q.x.key;W.to=null;rWhatIf()};
