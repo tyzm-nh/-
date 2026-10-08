@@ -1203,7 +1203,7 @@ function rWhatIf(){
   const notes={};const nt=(i,h)=>{(notes[i]=notes[i]||[]).push(h)};
   W.list.forEach(c=>{
     if(c.t=='mv'){const x=sched(c.from).find(q=>q.key==c.key);if(!x)return;const sg=x.kind=='in'?'+':'−',a=pidx(cashMonth(x,c.from)),b=pidx(cashMonth(x,c.to));if(a==b)return;
-      nt(a,`<span class="ds">${esc(x.name)} ${sg}${yen(x.amt)}</span>`);nt(b,`<span class="${x.kind=='in'?'pos':'neg'}">${esc(x.name)} ${sg}${yen(x.amt)}</span>`)}
+      nt(a,`<span class="hint">${esc(x.name)}</span> <span class="ds" style="white-space:nowrap">${sg}${yen(x.amt)}</span>`);nt(b,`<span class="${x.kind=='in'?'pos':'neg'}">${esc(x.name)} ${sg}${yen(x.amt)}</span>`)}
     if(c.t=='ex')nt(pidx(c.k),`<span class="${c.amt<0?'neg':'pos'}">${esc(c.name||'臨時')} ${c.amt<0?'−':'+'}${yen(Math.abs(c.amt))}</span>`)});
   $('wf').innerHTML=`<div class="wfl">${li||'<p class="hint">まだ何も動かしていません。下から予定を選んでください。</p>'}</div>
    <div class="wfadd"><b style="font-size:13px">予定を別の月に動かす</b>
