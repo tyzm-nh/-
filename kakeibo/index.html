@@ -834,8 +834,11 @@ const KW=[[/家賃/,'rent'],[/奨学/,'scholar'],[/オリコ|機種/,'phone'],[/
  [/マクド|マック|吉野家|松屋|すき家|ガスト|サイゼ|スタバ|ドトール|タリーズ|コメダ|カフェ|ランチ|弁当|パン|ラーメン|うどん|そば|寿司|定食|居酒屋|焼肉|ご?はん|食|セブン|ローソン|ファミ|ミニストップ|スーパー|イオン|まいばす|ライフ|西友|コンビニ|uber|出前|飲み物/i,'food']];
 const FOE4=[['e1','敵①','毎月の固定費'],['e2','敵②','毎月の変動費'],['e3','敵③','不定期の固定費'],['e4','敵④','不定期の変動費']];
 const FALLBACK={e1:'fix_other',e2:'other',e3:'irr',e4:'special'};
+// シーモアは月額（サブスク）とまとめ買い（ゲリラ）がある。22,000円以上ならゲリラとみなす
+function seyCat(memo,amt){const t=memo||'';if(/ゲリラ/.test(t))return 'seymour';if(/シーモア/.test(t))return amt>=22000?'seymour':'subs';return null}
 function guess(g,memo,amt,k=NOWK){
   const mm=(memo||'').trim().toLowerCase(),inG=c=>(CAT[c]||{}).g==g;
+  {const sc=seyCat(memo,amt);if(sc&&inG(sc))return {cat:sc,how:'kw'}}
   if(mm){const cnt={};Object.values(TX).forEach(t=>{if(!t.auto&&(t.memo||'').trim().toLowerCase()==mm&&inG(t.cat))cnt[t.cat]=(cnt[t.cat]||0)+1});
     const best=Object.entries(cnt).sort((a,b)=>b[1]-a[1])[0];if(best)return {cat:best[0],how:'memo'};
     const kw=KW.find(([re,c])=>inG(c)&&re.test(memo));if(kw)return {cat:kw[1],how:'kw'}}
@@ -1357,6 +1360,7 @@ $('mfFile').onchange=async e=>{
     const txt2=(r[I.mid]||'')+' '+(r[I.big]||''),isMv=I.mv>=0&&r[I.mv]==='1',kind=isMv?'mv':a<0?'out':'in';
     let cat=kind=='mv'?(/カード/.test(r[I.memo]||'')?'card':'mv_other'):kind=='in'?((IMAP.find(([re])=>re.test(txt2))||[0,'inc_other'])[1]):(MAP.find(([re])=>re.test(txt2))||[0,null])[1];
     if(!cat)cat=/④/.test(txt2)?'special':/③/.test(txt2)?'irr':'other';
+    if(kind=='out'){const sc=seyCat((r[I.memo]||'')+' '+txt2,Math.abs(a));if(sc)cat=sc}
     const bank=r[I.bank]||'',payv=/楽天カード/.test(bank)?'楽天カード':/楽天銀行/.test(bank)?'楽天銀行':/Kyash/i.test(bank)?'Kyash個人':/PayPay/i.test(bank)?'PayPay':/ドコモ|SMTB|住信/.test(bank)?'ドコモSMTB':bank.slice(0,20);
     const id='mf-'+((r[I.id]||'').replace(/[^A-Za-z0-9_-]/g,'')||(d+'-'+n));
     out.push([id,{date:d,amt:Math.abs(a),kind,cat,pay:payv,memo:[r[I.memo],r[I.note]].filter(Boolean).join(' ').slice(0,80),src:'mf',ts:Date.now()}])});
@@ -1490,6 +1494,7 @@ $('qAmt').oninput=qPreview;
 $('qPaySeg').onclick=e=>{const b=e.target.closest('[data-qp]');if(!b)return;setPay(b.dataset.qp);$('qAmt').focus()};
 // ===== 明細のスクショ取り込み（Claudeが画像を読む） =====
 function autoFoe(memo,amt){
+  {const sc=seyCat(memo,amt);if(sc)return [CAT[sc].g,{cat:sc,how:'kw'}]}
   const g2=guess('e2',memo,amt);if(g2.how!='none')return ['e2',g2];
   const kw=KW.find(([re])=>re.test(memo||''));if(kw){const g=CAT[kw[1]].g;return [g,guess(g,memo,amt)]}
   for(const g of ['e1','e3']){const q=guess(g,'',amt);if(q.how=='amt')return [g,q]}
