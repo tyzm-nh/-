@@ -140,6 +140,14 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 .wfmsg .ng{background:var(--bad-soft);color:var(--bad)} .wfmsg .ok{background:var(--good-soft);color:var(--good)} .wfmsg .n{background:var(--sunk);color:var(--ink)}
 .wft td.chg{font-weight:700}
 .wft tr.aff td{background:var(--sunk)}
+.tasks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.tasks li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.tasks li:last-child{border-bottom:none}
+.tasks .due{font-size:11px;color:var(--mute);white-space:nowrap;text-align:right}
+.tasks li.late .due{color:var(--bad);font-weight:700}
+.tasks li.done{color:var(--mute)} .tasks li.done .tt{text-decoration:line-through}
+.tasks .tt small{display:block;font-size:11px;color:var(--mute)}
+.tasks .go{border:none;background:none;color:var(--accent);font-weight:700;font-size:12px;cursor:pointer;padding:0;margin-left:6px}
 .nextbar{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:9px 14px;font-size:13px}
 .nextbar b{font-family:var(--num);font-size:16px}
 .nextbar .sp{flex:1}
@@ -366,6 +374,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
 <div id="p-home" class="col">
   <div id="warn"></div>
   <div id="next"></div>
+  <section class="panel" id="taskP"></section>
   <section class="panel hero">
     <div class="herog">
       <div id="wk"></div>
@@ -374,7 +383,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
         <div class="ph"><h3>すぐ記録</h3></div>
         <div class="pm" id="qPaySeg" role="group" aria-label="支払い方法"></div>
         <div class="amtbox"><span>¥</span><input id="qAmt" inputmode="decimal" placeholder="金額" aria-label="すぐ記録する金額"></div>
-        <input type="text" id="qMemo" placeholder="お店・内容（入れると品目を自動で分けます）" list="memos" aria-label="お店・内容">
+        <input type="text" id="qMemo" placeholder="お店（任意）" list="memos" aria-label="お店・内容">
         <div class="qprev hint" id="qPrev"></div>
         <div class="foe4" id="qFoe" role="group" aria-label="4つの敵から選んで記録"></div>
         <div class="srow"><button type="button" class="btn sm" id="qMore">品目を自分で選ぶ</button><span class="sp"></span><span id="qUnc"></span></div>
@@ -404,10 +413,6 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
     </div>
     <div class="col">
       <section class="panel" id="kyP"></section>
-      <section class="panel">
-        <h2>今月と来月にやること</h2>
-        <ol class="todo" id="todo"></ol>
-      </section>
     </div>
   </div>
 </div>
@@ -912,16 +917,41 @@ function rHome(){
   // 最近
   const R=Object.entries(TX).map(([id,t])=>({id,...t})).sort((a,b)=>(b.date+(b.ts||0))>(a.date+(a.ts||0))?1:-1).slice(0,6);
   $('recent').innerHTML=R.length?R.map(txRow).join(''):emptyState(ST.loaded?'まだ記録がありません':'記録を読み込んでいます…');
-  // やること
-  const {save5,s,P}=PLAN,i=pidx(k);
-  const rows=PLAN.rows,short=rows[1]&&rows[1].bal<0;
-  const T=[];
-  if(i<=0)T.push(`<b>10月：</b>カードの利用を合計${yen(cardLim('2026-10'))}円以内（できれば45,000円）。美容室は11月に入ってから。`);
-  if(i<=1)T.push(short?`<b>11月：</b>27日のローンと月末の住民税で約${yen(-rows[1].bal)}円足りません。住民税の納付を12月10日以降にできないか、早めに窓口に相談。`:`<b>11月：</b>未払給料（${yen(s.back)}円）は使わずに貯金用の口座へ。`);
-  if(i<=2)T.push(`<b>12月：</b>賞与は、旅行・ローン最終回・機種代ボーナス払い（計約133,000円）を払った残りを貯金へ。ローンはこれで完済。`);
-  if(i<=3)T.push(`<b>1月：</b>昇給後の最初の給料日に、貯金${yen(save5)}円と特別費${yen(s.res)}円の自動振替を設定。NISAは月${yen(s.nisa)}円から。`);
-  if(i>3)T.push(`<b>毎月：</b>10日に先取り貯金${yen(save5)}円・特別費${yen(s.res)}円・NISA${yen(s.nisa)}円。月末に実際の残高を計画タブで記録。`);
-  $('todo').innerHTML=T.slice(0,3).map(x=>`<li>${x}</li>`).join('');
+  rTasks();
+}
+// ===== やること（自分で動く必要があることだけ。チェックで完了） =====
+function taskList(){
+  const {save5,s,rows}=PLAN,y=KY(),L=[],add=(id,due,t,sub,go)=>L.push({id,due,t,sub,go});
+  add('card10','2026-10-20','楽天カード10月の引き落とし額を確認','e-NAVIで確定額を見る');
+  add('backinfo','2026-10-31','未払給料の金額と入金日を確認');
+  if(rows[1]&&rows[1].bal<0)add('jumin','2026-11-20','住民税を12/10以降に払えないか窓口に相談',`11月末に${yen(-rows[1].bal)}円足りない見込み`);
+  if(s.back)add('backsave','2026-11-30','未払給料を全額、貯金口座へ移す');
+  add('bonusinfo','2026-11-30','12月の賞与の額と支給日を確認','分かったら設定に入力','set');
+  add('scholar','2026-11-30','奨学金の最新の残高を確認','スカラネット・パーソナル');
+  add('raise','2026-12-10','昇給がいつの給料から反映か確認');
+  add('bonus12','2026-12-31','賞与の残りを貯金口座へ移す','旅行・ローン最終回・機種代を払った残り');
+  if(y.start<='2027-02')add('kycharge',y.start+'-15',`Kyash個人へ${yen(y.mode=='all'?bsum(bud(y.start)):+bud(y.start).food||0)}円チャージ`,'切り替えの最初の1回');
+  add('autosave','2027-01-09',`先取り貯金 ${yen(save5)}円の自動振替を設定`,'楽天銀行 → ドコモSMTB、毎月10日');
+  if(s.res)add('autores','2027-01-09',`特別費 ${yen(s.res)}円の自動振替を設定`,'楽天銀行 → ドコモSMTB、毎月10日');
+  if(s.nisa)add('nisa','2027-01-31',`NISAで月${yen(s.nisa)}円の積立を設定`);
+  add('snap-'+NOWK,`${NOWK}-${pad(dim(NOWK))}`,`${mparts(NOWK)[1]}月末の残高を記録`,'',`plan`);
+  (CONF.myTasks||[]).forEach(t=>add(t.id,t.due||'',t.t,'',null));
+  return L.sort((a,b)=>(a.due||'9')<(b.due||'9')?-1:1);
+}
+function rTasks(){
+  const L=taskList(),done=CONF.taskDone||{},lim=addDays(TD,45),open=L.filter(t=>!done[t.id]),soon=open.filter(t=>!t.due||t.due<=lim);
+  const show=UI.taskAll?L:soon;
+  const row=t=>{const dn=!!done[t.id],late=!dn&&t.due&&t.due<TD,dl=t.due?Math.round((new Date(t.due+'T00:00')-new Date(TD+'T00:00'))/864e5):null;
+    return `<li class="${dn?'done':''} ${late?'late':''}"><button class="chk ${dn?'on':''}" type="button" data-tk="${t.id}" aria-label="${esc(t.t)}を${dn?'未完了に戻す':'完了にする'}">${svgCheck}</button><span class="tt">${esc(t.t)}${t.go&&!dn?`<button class="go" type="button" data-tgo="${t.go}">開く</button>`:''}${UI.taskAll&&t.id[0]=='u'?`<button class="go" type="button" data-tdel="${t.id}" style="color:var(--bad)">消す</button>`:''}${t.sub?`<small>${esc(t.sub)}</small>`:''}</span><span class="due">${t.due?`${md(t.due)}まで<br>${dn?'完了':late?`${-dl}日過ぎ`:dl==0?'今日':`あと${dl}日`}`:''}</span></li>`};
+  $('taskP').innerHTML=`<div class="ph"><h2>やること <span class="pill ${open.filter(t=>t.due&&t.due<TD).length?'ng':'n'}">${open.length}</span></h2><button class="btn sm" type="button" id="tkAll">${UI.taskAll?'近いものだけ':'すべて'}</button></div>
+   <ul class="tasks">${show.length?show.map(row).join(''):'<li style="display:block" class="hint">近いうちにやることはありません</li>'}</ul>
+   ${UI.taskAll?`<div class="srow"><input type="text" id="tkNew" placeholder="やることを追加" aria-label="やることを追加" style="flex:1"><input type="date" id="tkDue" aria-label="期限"><button class="btn sm" type="button" id="tkAdd">追加</button></div>`:(open.length>soon.length?`<span class="hint">ほかに${open.length-soon.length}件（先の予定）</span>`:'')}`;
+  $('tkAll').onclick=()=>{UI.taskAll=!UI.taskAll;rTasks()};
+  $('taskP').querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>{const id=b.dataset.tk,d={...(CONF.taskDone||{})};if(d[id])delete d[id];else d[id]=TD;CONF.taskDone=d;saveConf();if(!d[id])return;toast('完了にしました',()=>{const e={...(CONF.taskDone||{})};delete e[id];CONF.taskDone=e;saveConf()})});
+  $('taskP').querySelectorAll('[data-tgo]').forEach(b=>b.onclick=()=>{const g=b.dataset.tgo;if(g=='plan'){UI.pp='road'}tab(g)});
+  $('taskP').querySelectorAll('[data-tdel]').forEach(b=>b.onclick=()=>{CONF.myTasks=(CONF.myTasks||[]).filter(t=>t.id!=b.dataset.tdel);saveConf()});
+  if($('tkAdd'))$('tkAdd').onclick=()=>{const t=$('tkNew').value.trim();if(!t){$('tkNew').focus();return}
+    CONF.myTasks=[...(CONF.myTasks||[]),{id:'u'+Date.now().toString(36),t:t.slice(0,60),due:$('tkDue').value||''}];saveConf();toast('やることに追加しました')};
 }
 function rKy(A){
   const y=KY(),i=pidx(y.start),[sy,sm]=mparts(y.start),nk=madd(y.start,1),[ny,nm]=mparts(nk),fund=y.mode=='all'?bsum(bud(y.start)):+bud(y.start).food||0;
@@ -956,7 +986,7 @@ function fillMemos(){$('memos').innerHTML=[...new Set(Object.values(TX).map(x=>x
 function qPaySeg(){const c=curPay(),y=KY(),PL0=MYP().slice();$('qPaySeg').innerHTML=PL0.map(p=>`<button type="button" data-qp="${p}" aria-pressed="${c==p}">${p}${p=='Kyash個人'&&NOWK>=y.start?'<small>変動費はこちら</small>':p=='楽天カード'&&NOWK>=y.start&&y.mode=='all'?'<small>固定費だけ</small>':''}</button>`).join('')}
 function qPreview(){
   qPaySeg();const raw=$('qAmt').value.trim(),a=evalAmt(raw),W=week(),el=$('qPrev'),memo=$('qMemo').value;
-  $('qFoe').innerHTML=FOE4.map(([g,n,d])=>{const q=guess(g,memo,a>0?a:0);return `<button type="button" data-qg="${g}" style="--c:var(${GC[g]})"><b>${n} ${d.replace('毎月の','').replace('不定期の','不定期')}</b><span>${q.how=='none'?(memo?'品目はあとで確認':'お店を入れると品目が決まります'):`→ <em>${CAT[q.cat].n}</em>`}</span></button>`}).join('');
+  $('qFoe').innerHTML=FOE4.map(([g,n,d])=>{const q=guess(g,memo,a>0?a:0);return `<button type="button" data-qg="${g}" style="--c:var(${GC[g]})"><b>${n} ${d.replace('毎月の','').replace('不定期の','不定期')}</b><span>${q.how=='none'?(memo?'品目はあとで確認':'品目は自動'):`→ <em>${CAT[q.cat].n}</em>`}</span></button>`}).join('');
   const un=txOf(NOWK).filter(t=>t.auto=='none').length;
   $('qUnc').innerHTML=un?`<button class="btn sm" type="button" id="toUnc">品目の確認 ${un}件</button>`:'';
   if($('toUnc'))$('toUnc').onclick=()=>{UI.lm=NOWK;UI.lf='unc';UI.q='';$('q').value='';tab('list')};
