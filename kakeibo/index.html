@@ -281,6 +281,9 @@ table{border-collapse:collapse;font-size:13px;width:100%}
 th,td{padding:6px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
 thead th{color:var(--mute);font-weight:500;font-size:12px}
 th:first-child,td:first-child{text-align:left}
+@media(max-width:720px){#trend svg.ch text{font-size:13px}}
+#rCat .cb{color:var(--mute)} #rCat .ca{color:var(--ink);font-weight:700} #rCat .cr{color:var(--good);font-weight:700} #rCat .cr.neg{color:var(--bad)}
+#rCat th.cb,#rCat th.ca,#rCat th.cr{font-weight:700}
 td.actual{font-weight:700;color:var(--accent)}
 .sheet-t td:first-child,.sheet-t th:first-child{min-width:7.5em}
 td.n{font-family:var(--num);font-size:15px;font-variant-numeric:tabular-nums}
@@ -455,7 +458,7 @@ input.yen{text-align:right;font-variant-numeric:tabular-nums}
       <div id="rFoes"></div>
     </section>
     <section class="panel">
-      <div class="ph"><h2>変動費の推移</h2><span class="hint">棒＝実績、線＝予算</span></div>
+      <div class="ph"><h2>変動費の推移</h2><span class="hint">棒＝使った額（赤は予算オーバー）／点線＝予算</span></div>
       <div class="chartbox" id="trend"></div>
     </section>
   </div>
@@ -1153,23 +1156,28 @@ function rReport(){
   bindTip($('trend'));
   // 費目
   const allc=CATS.filter(c=>c[2]!='inc'&&c[2]!='mv'&&(A.cat[c[0]]||(c[2]=='e2'&&(B[c[0]]||AVG[c[0]])))).map(c=>c[0]);
-  $('rCat').innerHTML=`<thead><tr><th>費目</th><th>予算</th><th>実績</th><th>残り</th><th>${DEMO?'':'7〜9月の平均'}</th></tr></thead><tbody>`+
+  // 予算＝グレー、実績＝濃い文字、残り＝緑（足りなければ赤）
+  $('rCat').innerHTML=`<thead><tr><th>費目</th><th class="cb">予算</th><th class="ca">実績</th><th class="cr">残り</th></tr></thead><tbody>`+
    allc.map(c=>{const a=A.cat[c]||0,isv=CAT[c].g=='e2',b=isv?+B[c]||0:null;
-     return `<tr><td><i class="dot" style="background:${ccol(c)};margin-right:6px"></i>${CAT[c].n}<span class="hint"> ${GS[CAT[c].g]}</span></td><td class="n">${b==null?'':yen(b)}</td><td class="n">${yen(a)}</td><td class="n ${b!=null&&a>b?'neg':''}">${b==null?'':yen(b-a)}</td><td class="n hint">${isv&&AVG[c]?yen(AVG[c]):''}</td></tr>`}).join('')+
-   `<tr class="tot"><td>変動費の合計${A.refund?'（割り勘受取を差し引き）':''}</td><td class="n">${yen(bsum(B))}</td><td class="n">${yen(A.var)}</td><td class="n ${A.var>bsum(B)?'neg':''}">${yen(bsum(B)-A.var)}</td><td class="n hint">${DEMO?'':'67,732'}</td></tr></tbody>`;
+     return `<tr><td><i class="dot" style="background:${ccol(c)};margin-right:6px"></i>${CAT[c].n}</td><td class="n cb">${b==null?'':yen(b)}</td><td class="n ca">${yen(a)}</td><td class="n cr ${b!=null&&a>b?'neg':''}">${b==null?'':yen(b-a)}</td></tr>`}).join('')+
+   `<tr class="tot"><td>変動費 合計${A.refund?'<span class="hint">（割り勘を差し引き）</span>':''}</td><td class="n cb">${yen(bsum(B))}</td><td class="n ca">${yen(A.var)}</td><td class="n cr ${A.var>bsum(B)?'neg':''}">${yen(bsum(B)-A.var)}</td></tr></tbody>`;
 }
 function trendChart(vals){
-  const W=520,H=230,L=46,R=10,T=14,B=28,n=vals.length,mx=Math.max(...vals.map(v=>Math.max(v.v,v.b)),10000)*1.1;
+  const W=360,H=220,L=40,R=8,T=18,B=26,n=vals.length,mx=Math.max(...vals.map(v=>Math.max(v.v,v.b)),10000)*1.1;
   const bw=(W-L-R)/n,x=j=>L+bw*j,y=v=>T+(H-T-B)*(1-v/mx);
   const step=mx>150000?50000:mx>60000?20000:10000;
   let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="変動費の月ごとの推移">`;
   for(let g=0;g<=mx;g+=step)s+=`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${y(g)+4}" text-anchor="end">${g/10000}万</text>`;
-  vals.forEach((v,j)=>{const cx=x(j)+bw/2,w=Math.min(34,bw*.55),over=v.v>v.b;
+  vals.forEach((v,j)=>{const cx=x(j)+bw/2,w=Math.min(34,bw*.55),over=v.b>0&&v.v>v.b;
     if(v.v>0)s+=`<path d="M${cx-w/2},${y(0)} V${y(v.v)+4} q0,-4 4,-4 h${w-8} q4,0 4,4 V${y(0)} Z" fill="${over?'var(--bad)':'var(--accent)'}"/>`;
-    if(v.b)s+=`<line x1="${cx-w/2-5}" x2="${cx+w/2+5}" y1="${y(v.b)}" y2="${y(v.b)}" stroke="var(--ink)" stroke-width="2"/>`;
     const[yy,mm]=mparts(v.k);
     s+=`<text x="${cx}" y="${H-9}" text-anchor="middle">${mm==1||j==0?String(yy).slice(2)+'/':''}${mm}月</text>`;
     s+=`<rect x="${x(j)}" y="${T}" width="${bw}" height="${H-T-B}" fill="transparent" data-tip="${mlabel(v.k)}<br>実績 <b>${yen(v.v)}</b>円<br>${v.b?`予算 ${yen(v.b)}円`:'予算なし'}"/>`});
+  // 予算の点線：予算がある月をつないで、グラフの端から端まで引く
+  const bi=vals.map((v,j)=>v.b?j:-1).filter(j=>j>=0);
+  if(bi.length){const b0=vals[bi[0]].b;let d='';vals.forEach((v,j)=>{const yy=y(v.b||b0).toFixed(1);d+=(j==0?`M${x(0)},${yy}`:` L${x(j)},${yy}`)+` H${x(j)+bw}`});
+    const last=vals[bi[bi.length-1]];
+    s+=`<path d="${d}" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-dasharray="5 4"/><text x="${W-R}" y="${y(last.b)-6}" text-anchor="end" style="fill:var(--ink);font-weight:700">予算 ${yen(last.b)}</text>`}
   return s+'</svg>';
 }
 // ===== 将来：預金と投資を合わせた資産の見通し・ライフイベント =====
