@@ -1705,6 +1705,8 @@ document.addEventListener('keydown',e=>{
   if(e.key=='Escape'&&!$('ov').hidden){closeSheet();return}
   if(!$('ov').hidden||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName))return;
   if((e.key=='n'||e.key=='N')&&!e.metaKey&&!e.ctrlKey){e.preventDefault();openSheet()}});
+// 将来タブ（投資の見通し）はデモだけに出す。あなた用では隠す
+if(!DEMO){document.querySelector('#pSeg [data-p="future"]').hidden=true;if(UI.pp=='future')UI.pp='road'}
 // ===== デモ版：質問の答えから数字を作る（DEMO=true のときだけ動く） =====
 if(DEMO){
   BASEK=NOWK;
