@@ -164,7 +164,7 @@ svg.ch text{font-family:var(--body);font-size:11px;fill:var(--mute)}
   <div id="p-plan" class="col" hidden>
     <div class="kpis" id="kpis"></div>
     <div class="grid">
-      <section class="panel"><div class="ph"><h2>貯金の道のり</h2></div><div id="chart"></div>
+      <section class="panel"><div class="ph"><h2>貯金の道のり</h2></div><div id="chart"></div><div id="chartNote"></div>
         <div class="legend"><span><i style="background:var(--accent)"></i>貯金残高</span><span><i style="background:var(--gold)"></i>生活費3か月・6か月分</span></div></section>
       <section class="panel"><h2>支出の4つの敵と手取りの8割</h2><div class="stack" id="g8"></div><div class="mk" id="g8m"></div><div id="g8t"></div>
         <div class="legend"><span><i style="background:var(--accent)"></i>①固定費</span><span><i style="background:var(--gold)"></i>②変動費</span><span><i style="background:var(--e3)"></i>③不定期の固定費</span><span><i style="background:var(--warn)"></i>④不定期の変動費</span></div></section>
@@ -241,7 +241,7 @@ function render(){
   const n=v=>`<b class="${v<0?'neg':''}">${yen(v)}</b>円`,it=(cv,l,t)=>`<span class="tk-i"><span class="tk-l" style="--c:var(${cv})">${l}</span><span>${t}</span></span>`;
   const L=[it('--accent','貯金',`給料日に${n(c.saveAmt)}を先取り`),it('--gold','今週',`あと${n(W.left)}・1日${n(Math.max(0,W.left/W.dl))}まで`),
     it('--gold','変動費',`今月は${n(A.vari)}まで`),it('--warn','敵④',`特別費に毎月${n(c.special)}を積み立て`),
-    goalMonth(c)?it('--good','目標',`${yen(A.goal)}円に${goalMonth(c)}到達予定`):it('--bad','目標','このままだと届きません。変動費を見直しましょう')].join('');
+    goalMonth(c)?it('--good','目標',`${man(A.goal)}円まで${span(c.months)}`):it('--bad','目標','このままだと届きません。変動費を見直しましょう')].join('');
   const tr=$('tk');if(tr._h!==L){tr._h=L;tr.innerHTML=L+L;requestAnimationFrame(()=>tr.style.setProperty('--dur',Math.max(18,tr.scrollWidth/2/45)+'s'))}
   // 今週
   const pace=W.base*(W.dow+1)/7,st=W.left<0?['ng','予算オーバー']:W.spent>pace*1.1?['mid','ペースが速め']:['ok','ペース通り'];
@@ -262,25 +262,32 @@ function render(){
   $('recent').innerHTML=TX.slice().sort((a,b)=>a.d<b.d?1:-1).slice(0,6).map(t=>{const f=FOE.find(x=>x[0]==t.g);return `<li><span class="dot" style="--c:var(${f[4]})"></span><span class="t">${esc(t.memo||f[2])}${t.s?'<span class="sample">見本</span>':''}<small>${+t.d.slice(5,7)}/${+t.d.slice(8)}・${f[1]}・${esc(t.pay)}</small></span><span class="a">−${yen(t.amt)}</span></li>`}).join('')||'<li class="hint">まだ記録がありません</li>';
   // 計画
   const gm=goalMonth(c);
-  $('kpis').innerHTML=[['目標に届く月',gm||'届かない','',gm?`あと${c.months}か月`:'毎月の黒字がありません'],['毎月の先取り貯金',yen(c.saveAmt),'円','給料日に別口座へ'],['毎月の黒字',`<span class="${c.surplus<0?'neg':''}">${yen(c.surplus)}</span>`,'円','手取り − 4つの敵'],['生活費6か月分',yen(c.living*6),'円','生活防衛資金の目安']]
+  $('kpis').innerHTML=[['目標に届く月',gm?(c.months>=24?`約${Math.round(c.months/12)}年後`:gm):'届かない','',gm?(c.months>120?'<span class="neg">目標か貯金額の見直しを</span>':`あと${span(c.months)}`):'毎月の黒字がありません'],['毎月の先取り貯金',yen(c.saveAmt),'円','給料日に別口座へ'],['毎月の黒字',`<span class="${c.surplus<0?'neg':''}">${yen(c.surplus)}</span>`,'円','手取り − 4つの敵'],['生活費6か月分',yen(c.living*6),'円','生活防衛資金の目安']]
     .map(([k,v,u,s])=>`<div class="kpi"><div class="k">${k}</div><div class="v">${v}<small>${u}</small></div><div class="s">${s}</div></div>`).join('');
   $('chart').innerHTML=chart(c);
+  $('chartNote').innerHTML=c.months>120?`<p class="hint neg" style="margin:0">今のペースだと${span(c.months)}かかります。まずは生活費6か月分（${man(c.living*6)}円）を最初の目標にするのがおすすめです。</p>`:'';
   const parts=[[c.fixed,'--accent'],[A.vari,'--gold'],[c.irregular,'--e3'],[c.special,'--warn']],mx=Math.max(A.income,c.out),lim=A.income*.8;
   $('g8').innerHTML=parts.map(([v,cv])=>`<i style="width:${v/mx*100}%;background:var(${cv})"></i>`).join('');
   $('g8m').innerHTML=`<b style="left:${lim/mx*100}%"></b><span style="left:${lim/mx*100}%">手取りの8割</span>`;
   $('g8t').innerHTML=`<p class="hint" style="margin:0">4つの敵の合計は手取りの<b class="${c.ratio>.8?'neg':'pos'}">${Math.round(c.ratio*100)}%</b>。8割以内なら、残りの2割を貯金に回せます。③④は手取りの3%・5%を見込んでいます。</p>`;
 }
+// 目盛りは5本前後になるように 1・2・5×10のn乗 で切る。金額は万／億で短く
+const niceStep=v=>{const p=Math.pow(10,Math.floor(Math.log10(v))),f=v/p;return (f<=1?1:f<=2?2:f<=5?5:10)*p};
+const man=v=>v>=1e8?`${+(v/1e8).toFixed(2)}億`:`${+(v/1e4).toFixed(0)}万`;
+const span=m=>m>=24?`約${Math.round(m/12)}年`:`${m}か月`;
 function chart(c){
-  const W=420,H=250,L=40,R=8,T=18,B=24,N=Math.min(Math.max(12,(c.months||24)+2),60);
+  // 横軸は目標に届く月まで（届かないときは2年分）。長いときは年単位の目盛りにする
+  const W=420,H=250,L=54,R=8,T=18,B=24,N=c.months!=null?Math.min(Math.max(12,c.months+2),1200):24;
   const vals=[...Array(N+1)].map((_,i)=>A.saved+c.saveAmt*i),hi=Math.max(A.goal*1.08,vals[N]*1.02,1);
-  const x=i=>L+(W-L-R)*i/N,y=v=>T+(H-T-B)*(1-v/hi),step=hi>3e6?1e6:hi>1.2e6?5e5:hi>5e5?2e5:1e5;
+  const x=i=>L+(W-L-R)*i/N,y=v=>T+(H-T-B)*(1-v/hi),step=niceStep(hi/5);
   let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="貯金残高の見込み">`;
-  for(let g=0;g<=hi;g+=step)s+=`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="var(--line)"/><text x="${L-6}" y="${y(g)+4}" text-anchor="end">${g/1e4}万</text>`;
-  [[3,'3か月分'],[6,'6か月分']].forEach(([k,t])=>{const v=c.living*k;if(v<hi)s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--gold)" stroke-dasharray="4 4"/><text x="${L+6}" y="${y(v)-5}" style="fill:var(--gold)">生活費${t}</text>`});
-  s+=`<line x1="${L}" x2="${W-R}" y1="${y(A.goal)}" y2="${y(A.goal)}" stroke="var(--accent)" stroke-width="1.5"/><text x="${W-R-4}" y="${y(A.goal)-6}" text-anchor="end" style="fill:var(--accent);font-weight:700">目標 ${yen(A.goal)}円</text>`;
+  for(let g=0;g<=hi;g+=step)s+=`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="var(--line)"/><text x="${L-6}" y="${y(g)+4}" text-anchor="end">${man(g)}</text>`;
   const P=vals.map((v,i)=>`${x(i).toFixed(1)},${y(Math.min(v,hi)).toFixed(1)}`).join(' ');
   s+=`<polygon points="${x(0)},${y(0)} ${P} ${x(N)},${y(0)}" fill="var(--accent-soft)" opacity=".8"/><polyline points="${P}" fill="none" stroke="var(--accent)" stroke-width="2.2"/>`;
-  const sp=N<=18?3:N<=36?6:12;for(let i=0;i<=N;i+=sp){const d=new Date(Y,M-1+i,1);s+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle">${String(d.getFullYear()).slice(2)}/${d.getMonth()+1}</text>`}
+  [[3,'3か月分'],[6,'6か月分']].forEach(([k,t])=>{const v=c.living*k;if(v<hi&&(H-T-B)*v/hi>14)s+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--gold)" stroke-dasharray="4 4"/><text x="${W-R-4}" y="${y(v)-5}" text-anchor="end" style="fill:var(--gold)">生活費${t}</text>`});
+  s+=`<line x1="${L}" x2="${W-R}" y1="${y(A.goal)}" y2="${y(A.goal)}" stroke="var(--accent)" stroke-width="1.5"/><text x="${L+6}" y="${y(A.goal)-6}" style="fill:var(--accent);font-weight:700">目標 ${man(A.goal)}円</text>`;
+  const sp=[3,6,12,24,60,120,240].find(v=>N/v<=6)||480;
+  for(let i=0;i<=N;i+=sp){const d=new Date(Y,M-1+i,1);s+=`<text x="${x(i)}" y="${H-8}" text-anchor="${i==0?'start':'middle'}">${sp>=12?`${d.getFullYear()}年`:`${String(d.getFullYear()).slice(2)}/${d.getMonth()+1}`}</text>`}
   if(c.months!=null&&c.months<=N)s+=`<circle cx="${x(c.months)}" cy="${y(Math.min(vals[c.months],hi))}" r="5" fill="var(--accent)" stroke="var(--panel)" stroke-width="2"/>`;
   return s+'</svg>';
 }
