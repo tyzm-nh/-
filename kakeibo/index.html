@@ -272,6 +272,7 @@ ol.todo{margin:0;padding-left:1.2em;font-size:13px;display:flex;flex-direction:c
 .cal .dn{font-size:11px;font-weight:700}
 .cal .ds{font-family:var(--num);font-size:13px;align-self:flex-end;white-space:nowrap}
 .cal .ds.over{color:var(--bad)}
+.cal .tkd{font-size:9px;font-weight:700;line-height:1.5;color:var(--panel);background:var(--warn);border-radius:6px;padding:0 4px;white-space:nowrap;max-width:100%;overflow:hidden}
 .cal .blank{border:none;background:none;cursor:default}
 .cal .heat{position:relative}
 /* tables */
@@ -938,6 +939,10 @@ function taskList(){
   (CONF.myTasks||[]).forEach(t=>add(t.id,t.due||'',t.t,'',null));
   return L.sort((a,b)=>(a.due||'9')<(b.due||'9')?-1:1);
 }
+function toggleTask(id){const d={...(CONF.taskDone||{})};if(d[id])delete d[id];else d[id]=TD;CONF.taskDone=d;saveConf();if(!d[id])return;
+  toast('完了にしました',()=>{const e={...(CONF.taskDone||{})};delete e[id];CONF.taskDone=e;saveConf()})}
+// まだ終わっていないやることを期限の日ごとにまとめる（カレンダー用）
+function tasksByDay(){const done=CONF.taskDone||{},o={};taskList().forEach(t=>{if(t.due&&!done[t.id])(o[t.due]=o[t.due]||[]).push(t)});return o}
 function rTasks(){
   const L=taskList(),done=CONF.taskDone||{},lim=addDays(TD,45),open=L.filter(t=>!done[t.id]),soon=open.filter(t=>!t.due||t.due<=lim);
   const show=UI.taskAll?L:soon;
@@ -947,7 +952,7 @@ function rTasks(){
    <ul class="tasks">${show.length?show.map(row).join(''):'<li style="display:block" class="hint">近いうちにやることはありません</li>'}</ul>
    ${UI.taskAll?`<div class="srow"><input type="text" id="tkNew" placeholder="やることを追加" aria-label="やることを追加" style="flex:1"><input type="date" id="tkDue" aria-label="期限"><button class="btn sm" type="button" id="tkAdd">追加</button></div>`:(open.length>soon.length?`<span class="hint">ほかに${open.length-soon.length}件（先の予定）</span>`:'')}`;
   $('tkAll').onclick=()=>{UI.taskAll=!UI.taskAll;rTasks()};
-  $('taskP').querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>{const id=b.dataset.tk,d={...(CONF.taskDone||{})};if(d[id])delete d[id];else d[id]=TD;CONF.taskDone=d;saveConf();if(!d[id])return;toast('完了にしました',()=>{const e={...(CONF.taskDone||{})};delete e[id];CONF.taskDone=e;saveConf()})});
+  $('taskP').querySelectorAll('[data-tk]').forEach(b=>b.onclick=()=>toggleTask(b.dataset.tk));
   $('taskP').querySelectorAll('[data-tgo]').forEach(b=>b.onclick=()=>{const g=b.dataset.tgo;if(g=='plan'){UI.pp='road'}tab(g)});
   $('taskP').querySelectorAll('[data-tdel]').forEach(b=>b.onclick=()=>{CONF.myTasks=(CONF.myTasks||[]).filter(t=>t.id!=b.dataset.tdel);saveConf()});
   if($('tkAdd'))$('tkAdd').onclick=()=>{const t=$('tkNew').value.trim();if(!t){$('tkNew').focus();return}
@@ -1061,13 +1066,16 @@ function rList(){
   if(UI.lv=='cal'){
     const [y,m]=mparts(k),first=new Date(y,m-1,1).getDay(),n=dim(k),per=bsum(bud(k))/n,by={};
     txOf(k).forEach(t=>{if(t.kind=='out'&&(CAT[t.cat]||CAT.other).g=='e2'){by[t.date]=(by[t.date]||0)+(+t.amt||0)}});
+    const TK=tasksByDay();
     let h=[...WD].map(w=>`<span class="wd">${w}</span>`).join('')+'<span class="blank"></span>'.repeat(first);
     for(let dd=1;dd<=n;dd++){const ds=`${k}-${pad(dd)}`,v=by[ds]||0;
-      h+=`<button type="button" data-day="${ds}" class="${ds==TD?'today':''} ${UI.day==ds?'sel':''}" style="${v?`background:color-mix(in srgb,var(--accent-soft) ${Math.min(100,v/per*60)}%,var(--panel))`:''}"><span class="dn">${dd}</span><span class="ds ${v>per?'over':''}">${v?yen(v):''}</span></button>`}
+      h+=`<button type="button" data-day="${ds}" class="${ds==TD?'today':''} ${UI.day==ds?'sel':''}" style="${v?`background:color-mix(in srgb,var(--accent-soft) ${Math.min(100,v/per*60)}%,var(--panel))`:''}"><span class="dn">${dd}</span>${TK[ds]?`<span class="tkd" title="${esc(TK[ds].map(t=>t.t).join('、'))}">期限${TK[ds].length>1?TK[ds].length:''}</span>`:''}<span class="ds ${v>per?'over':''}">${v?yen(v):''}</span></button>`}
     $('cal').innerHTML=h;
   }
   if(UI.day)L=L.filter(t=>t.date==UI.day);
-  $('lDayNote').innerHTML=UI.day?`<div class="ph"><h2>${+UI.day.slice(5,7)}月${+UI.day.slice(8)}日の記録</h2><button class="btn sm" type="button" id="clrDay">月全体に戻す</button></div>`:'';
+  const dTk=UI.day?(tasksByDay()[UI.day]||[]):[];
+  $('lDayNote').innerHTML=UI.day?`<div class="ph"><h2>${+UI.day.slice(5,7)}月${+UI.day.slice(8)}日の記録</h2><button class="btn sm" type="button" id="clrDay">月全体に戻す</button></div>${dTk.length?`<ul class="tasks">${dTk.map(t=>`<li><button class="chk" type="button" data-tkc="${t.id}" aria-label="${esc(t.t)}を完了にする">${svgCheck}</button><span class="tt">${esc(t.t)}${t.sub?`<small>${esc(t.sub)}</small>`:''}</span><span class="due">期限</span></li>`).join('')}</ul>`:''}`:'';
+  $('lDayNote').querySelectorAll('[data-tkc]').forEach(b=>b.onclick=()=>toggleTask(b.dataset.tkc));
   if($('clrDay'))$('clrDay').onclick=()=>{UI.day=null;render()};
   L.sort((a,b)=>a.date==b.date?(b.ts||0)-(a.ts||0):a.date<b.date?1:-1);
   if(!L.length){$('lList').innerHTML=emptyState(UI.q||UI.lf!='all'||UI.day?'条件に合う記録はありません':`${mlabel(k)}の記録はまだありません`);return}
