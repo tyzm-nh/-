@@ -467,12 +467,12 @@ input.yen{text-align:right;font-variant-numeric:tabular-nums}
 
 <!-- 計画 -->
 <div id="p-plan" class="col" hidden>
-  <div class="seg" id="pSeg"><button data-p="road" type="button">ロードマップ</button><button data-p="whatif" type="button">もしも</button><button data-p="sheet" type="button">支出管理表</button><button data-p="foes" type="button">4つの敵</button><button data-p="pay" type="button">給与</button></div>
+  <div class="seg" id="pSeg"><button data-p="road" type="button">ロードマップ</button><button data-p="future" type="button">将来</button><button data-p="whatif" type="button">もしも</button><button data-p="sheet" type="button">支出管理表</button><button data-p="foes" type="button">4つの敵</button><button data-p="pay" type="button">給与</button></div>
   <div id="pp-road" class="col">
     <div class="kpis" id="pKpis"></div>
     <div class="grid g21">
       <section class="panel">
-        <div class="ph"><h2>貯金残高の道のり</h2><div class="seg" id="rng"><button data-r="18" type="button">1年半</button><button data-r="0" type="button">200万円まで</button></div></div>
+        <div class="ph"><h2>貯金残高の道のり</h2><div class="seg" id="rng"><button data-r="18" type="button">1年半</button><button data-r="0" type="button">目標まで</button></div></div>
         <div class="chartbox" id="chart"></div>
         <div class="legend"><span><i style="background:var(--accent)"></i>計画（月末の残高）</span><span><i style="background:var(--ink);border-radius:50%"></i>記録した実際の残高</span><span><i style="background:var(--gold)"></i>生活費3か月・6か月分</span></div>
       </section>
@@ -486,6 +486,37 @@ input.yen{text-align:right;font-variant-numeric:tabular-nums}
         <section class="panel"><h2>ロードマップ</h2><ol class="road" id="road"></ol></section>
       </div>
     </div>
+  </div>
+  <div id="pp-future" class="col" hidden>
+    <div class="kpis" id="fKpis"></div>
+    <div class="grid g21" style="align-items:start">
+      <section class="panel">
+        <div class="ph"><h2>資産の見通し</h2><div class="seg" id="fYrs"></div></div>
+        <div class="chartbox" id="fChart"></div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>預金</span><span><i style="background:var(--gold)"></i>投資（評価額）</span><span><i style="background:var(--warn)"></i>ライフイベント</span></div>
+        <div id="fWarn"></div>
+      </section>
+      <div class="col">
+        <section class="panel">
+          <h2>投資の条件</h2>
+          <div class="f"><label for="fInv">毎月の積立</label><div class="in"><input type="text" class="yen" id="fInv"><span class="u">円</span></div><span class="hint" id="fInvNote"></span></div>
+          <div class="f"><label>想定の利回り（年）</label><div class="seg" id="fRate"></div></div>
+          <div class="f"><label for="fInit">今の投資の評価額</label><div class="in"><input type="text" class="yen" id="fInit" placeholder="0"><span class="u">円</span></div></div>
+        </section>
+        <section class="panel">
+          <h2>ライフイベント</h2>
+          <ul class="plain tasks" id="fEv"></ul>
+          <div class="srow"><input type="text" id="fEvN" placeholder="例：引っ越し" aria-label="イベントの名前" style="flex:1;min-width:7em"><input type="month" id="fEvM" aria-label="時期"></div>
+          <div class="srow"><input type="text" class="yen" id="fEvA" placeholder="かかるお金（例：30万）" aria-label="かかるお金" style="flex:1"><button class="btn sm" type="button" id="fEvAdd">追加</button></div>
+        </section>
+      </div>
+    </div>
+    <div class="grid g2" style="align-items:start">
+      <section class="panel"><div class="ph"><h2>積立のシミュレーション</h2><span class="hint" id="fSimT"></span></div><div class="chartbox" id="fSim"></div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>積み立てた元本</span><span><i style="background:var(--gold)"></i>増えた分</span><span>点線：利回り±2%</span></div></section>
+      <section class="panel"><div class="ph"><h2>資産の推移</h2><span id="fHistTag"></span></div><div class="chartbox" id="fHist"></div><p class="hint" id="fHistNote" style="margin:0"></p></section>
+    </div>
+    <p class="hint" style="margin:0">投資の見通しは一定の利回りが続いた場合の計算で、将来の成果を約束するものではありません。値動きで元本を下回ることもあります。</p>
   </div>
   <div id="pp-whatif" class="col" hidden>
     <section class="panel">
@@ -524,7 +555,7 @@ input.yen{text-align:right;font-variant-numeric:tabular-nums}
     <section class="panel">
       <div class="ph"><h2>変動費の予算（費目ごと）</h2></div>
       <div class="scroll"><table class="budt" id="budt"></table></div>
-      <div class="f"><label for="cardLim">今月の楽天カード利用の上限</label><div class="in"><input type="text" class="yen" id="cardLim"><span class="u">円</span></div><span class="hint">サブスク・通信費も含む。70%・90%・100%で警告</span></div>
+      <div class="f"><label for="cardLim">今月のカード利用の上限</label><div class="in"><input type="text" class="yen" id="cardLim"><span class="u">円</span></div><span class="hint">サブスク・通信費も含む。70%・90%・100%で警告</span></div>
     </section>
     <section class="panel">
       <div class="ph"><h2>計画の条件</h2><button class="btn sm" id="reset" type="button">おすすめの計画に戻す</button></div>
@@ -581,6 +612,11 @@ input.yen{text-align:right;font-variant-numeric:tabular-nums}
 <div class="toast" id="toast" hidden role="status"><span id="toastT"></span><button id="toastB" type="button" hidden>元に戻す</button></div>
 
 <script>
+// ===== デモ版との切り替え =====
+// build.py がこの行を true にした demo.html を作る。デモ版は質問の答えから数字を作り、記録はその人のブラウザにだけ残す
+const DEMO=false;
+const CARD=DEMO?'クレジットカード':'楽天カード';   // 「カードの利用」として数えて、翌月に引き落とす支払い方法
+let BASEK='2026-10';                               // 計画の1か月目（デモは今月）
 // ===== 基本データ =====
 const CATS=[
  ['food','食費','e2'],['trans','交通費','e2'],['beauty','美容費','e2'],['daily','日用品','e2'],['fun','娯楽','e2'],['med','医療','e2'],['cloth','被服','e2'],['other','その他','e2'],
@@ -610,10 +646,12 @@ const FIELDS=[
  ['res','敵④ 特別費の積立（1月から）',0,50000,1000,'円','旅行・家電・冠婚葬祭など。年18万円の枠'],
  ['nisa','NISAの積立（1月から）',0,30000,1000,'円','200万円とは別枠で引きます'],
  ['side','副業などの上乗せ（27年4月〜）',0,50000,1000,'円','YouTubeの収益など']];
-const START=5243,GOAL=2000000,LK='kakeibo200-v1';
+let START=5243,GOAL=2000000;const LK='kakeibo200-v1';
 
 // ===== 小道具 =====
 const $=id=>document.getElementById(id);
+const man=v=>v>=1e8?`${+(v/1e8).toFixed(2)}億`:v>=1e4?`${+(v/1e4).toFixed(1)}万`:`${Math.round(v)}`;
+const GL=()=>man(GOAL)+'円';
 const yen=n=>(n<0?'−':'')+Math.abs(Math.round(n)).toLocaleString('ja-JP');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
@@ -623,8 +661,8 @@ const mkey=(y,m)=>`${y}-${pad(m)}`;
 const madd=(k,n)=>{let [y,m]=k.split('-').map(Number);m+=n;while(m>12){m-=12;y++}while(m<1){m+=12;y--}return mkey(y,m)};
 const mparts=k=>k.split('-').map(Number);
 const dim=k=>{const[y,m]=mparts(k);return new Date(y,m,0).getDate()};
-const pidx=k=>{const[y,m]=mparts(k);return (y-2026)*12+m-10}; // 計画の月番号（2026年10月=0）
-const ym=i=>{const m=9+i;return [2026+Math.floor(m/12),m%12+1]};
+const pidx=k=>{const[y,m]=mparts(k),[by,bm]=mparts(BASEK);return (y-by)*12+m-bm}; // 計画の月番号（BASEK=0）
+const ym=i=>{const[by,bm]=mparts(BASEK),m=bm-1+i;return [by+Math.floor(m/12),m%12+1]};
 const mlabel=k=>{const[y,m]=mparts(k);return `${y}年${m}月`};
 const WD='日月火水木金土';
 const svgCheck='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
@@ -640,12 +678,12 @@ try{const o=JSON.parse(localStorage.getItem(LK)||'{}');TX=o.tx||{};SNAP=o.snap||
 if(!CONF.S){try{const old=JSON.parse(localStorage.getItem('road200e')||'null');if(old){CONF.S={};Object.keys(DEF).forEach(k=>{if(typeof old[k]=='number')CONF.S[k]=old[k]})}}catch(e){}}
 const ST={db:null,cloud:false,localTx:Object.keys(TX).length,loaded:false};
 const S=()=>({...DEF,...(CONF.S||{})});
-const bud=k=>pidx(k)<3?{...BUD0,...(CONF.bud0||{})}:{...BUD1,...(CONF.bud1||{})};
+let bud=k=>pidx(k)<3?{...BUD0,...(CONF.bud0||{})}:{...BUD1,...(CONF.bud1||{})};
 const bsum=b=>VAR.reduce((a,c)=>a+(+b[c]||0),0);
 // Kyashへの切り替え（start＝変動費をKyash個人で払い始める月、mode＝all か food）
 const KY=()=>({start:'2026-12',mode:'all',...(CONF.ky||{})});
 // 支払い方法は「いつも使うもの」から最後に選んだものを使う。家賃・奨学金など決まった支払いだけは費目で決める
-const MYP=()=>{const a=(CONF.myPays||['楽天カード','Kyash個人','PayPay']).filter(p=>PAYS.includes(p));return a.length?a:['楽天カード']};
+const MYP=()=>{const a=(CONF.myPays||['楽天カード','Kyash個人','PayPay']).filter(p=>PAYS.includes(p));return a.length?a:[PAYS[0]]};
 const SHORT={card:'楽天カード',kyash:'Kyash個人',kyashk:'Kyash共通',paypay:'PayPay',cash:'現金',bank:'楽天銀行',smtb:'ドコモSMTB'};
 const SHORTK=Object.fromEntries(Object.entries(SHORT).map(([k,v])=>[v,k]));
 const ART='https://claude.ai/artifact/VV3rr8MEV4FAhXBiNFd5zw';
@@ -653,7 +691,7 @@ let QP=null;
 const curPay=()=>QP||(MYP().includes(CONF.lastPay)?CONF.lastPay:MYP()[0]);
 const defPay=cat=>DEFPAY[cat]||curPay();
 // Kyashに切り替えた月からは、カードに残るのは決まった支払い（サブスク・通信 4,880円）と切り替えていない費目だけ
-const cardLim=k=>{const y=KY(),b=bud(k);return CONF.cardLim?.[k]??(k=='2026-10'?47900:4880+(k>=y.start?(y.mode=='all'?0:bsum(b)-(+b.food||0)):bsum(b)))};
+let cardLim=k=>{const y=KY(),b=bud(k);return CONF.cardLim?.[k]??(k=='2026-10'?47900:4880+(k>=y.start?(y.mode=='all'?0:bsum(b)-(+b.food||0)):bsum(b)))};
 
 // ===== 保存 =====
 function saveLocal(){if(ST.cloud)return;try{localStorage.setItem(LK,JSON.stringify({tx:TX,snap:SNAP,conf:CONF,plans:PL}))}catch(e){}}
@@ -678,6 +716,7 @@ async function flushConf(){
   confBusy=false;if(confDirty){confDirty=false;flushConf()}
 }
 async function boot(){
+  if(DEMO){ST.loaded=true;render();return}  // デモは見る人のブラウザにだけ保存し、ほかの人と混ざらないようにする
   const db=window.claude?.use?await window.claude.use('db').catch(()=>null):null;
   if(!db){ST.loaded=true;render();return}
   ST.db=db;ST.cloud=true;
@@ -715,7 +754,7 @@ function jumin(P1,P2){
   return (Math.max(0,a-kk-P1.soc*3-P2.soc*9-430000)*0.1+2500)/12;
 }
 const JUMIN1=400;
-const ITEMS=[
+let ITEMS=[
  ['inc','給料（手取り）',(i,m,s,P)=>i<3?s.now:i<6?P.p1.net:P.p2.net-(i>=20?P.jm:i>=8?JUMIN1:0)],
  ['inc','賞与',(i,m,s)=>i>=2&&(m==12||m==7)?s.bonus:0],
  ['inc','未払給料',(i,m,s)=>i==1?s.back:0],
@@ -736,21 +775,21 @@ const ITEMS=[
  ['e4','特別費の積立',(i,m,s)=>i>=3?s.res:0],
  ['inv','NISA',(i,m,s)=>i>=3?s.nisa:0]];
 let PLAN=null;
-function sim(){
+function sim(minLen=0){
   const s={...S(),v0:bsum({...BUD0,...(CONF.bud0||{})}),v:bsum({...BUD1,...(CONF.bud1||{})})};
   const p1=pay(s.ot,240000),p2=pay(s.ot),P={p1,p2,jm:jumin(p1,p2)};
   let bal=START,rows=[],hit=-1;
-  for(let i=0;i<240;i++){
+  for(let i=0;i<Math.max(240,minLen+1);i++){
     const m=(9+i)%12+1,val=ITEMS.map(t=>t[2](i,m,s,P)),g={inc:0,e1:0,e2:0,e3:0,e4:0,inv:0},act=new Set();
     // 記録した実績があれば、見込みの代わりにその金額を使う（収入と、予定から記録した固定の支払い）
-    if(i<=pidx(NOWK)+1){const k=madd('2026-10',i),L=txOf(k),sum=c=>L.filter(t=>t.kind=='in'&&t.cat==c).reduce((a,t)=>a+(+t.amt||0),0);
+    if(i<=pidx(NOWK)+1){const k=madd(BASEK,i),L=txOf(k),sum=c=>L.filter(t=>t.kind=='in'&&t.cat==c).reduce((a,t)=>a+(+t.amt||0),0);
       [[0,'salary'],[1,'bonus'],[2,'back']].forEach(([ix,c])=>{const v=sum(c);if(v){val[ix]=v;act.add(ix)}});
       [[4,'rent'],[5,'scholar'],[6,'phone'],[9,'ins'],[12,'jumin'],[13,'loan']].forEach(([ix,key])=>{const t=TX[`s-${k}-${key}`];if(t){val[ix]=Math.max(0,(+t.amt||0)-(key=='phone'?val[15]:0));act.add(ix)}})}
     ITEMS.forEach((t,k)=>g[t[0]]+=val[k]);
     const out=g.e1+g.e2+g.e3+g.e4;bal+=g.inc-out-g.inv;
     rows.push({i,m,val,g,out,bal,sal:val[0],act});
     if(hit<0&&bal>=GOAL)hit=i;
-    if(hit>=0&&i>=Math.max(hit+1,24))break;
+    if(hit>=0&&i>=Math.max(hit+1,24,minLen))break;
   }
   const sur=P.p2.net+s.side-102180-s.v-s.res-s.nisa, save5=Math.max(0,Math.floor((sur-9200)/5000)*5000);
   return {rows,hit,P,s,sur,save5};
@@ -768,14 +807,14 @@ function agg(k){
   const L=txOf(k),r={inc:0,out:0,e1:0,e2:0,e3:0,e4:0,refund:0,cat:{},card:0,n:L.length};
   L.forEach(t=>{const c=CAT[t.cat]||CAT.other,a=+t.amt||0;
     if(t.kind=='in'){r.inc+=a;if(t.cat=='refund')r.refund+=a}
-    else if(t.kind=='out'){r.out+=a;r[c.g]=(r[c.g]||0)+a;r.cat[c.k]=(r.cat[c.k]||0)+a;if(t.pay=='楽天カード')r.card+=a}});
+    else if(t.kind=='out'){r.out+=a;r[c.g]=(r[c.g]||0)+a;r.cat[c.k]=(r.cat[c.k]||0)+a;if(t.pay==CARD)r.card+=a}});
   r.var=r.e2-r.refund; // 割り勘の受け取りは変動費から差し引く
   return r;
 }
 function cardDue(k){
   const i=pidx(k);if(i==0)return {amt:109000,note:'本人の見込み（未確定）'};
   const pk=madd(k,-1),pk2=madd(k,-2);
-  const L=txOf(pk).filter(t=>t.kind=='out'&&t.pay=='楽天カード'&&t.cat!='seymour'),S2=txOf(pk2).filter(t=>t.kind=='out'&&t.pay=='楽天カード'&&t.cat=='seymour');
+  const L=txOf(pk).filter(t=>t.kind=='out'&&t.pay==CARD&&t.cat!='seymour'),S2=txOf(pk2).filter(t=>t.kind=='out'&&t.pay==CARD&&t.cat=='seymour');
   const sey=S2.reduce((a,t)=>a+(+t.amt||0),0),m=mparts(k)[1],seyPlan=i>=3?(m==1||m==9?44000:m==6?22000:0):0;
   if(L.length)return {amt:L.reduce((a,t)=>a+(+t.amt||0),0)+(sey||seyPlan),note:`${mparts(pk)[1]}月のカード記録の合計`+(sey||seyPlan?`＋ゲリラ${yen(sey||seyPlan)}円`:'')};
   return {amt:cardLim(pk)+(sey||seyPlan),note:`${mparts(pk)[1]}月の記録がないので上限額で見積もり`};
@@ -793,7 +832,7 @@ function sched(k){
   if((m==12&&i>=2)||(m==7&&i>=9))add('bonus',0,'賞与',s.bonus,'bonus','in','支給日は未確認');
   if(i==1&&s.back)add('back',0,'未払給料',s.back,'back','in','入ったら全額を貯金へ');
   {const y=KY();if(k>=y.start)add('kcharge',10,'Kyash個人へチャージ',y.mode=='all'?bsum(bud(k)):+bud(k).food||0,'kcharge','mv','1週 '+yen((y.mode=='all'?bsum(bud(k)):+bud(k).food||0)/dim(k)*7)+'円')}
-  const cd=cardDue(k);add('card',27,'楽天カード引き落とし',cd.amt,'card','mv',cd.note);
+  const cd=cardDue(k);add('card',27,`${CARD}引き落とし`,cd.amt,'card','mv',cd.note);
   add('scholar',27,'奨学金',39312,'scholar');
   if(i<=6)add('phone',27,'携帯機種代（オリコ）',5150+(i==2?10000:0),'phone','out',i==2?'ボーナス払い＋10,000円':'');
   if(i==1||i==2)add('loan',27,'過去のローン',73000,'loan','out',i==2?'最終回':'');
@@ -864,10 +903,10 @@ function rTicker(){
    it('--accent','貯金',i<3?`今は不足を出さないことが最優先。1月から毎月${n(save5)}を先取り`:`給料日に${n(save5)}を先取り。賞与は全額貯金`),
    it('--gold','今週',`あと${n(W.left)}・1日${n(Math.max(W.perDay,0))}まで`),
    it('--gold','変動費',`${m}月はあと${n(rest)}（予算 ${yen(budget)}円）`),
-   it(A.card>lim*.9?'--bad':'--e3','カード',`楽天カードはあと${n(lim-A.card)}（上限 ${yen(lim)}円）`),
+   it(A.card>lim*.9?'--bad':'--e3','カード',`${CARD}はあと${n(lim-A.card)}（上限 ${yen(lim)}円）`),
    it('--warn','敵④',i<3?`11月の旅行は12月の賞与から。1月から特別費に毎月${n(s.res)}`:`旅行・家電・冠婚葬祭は特別費の口座から（毎月${n(s.res)}）`),
    nx?it('--accent','次の支払い',`${m}/${nx.day} ${esc(nx.name)} ${nx.kind=='in'?'+':''}${n(nx.amt)}`):'',
-   hit>=0?it('--good','200万円',`${ym(hit).join('年')}月に到達予定`):''].join('');
+   hit>=0?it('--good',GL(),`${ym(hit).join('年')}月に到達予定`):''].join('');
   const tr=$('tkTrack');if(tr._h===L)return;tr._h=L;tr.innerHTML=L+L;
   requestAnimationFrame(()=>tr.style.setProperty('--dur',Math.max(20,tr.scrollWidth/2/45)+'s'));
 }
@@ -904,11 +943,11 @@ function rHome(){
   $('mo').innerHTML=`<div class="lbl">${m}月の変動費 あと</div><div class="mv ${rest<0?'neg':''}">${yen(rest)}<small>円</small> <span class="pill ${st[0]}" style="vertical-align:4px">${st[1]}</span></div>
    <div class="meter thin"><i class="${A.var>budget?'over':''}" style="width:${Math.min(100,A.var/budget*100||0)}%"></i><b style="left:${d/days*100}%"></b></div>
    <div class="meter-l"><span>使った ${yen(A.var)}円</span><span>予算 ${yen(budget)}円</span></div>
-   <div class="lbl" style="margin-top:6px">楽天カードの利用（${m}月）</div><div class="mv ${A.card>lim0?'neg':''}">${yen(A.card)}<small>円</small></div>
+   <div class="lbl" style="margin-top:6px">${CARD}の利用（${m}月）</div><div class="mv ${A.card>lim0?'neg':''}">${yen(A.card)}<small>円</small></div>
    <div class="meter thin"><i class="${A.card>lim0*.9?'over':''}" style="width:${Math.min(100,A.card/lim0*100||0)}%"></i></div>
    <div class="meter-l"><span>上限 ${yen(lim0)}円</span><span>あと ${yen(lim0-A.card)}円</span></div>`;
   const cr=A.card/lim0,lv=cr>=1?3:cr>=.9?2:cr>=.7?1:0;
-  $('warn').innerHTML=lv?`<div class="warn l${lv}"><b style="white-space:nowrap">楽天カードが上限の${Math.round(cr*100)}%</b><span>${lv==3?`${yen(A.card-lim0)}円オーバー。今月はカードを使わない`:lv==2?`あと${yen(lim0-A.card)}円。急がない買い物は来月に`:`あと${yen(lim0-A.card)}円（1日${yen((lim0-A.card)/left)}円まで）`}</span></div>`:'';
+  $('warn').innerHTML=lv?`<div class="warn l${lv}"><b style="white-space:nowrap">${CARD}が上限の${Math.round(cr*100)}%</b><span>${lv==3?`${yen(A.card-lim0)}円オーバー。今月はカードを使わない`:lv==2?`あと${yen(lim0-A.card)}円。急がない買い物は来月に`:`あと${yen(lim0-A.card)}円（1日${yen((lim0-A.card)/left)}円まで）`}</span></div>`:'';
   fillMemos();qPreview();rKy(A);
   // KPI
   const lim=cardLim(k),hit=PLAN.hit,snaps=Object.values(SNAP).sort((a,b)=>a.date<b.date?1:-1),last=snaps[0];
@@ -917,7 +956,7 @@ function rHome(){
    kpi('今月の収入',yen(A.inc),'円',A.n?`記録 ${A.n}件`:'まだ記録がありません')+
    kpi('今月の支出',yen(A.out),'円',`固定 ${yen(A.e1)}・変動 ${yen(A.e2)}・特別 ${yen(A.e3+A.e4)}`)+
    kpi('今月の収支',`<span class="${A.inc-A.out<0?'neg':''}">${yen(A.inc-A.out)}</span>`,'円','収入−支出（振替は除く）')+
-   kpi('200万円に届く月',hit>=0?(()=>{const[a,b]=ym(hit);return `${a}<small>年</small>${b}`})():'未定',hit>=0?'月':'',
+   kpi(`${GL()}に届く月`,hit>=0?(()=>{const[a,b]=ym(hit);return `${a}<small>年</small>${b}`})():'未定',hit>=0?'月':'',
      diff==null?'計画タブで残高を記録すると表示':`計画より ${diff>=0?'+':''}${yen(diff)}円（${+last.date.slice(5,7)}/${+last.date.slice(8)}時点）`);
   // 予算
   $('budT').textContent=`${m}月の変動費の予算`;
@@ -1002,7 +1041,7 @@ function fillMemos(){$('memos').innerHTML=[...new Set(Object.values(TX).map(x=>x
 function qPaySeg(){const c=curPay(),y=KY(),PL0=MYP().slice();$('qPaySeg').innerHTML=PL0.map(p=>`<button type="button" data-qp="${p}" aria-pressed="${c==p}">${p}${p=='Kyash個人'&&NOWK>=y.start?'<small>変動費はこちら</small>':p=='楽天カード'&&NOWK>=y.start&&y.mode=='all'?'<small>固定費だけ</small>':''}</button>`).join('')}
 function qPreview(){
   qPaySeg();const raw=$('qAmt').value.trim(),a=evalAmt(raw),W=week(),el=$('qPrev'),memo=$('qMemo').value;
-  $('qFoe').innerHTML=FOE4.map(([g,n,d])=>{const q=guess(g,memo,a>0?a:0);return `<button type="button" data-qg="${g}" style="--c:var(${GC[g]})"><b>${n} ${d.replace('毎月の','').replace('不定期の','不定期')}</b><span>${q.how=='none'?(memo?'品目はあとで確認':{e1:'家賃・奨学金・通信',e2:'食・日用・美容',e3:'税金・ローン・ゲリラ',e4:'旅行・家電・冠婚葬祭'}[g]):`→ <em>${CAT[q.cat].n}</em>`}</span></button>`}).join('');
+  $('qFoe').innerHTML=FOE4.map(([g,n,d])=>{const q=guess(g,memo,a>0?a:0);return `<button type="button" data-qg="${g}" style="--c:var(${GC[g]})"><b>${n} ${d.replace('毎月の','').replace('不定期の','不定期')}</b><span>${q.how=='none'?(memo?'品目はあとで確認':(DEMO?{e1:'家賃・通信・サブスク',e2:'食・日用・美容',e3:'税金・更新料・年払い',e4:'旅行・家電・冠婚葬祭'}:{e1:'家賃・奨学金・通信',e2:'食・日用・美容',e3:'税金・ローン・ゲリラ',e4:'旅行・家電・冠婚葬祭'})[g]):`→ <em>${CAT[q.cat].n}</em>`}</span></button>`}).join('');
   const un=txOf(NOWK).filter(t=>t.auto=='none').length;
   $('qUnc').innerHTML=un?`<button class="btn sm" type="button" id="toUnc">品目の確認 ${un}件</button>`:'';
   if($('toUnc'))$('toUnc').onclick=()=>{UI.lm=NOWK;UI.lf='unc';UI.q='';$('q').value='';tab('list')};
@@ -1114,10 +1153,10 @@ function rReport(){
   bindTip($('trend'));
   // 費目
   const allc=CATS.filter(c=>c[2]!='inc'&&c[2]!='mv'&&(A.cat[c[0]]||(c[2]=='e2'&&(B[c[0]]||AVG[c[0]])))).map(c=>c[0]);
-  $('rCat').innerHTML=`<thead><tr><th>費目</th><th>予算</th><th>実績</th><th>残り</th><th>7〜9月の平均</th></tr></thead><tbody>`+
+  $('rCat').innerHTML=`<thead><tr><th>費目</th><th>予算</th><th>実績</th><th>残り</th><th>${DEMO?'':'7〜9月の平均'}</th></tr></thead><tbody>`+
    allc.map(c=>{const a=A.cat[c]||0,isv=CAT[c].g=='e2',b=isv?+B[c]||0:null;
      return `<tr><td><i class="dot" style="background:${ccol(c)};margin-right:6px"></i>${CAT[c].n}<span class="hint"> ${GS[CAT[c].g]}</span></td><td class="n">${b==null?'':yen(b)}</td><td class="n">${yen(a)}</td><td class="n ${b!=null&&a>b?'neg':''}">${b==null?'':yen(b-a)}</td><td class="n hint">${isv&&AVG[c]?yen(AVG[c]):''}</td></tr>`}).join('')+
-   `<tr class="tot"><td>変動費の合計${A.refund?'（割り勘受取を差し引き）':''}</td><td class="n">${yen(bsum(B))}</td><td class="n">${yen(A.var)}</td><td class="n ${A.var>bsum(B)?'neg':''}">${yen(bsum(B)-A.var)}</td><td class="n hint">67,732</td></tr></tbody>`;
+   `<tr class="tot"><td>変動費の合計${A.refund?'（割り勘受取を差し引き）':''}</td><td class="n">${yen(bsum(B))}</td><td class="n">${yen(A.var)}</td><td class="n ${A.var>bsum(B)?'neg':''}">${yen(bsum(B)-A.var)}</td><td class="n hint">${DEMO?'':'67,732'}</td></tr></tbody>`;
 }
 function trendChart(vals){
   const W=520,H=230,L=46,R=10,T=14,B=28,n=vals.length,mx=Math.max(...vals.map(v=>Math.max(v.v,v.b)),10000)*1.1;
@@ -1133,6 +1172,75 @@ function trendChart(vals){
     s+=`<rect x="${x(j)}" y="${T}" width="${bw}" height="${H-T-B}" fill="transparent" data-tip="${mlabel(v.k)}<br>実績 <b>${yen(v.v)}</b>円<br>${v.b?`予算 ${yen(v.b)}円`:'予算なし'}"/>`});
   return s+'</svg>';
 }
+// ===== 将来：預金と投資を合わせた資産の見通し・ライフイベント =====
+const INVK=DEMO?'inv':'nisa';
+const VIS=()=>({rate:3,yrs:20,init:0,events:[],...(CONF.vis||{})});
+const setVis=o=>{CONF.vis={...VIS(),...o};saveConf()};
+const niceStep=v=>{const p=Math.pow(10,Math.floor(Math.log10(Math.max(v,1)))),f=v/p;return (f<=1?1:f<=2?2:f<=5?5:10)*p};
+const fvm=(init,pmt,ratePct,m)=>{const r=ratePct/100/12;return r?init*Math.pow(1+r,m)+pmt*(Math.pow(1+r,m)-1)/r:init+pmt*m};
+function rFuture(){
+  const v=VIS(),M=v.yrs*12,now=Math.max(0,pidx(NOWK)),pl=sim(now+M+1),rows=pl.rows,invIx=ITEMS.findIndex(t=>t[0]=='inv');
+  const evBy={};v.events.forEach(e=>{const i=pidx(e.ym);(evBy[i]=evBy[i]||[]).push(e)});
+  let inv=v.init,prin=v.init,ev=0;const P=[];
+  for(let i=now;i<=now+M&&i<rows.length;i++){const pm=invIx>=0?rows[i].val[invIx]:0;inv=inv*(1+v.rate/100/12)+pm;prin+=pm;(evBy[i]||[]).forEach(e=>ev+=e.amt);P.push({i,dep:rows[i].bal-ev,inv,prin})}
+  const e=P[P.length-1],tot=e.dep+e.inv,[ey,em]=ym(e.i);
+  $('fKpis').innerHTML=kpi(`${v.yrs}年後の資産`,man(tot),'円',`${ey}年${em}月・預金と投資の合計`)+kpi('預金',`<span class="${e.dep<0?'neg':''}">${man(e.dep)}</span>`,'円',v.events.length?`イベント ${man(v.events.reduce((a,x)=>a+x.amt,0))}円を引いた後`:'先取り貯金の積み上げ')+
+    kpi('投資の評価額',man(e.inv),'円',`元本 ${man(e.prin)}円`)+kpi('投資で増えた分',`<span class="pos">+${man(Math.max(0,e.inv-e.prin))}</span>`,'円',`利回り${v.rate}%の場合`);
+  $('fYrs').innerHTML=[10,20,30].map(y=>`<button type="button" data-fy="${y}" aria-pressed="${y==v.yrs}">${y}年</button>`).join('');
+  $('fRate').innerHTML=[1,3,5,7].map(r=>`<button type="button" data-fr="${r}" aria-pressed="${r==v.rate}">${r}%</button>`).join('');
+  const pm0=+S()[INVK]||0;
+  if(document.activeElement!==$('fInv'))$('fInv').value=yen(pm0);if(document.activeElement!==$('fInit'))$('fInit').value=v.init?yen(v.init):'';
+  $('fInvNote').textContent=DEMO?'積立の分だけ先取り貯金が減ります':'計画どおり1月から。積立の分だけ先取り貯金が減ります';
+  // ライフイベント：時期の前に預金が足りているかも出す
+  $('fEv').innerHTML=v.events.length?v.events.slice().sort((a,b)=>a.ym<b.ym?-1:1).map(x=>{const pt=P.find(p=>p.i==pidx(x.ym)),ok=pt?pt.dep>=0:true,[y2,m2]=mparts(x.ym);
+    return `<li><span class="pill ${ok?'ok':'ng'}" style="justify-self:start">${ok?'準備OK':'足りない'}</span><span class="tt">${esc(x.name)}<small>${y2}年${m2}月・${yen(x.amt)}円</small></span><button class="btn sm" type="button" data-fdel="${x.id}">消す</button></li>`}).join(''):'<li style="display:block" class="hint">引っ越し・結婚・車など、大きな出費の予定を入れると見通しに反映されます</li>';
+  // 見通しのグラフ：預金の上に投資を積み上げ。イベントの月に印
+  const W=520,H=260,L=56,Rr=10,T=24,B=26,n=P.length-1,mx=Math.max(...P.map(p=>Math.max(0,p.dep)+p.inv),GOAL)*1.08,mn=Math.min(0,...P.map(p=>p.dep));
+  const x=k=>L+(W-L-Rr)*k/n,y=val=>T+(H-T-B)*(1-(val-mn)/(mx-mn)),st=niceStep((mx-mn)/5);
+  let g=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="資産の見通し">`;
+  for(let t=Math.ceil(mn/st)*st;t<=mx;t+=st)g+=`<line x1="${L}" x2="${W-Rr}" y1="${y(t)}" y2="${y(t)}" stroke="var(--line)" stroke-width="${t==0?1.5:1}"/><text x="${L-6}" y="${y(t)+4}" text-anchor="end">${man(t)}</text>`;
+  const dp=P.map((p,k)=>`${x(k).toFixed(1)},${y(Math.max(0,p.dep)).toFixed(1)}`).join(' '),tp=P.map((p,k)=>`${x(k).toFixed(1)},${y(Math.max(0,p.dep)+p.inv).toFixed(1)}`).join(' ');
+  g+=`<polygon points="${x(0)},${y(0)} ${tp} ${x(n)},${y(0)}" fill="var(--gold)" opacity=".9"/><polygon points="${x(0)},${y(0)} ${dp} ${x(n)},${y(0)}" fill="var(--accent)"/>`;
+  if(mn<0)g+=`<polyline points="${P.map((p,k)=>`${x(k).toFixed(1)},${y(Math.min(0,p.dep)).toFixed(1)}`).join(' ')}" fill="none" stroke="var(--bad)" stroke-width="2"/>`;
+  if(GOAL<mx)g+=`<line x1="${L}" x2="${W-Rr}" y1="${y(GOAL)}" y2="${y(GOAL)}" stroke="var(--ink)" stroke-dasharray="3 4"/><text x="${L+4}" y="${y(GOAL)-4}" style="fill:var(--ink)">目標 ${GL()}</text>`;
+  v.events.forEach(x2=>{const k=pidx(x2.ym)-now;if(k<0||k>n)return;g+=`<line x1="${x(k)}" x2="${x(k)}" y1="${T}" y2="${H-B}" stroke="var(--warn)" stroke-dasharray="3 3"/><text x="${x(k)}" y="${T-8}" text-anchor="middle" style="fill:var(--warn);font-weight:700">${esc(x2.name)}</text>`});
+  const ys=v.yrs<=10?2:5;for(let yy=0;yy<=v.yrs;yy+=ys)g+=`<text x="${x(yy*12)}" y="${H-8}" text-anchor="${yy==0?'start':yy==v.yrs?'end':'middle'}">${yy?ym(now+yy*12)[0]+'年':'今'}</text>`;
+  for(let yy=1;yy<=v.yrs;yy++){const p=P[yy*12];if(!p)continue;g+=`<rect x="${x(yy*12-6)}" y="${T}" width="${x(12)-x(0)}" height="${H-T-B}" fill="transparent" data-tip="${ym(p.i)[0]}年<br>合計 <b>${yen(p.dep+p.inv)}</b>円<br>預金 ${yen(p.dep)}・投資 ${yen(p.inv)}"/>`}
+  $('fChart').innerHTML=g+'</svg>';bindTip($('fChart'));
+  const neg=P.find(p=>p.dep<0),evFirst=v.events.length?Math.min(...v.events.map(x=>pidx(x.ym))):1e9;
+  $('fWarn').innerHTML=neg?`<p class="hint neg" style="margin:0">${ym(neg.i).join('年')}月に預金がマイナスになる見込みです。${neg.i>=evFirst?'イベントの時期か積立額を見直しましょう。':''}</p>`:'';
+  // 積立のシミュレーション（毎月の積立額が一定の場合）
+  const yrs=v.yrs,Ys=[...Array(yrs+1)].map((_,k)=>k),V=Ys.map(k=>fvm(v.init,pm0,v.rate,k*12)),Pr=Ys.map(k=>v.init+pm0*12*k),Lo=Ys.map(k=>fvm(v.init,pm0,Math.max(0,v.rate-2),k*12)),Hi=Ys.map(k=>fvm(v.init,pm0,v.rate+2,k*12));
+  $('fSimT').textContent=`毎月${yen(pm0)}円・${yrs}年で ${man(V[yrs])}円`;
+  const hi=Math.max(...Hi,1)*1.05,sx=k=>L+(W-L-Rr)*k/yrs,sy=val=>T+(H-T-B)*(1-val/hi),s2=niceStep(hi/5),pl2=a=>a.map((val,k)=>`${sx(k).toFixed(1)},${sy(val).toFixed(1)}`).join(' ');
+  let q=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="積立のシミュレーション">`;
+  for(let t=0;t<=hi;t+=s2)q+=`<line x1="${L}" x2="${W-Rr}" y1="${sy(t)}" y2="${sy(t)}" stroke="var(--line)"/><text x="${L-6}" y="${sy(t)+4}" text-anchor="end">${man(t)}</text>`;
+  q+=`<polygon points="${sx(0)},${sy(0)} ${pl2(V)} ${sx(yrs)},${sy(0)}" fill="var(--gold)" opacity=".9"/><polygon points="${sx(0)},${sy(0)} ${pl2(Pr)} ${sx(yrs)},${sy(0)}" fill="var(--accent)"/>`;
+  q+=`<polyline points="${pl2(Hi)}" fill="none" stroke="var(--mute)" stroke-dasharray="4 4"/><polyline points="${pl2(Lo)}" fill="none" stroke="var(--mute)" stroke-dasharray="4 4"/>`;
+  for(let yy=0;yy<=yrs;yy+=ys)q+=`<text x="${sx(yy)}" y="${H-8}" text-anchor="${yy==0?'start':yy==yrs?'end':'middle'}">${yy?yy+'年後':'今'}</text>`;
+  Ys.forEach(k=>{if(k)q+=`<rect x="${sx(k-.5)}" y="${T}" width="${sx(1)-sx(0)}" height="${H-T-B}" fill="transparent" data-tip="${k}年後<br>評価額 <b>${yen(V[k])}</b>円<br>元本 ${yen(Pr[k])}・増えた分 ${yen(V[k]-Pr[k])}"/>`});
+  $('fSim').innerHTML=q+'</svg>';bindTip($('fSim'));
+  // 資産の推移：記録した月末の残高から。記録がないデモでは見本を出す
+  let hs=Object.values(SNAP).sort((a,b)=>a.date<b.date?-1:1).map(z=>({k:z.date.slice(0,7),v:z.amt}));const byK={};hs.forEach(z=>byK[z.k]=z.v);hs=Object.entries(byK).map(([k,val])=>({k,val})).slice(-12);
+  const sample=hs.length<2&&DEMO;if(sample){const base=+S().saved||100000;hs=[...Array(12)].map((_,k)=>({k:madd(NOWK,k-11),val:Math.round(base*(0.55+0.45*k/11))}))}
+  $('fHistTag').innerHTML=sample?'<span class="pill n">見本</span>':'';
+  $('fHistNote').textContent=hs.length<2?'計画タブで月末の残高を記録すると、ここに推移が出ます':'記録した月末の残高（預金）';
+  if(hs.length){const mxh=Math.max(...hs.map(z=>z.val))*1.15||1,nn=hs.length,bx=k=>L+(W-L-Rr)*(k+.5)/nn,bw=Math.min(30,(W-L-Rr)/nn*.6),by=val=>T+(H-T-B)*(1-val/mxh),s3=niceStep(mxh/4);
+    let h=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="資産の推移">`;
+    for(let t=0;t<=mxh;t+=s3)h+=`<line x1="${L}" x2="${W-Rr}" y1="${by(t)}" y2="${by(t)}" stroke="var(--line)"/><text x="${L-6}" y="${by(t)+4}" text-anchor="end">${man(t)}</text>`;
+    hs.forEach((z,k)=>{h+=`<rect x="${bx(k)-bw/2}" y="${by(Math.max(0,z.val))}" width="${bw}" height="${Math.max(0,by(0)-by(Math.max(0,z.val)))}" rx="3" fill="var(--accent)" data-tip="${mlabel(z.k)}<br><b>${yen(z.val)}</b>円"/>`;if(nn<=6||k%3==2||k==nn-1)h+=`<text x="${bx(k)}" y="${H-8}" text-anchor="middle">${mparts(z.k)[1]}月</text>`});
+    $('fHist').innerHTML=h+'</svg>';bindTip($('fHist'))}else $('fHist').innerHTML='';
+}
+document.addEventListener('click',e=>{
+  const fy=e.target.closest('[data-fy]');if(fy){setVis({yrs:+fy.dataset.fy});return}
+  const fr=e.target.closest('[data-fr]');if(fr){setVis({rate:+fr.dataset.fr});return}
+  const fd=e.target.closest('[data-fdel]');if(fd){setVis({events:VIS().events.filter(x=>x.id!=fd.dataset.fdel)});return}
+});
+$('fInv').addEventListener('input',()=>{const a=evalAmt($('fInv').value);if(isNaN(a)||a<0)return;CONF.S={...(CONF.S||{}),[INVK]:a};saveConf()});
+$('fInit').addEventListener('input',()=>{const a=evalAmt($('fInit').value||'0');if(isNaN(a)||a<0)return;setVis({init:a})});
+$('fEvAdd').onclick=()=>{const nm=$('fEvN').value.trim(),m=$('fEvM').value,a=evalAmt($('fEvA').value);
+  if(!nm||!m||!(a>0)){toast('名前・時期・金額を入れてください');return}
+  setVis({events:[...VIS().events,{id:'e'+Date.now().toString(36),name:nm.slice(0,20),ym:m,amt:a}]});$('fEvN').value='';$('fEvA').value='';toast(`「${nm}」を将来の予定に入れました`)};
 function bindTip(box){
   let tip=box.querySelector('.tip');if(!tip){tip=document.createElement('div');tip.className='tip';tip.hidden=true;box.appendChild(tip)}
   box.onpointermove=e=>{const t=e.target.closest('[data-tip]');if(!t){tip.hidden=true;return}
@@ -1145,24 +1253,28 @@ function rPlan(){
   document.querySelectorAll('#pSeg button').forEach(b=>{const on=b.dataset.p==UI.pp;b.setAttribute('aria-pressed',on);$('pp-'+b.dataset.p).hidden=!on});
   const {rows,hit,P,s,save5}=PLAN;
   if(UI.pp=='road'){
-    const lv=102180+s.v,first=x=>rows.find(r=>r.bal>=x),dt=r=>{if(!r)return '未定';const[y,m]=ym(r.i);return `${y}年${m}月`};
+    const lv=DEMO?s.rent+s.fixo+s.v:102180+s.v,first=x=>rows.find(r=>r.bal>=x),dt=r=>{if(!r)return '未定';const[y,m]=ym(r.i);return `${y}年${m}月`};
     const snaps=Object.values(SNAP).sort((a,b)=>a.date<b.date?1:-1),last=snaps[0],diff=last?last.amt-(planAt(last.date)??last.amt):null;
     const low=rows.slice(0,6).reduce((a,b)=>b.bal<a.bal?b:a),[ly,lm]=ym(low.i);
-    $('pKpis').innerHTML=kpi('200万円に届く月',hit>=0?(()=>{const[a,b]=ym(hit);return `${a}<small>年</small>${b}`})():'届かない',hit>=0?'月':'',hit>=0?`いまから約${((hit+1)/12).toFixed(1)}年`:'この条件では20年以内に届きません')+
-      kpi('1月からの先取り貯金',yen(save5),'円','給料日に。賞与は別に全額')+
+    $('pKpis').innerHTML=kpi(`${GL()}に届く月`,hit>=0?(()=>{const[a,b]=ym(hit);return `${a}<small>年</small>${b}`})():'届かない',hit>=0?'月':'',hit>=0?`いまから約${((hit+1)/12).toFixed(1)}年`:'この条件では20年以内に届きません')+
+      kpi(DEMO?'毎月の先取り貯金':'1月からの先取り貯金',yen(save5),'円',DEMO?'給料日に別口座へ':'給料日に。賞与は別に全額')+
       kpi('いちばん苦しい月',`<span class="${low.bal<0?'neg':''}">${yen(low.bal)}</span>`,'円',`${ly}年${lm}月末の残高見込み`)+
       kpi('計画とのずれ',diff==null?'—':`<span class="${diff<0?'neg':'pos'}">${diff>=0?'+':''}${yen(diff)}</span>`,diff==null?'':'円',last?`${last.date.replace(/-/g,'/')}の記録 ${yen(last.amt)}円`:'右で実際の残高を記録');
     const R=UI.rng?rows.slice(0,UI.rng):rows.slice(0,(hit>=0?hit:rows.length-1)+1);
     $('chart').innerHTML=roadChart(R,lv);bindTip($('chart'));
     document.querySelectorAll('#rng button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.r==UI.rng));
     const nowI=pidx(NOWK);
-    $('road').innerHTML=[
+    $('road').innerHTML=(DEMO?[
+     [0,dt(rows[0]),'先取り貯金を始める',`給料日に${yen(save5)}円を貯金用の口座へ`],
+     [first(lv*3)?.i,dt(first(lv*3)),'生活費3か月分',`約${yen(lv*3)}円。急な出費があっても借りずに済む最初のライン`],
+     [first(lv*6)?.i,dt(first(lv*6)),'生活費6か月分',`約${yen(lv*6)}円。生活防衛資金の目安の下限`],
+     [hit,hit>=0?dt(rows[hit]):'未定',GL(),'目標達成。ここから投資の積立額を増やす']]:[
      [2,'2026年12月','ローン完済',`過去のローンが終わる。年末の残高見込み 約${yen(rows[2].bal)}円`],
      [3,'2027年1月','貯金の仕組みを始める',`昇給が反映。先取り貯金${yen(save5)}円＋特別費${yen(s.res)}円を自動化`],
      [first(lv*3)?.i,dt(first(lv*3)),'生活費3か月分',`約${yen(lv*3)}円。急な出費があっても借りずに済む最初のライン`],
      [first(lv*6)?.i,dt(first(lv*6)),'生活費6か月分',`約${yen(lv*6)}円。生活防衛資金の目安の下限`],
-     [hit,hit>=0?dt(rows[hit]):'未定','200万円',`生活防衛資金の完成。ここからNISAの積立額を増やす`]
-    ].map(a=>`<li class="${a[0]!=null&&a[0]<nowI?'past':''}"><span class="w">${a[1]}</span><span><strong>${a[2]}</strong>${a[3]}</span></li>`).join('');
+     [hit,hit>=0?dt(rows[hit]):'未定',GL(),`生活防衛資金の完成。ここからNISAの積立額を増やす`]
+    ]).map(a=>`<li class="${a[0]!=null&&a[0]<nowI?'past':''}"><span class="w">${a[1]}</span><span><strong>${a[2]}</strong>${a[3]}</span></li>`).join('');
     if(!$('snD').value)$('snD').value=TD;
     $('snList').innerHTML=snaps.slice(0,4).map(x=>{const p=planAt(x.date),df=p==null?null:x.amt-p;
       return `<li data-snap="${x.date}"><span class="cat" style="background:var(--ink)">残高</span><span class="m"><b>${yen(x.amt)}円</b><span>${x.date.replace(/-/g,'/')}${df==null?'':`・計画より ${df>=0?'+':''}${yen(df)}円`}</span></span><button class="btn sm" type="button" data-unsnap="${x.date}">削除</button></li>`}).join('');
@@ -1171,6 +1283,7 @@ function rPlan(){
   if(UI.pp=='foes')rFoes();
   if(UI.pp=='pay')rPay();
   if(UI.pp=='whatif')rWhatIf();
+  if(UI.pp=='future')rFuture();
 }
 function roadChart(rows,lv){
   const W=760,H=320,L=50,R=14,T=16,B=34,n=rows.length;
@@ -1181,7 +1294,7 @@ function roadChart(rows,lv){
   let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="貯金残高の推移">`;
   for(let g=Math.ceil(lo/step)*step;g<=hi;g+=step)s+=`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="var(--line)" stroke-width="${g==0?1.5:1}"/><text x="${L-7}" y="${y(g)+4}" text-anchor="end">${g/10000}万</text>`;
   [[3,'3か月分'],[6,'6か月分']].forEach(([k,t])=>{const v=lv*k;if(v<hi){const yy=y(v);s+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="4 4"/><text x="${L+6}" y="${yy-5}" style="fill:var(--gold)">生活費${t}（${Math.round(v/10000)}万円）</text>`}});
-  if(GOAL<=hi)s+=`<line x1="${L}" x2="${W-R}" y1="${y(GOAL)}" y2="${y(GOAL)}" stroke="var(--accent)" stroke-width="1.5"/><text x="${L+6}" y="${y(GOAL)-6}" style="fill:var(--accent);font-weight:700">目標 200万円</text>`;
+  if(GOAL<=hi)s+=`<line x1="${L}" x2="${W-R}" y1="${y(GOAL)}" y2="${y(GOAL)}" stroke="var(--accent)" stroke-width="1.5"/><text x="${L+6}" y="${y(GOAL)-6}" style="fill:var(--accent);font-weight:700">目標 ${GL()}</text>`;
   // 月の目盛り：2年以内は毎月、それ以上は2か月・3か月ごと
   const stp=n<=24?1:n<=40?2:3;
   for(let j=0;j<=n;j++){const [yy,mm]=ym(j),big=mm==1||j==0;
@@ -1205,7 +1318,7 @@ function roadChart(rows,lv){
   return s+'</svg>';
 }
 // ===== もしも：予定を別の月に動かす・臨時の出費／収入を足す =====
-const cashMonth=(x,k)=>x.kind=='out'&&x.pay=='楽天カード'?madd(k,x.cat=='seymour'?2:1):k;
+const cashMonth=(x,k)=>x.kind=='out'&&x.pay==CARD?madd(k,x.cat=='seymour'?2:1):k;
 function wfItems(){const L=[];for(let j=0;j<12;j++){const k=madd(NOWK,j);sched(k).forEach(x=>{if(x.skip||TX[x.id])return;if(x.kind=='mv'&&x.key!='card')return;L.push({k,x})})}return L}
 function wfCalc(list){
   const rows=PLAN.rows,n=rows.length,d=new Array(n).fill(0),lab=[];
@@ -1219,7 +1332,7 @@ function wfCalc(list){
 // 動かしたときに「なぜ残高が変わるか」を言葉にする
 function wfWhy(x,from,to){
   const a=cashMonth(x,from),b=cashMonth(x,to),[,am]=mparts(a),[,bm]=mparts(b);
-  return x.kind=='out'&&x.pay=='楽天カード'?`引き落とし ${am}/27 → ${bm}/27`:`${am}月 → ${bm}月`;
+  return x.kind=='out'&&x.pay==CARD?`引き落とし ${am}/${DEMO?S().cardDay:27} → ${bm}/${DEMO?S().cardDay:27}`:`${am}月 → ${bm}月`;
 }
 function rWhatIf(){
   UI.wf=UI.wf||{list:[]};const W=UI.wf,items=wfItems().filter(q=>!W.list.some(c=>c.t=='mv'&&c.from==q.k&&c.key==q.x.key)),{d,N}=wfCalc(W.list),rows=PLAN.rows,now=Math.max(0,pidx(NOWK));
@@ -1237,13 +1350,13 @@ function rWhatIf(){
   const neg=(arr)=>R.filter(r=>arr[r.i]<0).map(r=>r.i);
   const B=rows.map(r=>r.bal),nb=neg(B),nn=neg(N),msg=[];
   if(W.list.length){
-    const mm=i=>ml(madd('2026-10',i));
+    const mm=i=>ml(madd(BASEK,i));
     const newly=nn.filter(i=>!nb.includes(i)),gone=nb.filter(i=>!nn.includes(i));
     newly.forEach(i=>msg.push(['ng',`${mm(i)}末に ${yen(-N[i])}円 足りなくなる`]));
     nn.filter(i=>nb.includes(i)&&N[i]!=B[i]).forEach(i=>msg.push([N[i]<B[i]?'ng':'ok',`${mm(i)}末は ${yen(-N[i])}円 足りない（今のままだと ${yen(-B[i])}円）`]));
     gone.forEach(i=>msg.push(['ok',`${mm(i)}末の不足がなくなる`]));
     if(!nn.length)msg.push(['ok','マイナスになる月はなし']);
-    const hitN=N.findIndex(v=>v>=GOAL);if(hitN!=PLAN.hit&&hitN>=0&&PLAN.hit>=0){const[a2,b2]=ym(hitN);msg.push(['n',`200万円に届くのは ${a2}年${b2}月（今のままだと ${ym(PLAN.hit).join('年')}月）`])}
+    const hitN=N.findIndex(v=>v>=GOAL);if(hitN!=PLAN.hit&&hitN>=0&&PLAN.hit>=0){const[a2,b2]=ym(hitN);msg.push(['n',`${GL()}に届くのは ${a2}年${b2}月（今のままだと ${ym(PLAN.hit).join('年')}月）`])}
   }
   // 月ごとに出ていくお金（変えた場合）と、何が増えた・減ったかのメモ
   const n0=rows.length,dOut=new Array(n0).fill(0),notes={};const nt=(i,h)=>{(notes[i]=notes[i]||[]).push(h)};
@@ -1264,7 +1377,7 @@ function rWhatIf(){
     <div class="srow"><div class="seg" id="wfSign"><button type="button" data-ws="-1" aria-pressed="${(W.sign||-1)<0}">出費</button><button type="button" data-ws="1" aria-pressed="${W.sign>0}">収入</button></div><select id="wfExK" aria-label="月">${mopt(NOWK)}</select></div>
     <div class="srow"><input type="text" id="wfExN" placeholder="名前（例：美容室）" aria-label="名前" style="flex:1"><input type="text" class="yen" id="wfExA" placeholder="金額" aria-label="金額" style="width:7.5em;text-align:right"><button class="btn sm" type="button" id="wfExAdd">足す</button></div></div>
    ${msg.length?`<div class="wfmsg">${msg.map(([c,t])=>`<div class="${c}">${t}</div>`).join('')}</div>`:''}
-   <div class="scroll"><table class="wft"><thead><tr><th>月</th><th>出ていくお金</th><th>月末</th></tr></thead><tbody>${R.map(r=>`<tr class="${notes[r.i]?'aff':''}"><td>${ml(madd('2026-10',r.i))}</td><td class="n" style="white-space:normal"><b>${yen(outOf(r))}</b>${notes[r.i]||incs[r.i]?`<div class="hint" style="font-family:var(--body);font-size:11px">${[...(notes[r.i]||[]),...(incs[r.i]||[])].join('<br>')}</div>`:''}</td><td class="n" style="font-weight:700">${left(N[r.i])}</td></tr>`).join('')}</tbody></table></div>
+   <div class="scroll"><table class="wft"><thead><tr><th>月</th><th>出ていくお金</th><th>月末</th></tr></thead><tbody>${R.map(r=>`<tr class="${notes[r.i]?'aff':''}"><td>${ml(madd(BASEK,r.i))}</td><td class="n" style="white-space:normal"><b>${yen(outOf(r))}</b>${notes[r.i]||incs[r.i]?`<div class="hint" style="font-family:var(--body);font-size:11px">${[...(notes[r.i]||[]),...(incs[r.i]||[])].join('<br>')}</div>`:''}</td><td class="n" style="font-weight:700">${left(N[r.i])}</td></tr>`).join('')}</tbody></table></div>
    
    ${W.list.some(c=>c.t=='mv')?`<div class="sact"><span class="sp"></span><button class="btn sm" type="button" id="wfApply">動かした予定を支払い予定に反映する</button></div>`:''}`;
   if($('wfItem'))$('wfItem').onchange=()=>{const q=items[+$('wfItem').value];W.sel=q.k+'|'+q.x.key;W.to=null;rWhatIf()};
@@ -1325,13 +1438,14 @@ let setBuilt=false;
 function rSet(){if(!setBuilt){fillSettings();setBuilt=true}
   const my=MYP();
   $('myPays').innerHTML=PAYS.map(p=>`<button type="button" class="chip" data-mp="${p}" aria-pressed="${my.includes(p)}">${p}</button>`).join('');
-  $('shorts').innerHTML=`<label style="margin-top:8px;display:block">支払い方法ごとの記録リンク</label><span class="hint">ホーム画面に置くとすぐ記録できます</span>`+
+  if(DEMO)$('shorts').innerHTML='';else $('shorts').innerHTML=`<label style="margin-top:8px;display:block">支払い方法ごとの記録リンク</label><span class="hint">ホーム画面に置くとすぐ記録できます</span>`+
     my.map(p=>`<div class="short"><b>${p}で記録</b><code>${ART}#${SHORTK[p]}</code><button class="btn sm" type="button" data-copy="${ART}#${SHORTK[p]}">コピー</button></div>`).join('')+`<p class="hint">ショートカット用：末尾に「.金額」で金額入り</p>`;
   $('storeNote').textContent=ST.cloud?'あなただけが見られるクラウドに保存しています':'この端末だけに保存。CSVで書き出しておくと安心です';
 }
 function fillSettings(){
   const b0={...BUD0,...(CONF.bud0||{})},b1={...BUD1,...(CONF.bud1||{})};
-  $('budt').innerHTML=`<thead><tr><th>費目</th><th>7〜9月の平均</th><th>12月まで</th><th>1月から</th></tr></thead><tbody>`+
+  if(DEMO)$('budt').innerHTML=`<thead><tr><th>費目</th><th>1か月の予算</th></tr></thead><tbody>`+VAR.map(c=>`<tr><td><i class="dot" style="background:${ccol(c)};margin-right:6px"></i>${CAT[c].n}</td><td><input type="text" class="yen" id="b1_${c}" value="${yen(b1[c])}" data-b="bud1" data-c="${c}" aria-label="${CAT[c].n}の予算"></td></tr>`).join('')+`<tr class="tot"><td>合計</td><td class="n" id="bs1">${yen(bsum(b1))}</td></tr><tr hidden><td id="bs0"></td></tr></tbody>`;
+  else $('budt').innerHTML=`<thead><tr><th>費目</th><th>7〜9月の平均</th><th>12月まで</th><th>1月から</th></tr></thead><tbody>`+
     VAR.map(c=>`<tr><td><i class="dot" style="background:${ccol(c)};margin-right:6px"></i>${CAT[c].n}</td><td class="n hint">${AVG[c]?yen(AVG[c]):''}</td><td><input type="text" class="yen" id="b0_${c}" value="${yen(b0[c])}" data-b="bud0" data-c="${c}" aria-label="${CAT[c].n} 12月まで"></td><td><input type="text" class="yen" id="b1_${c}" value="${yen(b1[c])}" data-b="bud1" data-c="${c}" aria-label="${CAT[c].n} 1月から"></td></tr>`).join('')+
     `<tr class="tot"><td>合計</td><td class="n hint">67,732</td><td class="n" id="bs0">${yen(bsum(b0))}</td><td class="n" id="bs1">${yen(bsum(b1))}</td></tr></tbody>`;
   $('cardLim').value=yen(cardLim(NOWK));
@@ -1591,6 +1705,122 @@ document.addEventListener('keydown',e=>{
   if(e.key=='Escape'&&!$('ov').hidden){closeSheet();return}
   if(!$('ov').hidden||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName))return;
   if((e.key=='n'||e.key=='N')&&!e.metaKey&&!e.ctrlKey){e.preventDefault();openSheet()}});
+// ===== デモ版：質問の答えから数字を作る（DEMO=true のときだけ動く） =====
+if(DEMO){
+  BASEK=NOWK;
+  PAYS.splice(0,PAYS.length,'クレジットカード','デビットカード','QRコード決済','交通系IC','現金','口座引き落とし');
+  Object.keys(DEFPAY).forEach(k=>DEFPAY[k]='口座引き落とし');DEFPAY.refund='QRコード決済';
+  Object.keys(AVG).forEach(k=>AVG[k]=0);
+  Object.keys(DEF).forEach(k=>delete DEF[k]);
+  Object.assign(DEF,{goal:1000000,saved:100000,income:220000,payday:25,rent:60000,fixo:15000,irr:7000,res:11000,inv:10000,cardDay:27});
+  FIELDS.splice(0,FIELDS.length,['goal','目標の貯金',0,1e8,10000,'円',''],['saved','今の貯金',0,1e8,10000,'円',''],['income','毎月の手取り',0,2e6,1000,'円',''],
+   ['rent','家賃',0,5e5,1000,'円',''],['fixo','通信・サブスク・保険など',0,3e5,1000,'円',''],['irr','③不定期の固定費（月ならし）',0,2e5,1000,'円','税金・更新料・年払いを12で割った額'],
+   ['res','④特別費の積立',0,2e5,1000,'円','旅行・家電・冠婚葬祭のため'],['inv','投資の積立',0,3e5,1000,'円','先取り貯金とは別'],['payday','給料日',1,31,1,'日',''],['cardDay','カードの引き落とし日',1,31,1,'日','']);
+  const RATIO={food:.3,daily:.15,trans:.15,beauty:.15,fun:.15,med:.05,cloth:.05,other:0};
+  bud=k=>({...BUD1,...(CONF.bud1||{})});
+  cardLim=k=>CONF.cardLim?.[k]??bsum(bud(k));
+  ITEMS.splice(0,ITEMS.length,['inc','給料（手取り）',(i,m,s)=>s.income],['e1','家賃',(i,m,s)=>s.rent],['e1','通信・サブスク・保険',(i,m,s)=>s.fixo],
+   ['e2','変動費',(i,m,s)=>s.v],['e3','不定期の固定費（月ならし）',(i,m,s)=>s.irr],['e4','特別費の積立',(i,m,s)=>s.res],['inv','投資',(i,m,s)=>s.inv]);
+  sim=function(minLen=0){
+    const s={...S()};s.v=bsum(bud(NOWK));GOAL=+s.goal||1;START=+s.saved||0;
+    let bal=START,rows=[],hit=-1;
+    for(let i=0;i<Math.max(240,minLen+1);i++){
+      const m=(mparts(BASEK)[1]-1+i)%12+1,val=ITEMS.map(t=>t[2](i,m,s)),g={inc:0,e1:0,e2:0,e3:0,e4:0,inv:0},act=new Set();
+      if(i==0){const sal=txOf(NOWK).filter(t=>t.kind=='in'&&t.cat=='salary').reduce((a,t)=>a+(+t.amt||0),0);if(sal){val[0]=sal;act.add(0)}}
+      ITEMS.forEach((t,k)=>g[t[0]]+=val[k]);const out=g.e1+g.e2+g.e3+g.e4;bal+=g.inc-out-g.inv;
+      rows.push({i,m,val,g,out,bal,sal:val[0],act});if(hit<0&&bal>=GOAL)hit=i;if(hit>=0&&i>=Math.max(hit+1,24,minLen))break}
+    const sur=s.income-s.rent-s.fixo-s.v-s.irr-s.res-s.inv;
+    return {rows,hit,P:null,s,sur,save5:Math.max(0,Math.floor(sur/1000)*1000)};
+  };
+  cardDue=function(k){const pk=madd(k,-1),L=txOf(pk).filter(t=>t.kind=='out'&&t.pay==CARD);
+    return L.length?{amt:L.reduce((a,t)=>a+(+t.amt||0),0),note:`${mparts(pk)[1]}月のカード利用`}:{amt:Math.round(bsum(bud(pk))*.6),note:'見込み'}};
+  sched=function(k){
+    const i=pidx(k);if(i<0)return [];const s=PLAN.s,L=[],dd=d=>Math.min(d,dim(k));
+    const add=(key,day,name,amt,cat,kind='out',note='',pay,plan)=>{const ov=CONF.ov?.[key];if(ov&&k>=ov.from&&key!='card')amt=ov.amt;
+      const id=`s-${k}-${key}`;L.push({key,day,name,amt:Math.round(amt),cat,kind,note,pay:pay||DEFPAY[cat]||'口座引き落とし',plan,id,skip:!!CONF.skip?.[id]})};
+    add('salary',dd(s.payday),'給料',s.income,'salary','in');
+    add('save',dd(s.payday),'先取り貯金',PLAN.save5,'save','mv','貯金用の口座へ');
+    if(s.res)add('res',dd(s.payday),'特別費の積立',s.res,'save','mv');
+    if(s.inv)add('nisa',dd(s.payday),'投資の積立',s.inv,'nisa','mv');
+    add('rent',dd(27),'家賃',s.rent,'rent');
+    if(s.fixo)add('fixo',dd(10),'通信・サブスク・保険',s.fixo,'subs');
+    if(MYP().includes(CARD)){const cd=cardDue(k);add('card',dd(s.cardDay),`${CARD}引き落とし`,cd.amt,'card','mv',cd.note)}
+    Object.entries(PL).forEach(([pid,q])=>{if(!q||!q.start)return;
+      const on=q.rep=='once'?k==q.start:q.rep=='y'?k>=q.start&&mparts(k)[1]==mparts(q.start)[1]:k>=q.start&&(!q.end||k<=q.end);
+      if(on)add('p_'+pid,Math.min(+q.day||0,dim(k)),q.name,+q.amt||0,q.cat,q.kind||'out',q.rep=='m'?'毎月':q.rep=='y'?'毎年':'',q.pay,pid)});
+    return L.sort((a,b)=>(a.day||99)-(b.day||99));
+  };
+  taskList=function(){
+    const {save5,s}=PLAN,L=[],add=(id,due,t,sub,go)=>L.push({id,due,t,sub,go}),nx=madd(NOWK,1),pd=`${NOWK}-${pad(Math.min(s.payday,dim(NOWK)))}`,due1=pd>=TD?pd:`${nx}-${pad(Math.min(s.payday,dim(nx)))}`;
+    add('autosave',due1,`先取り貯金 ${yen(save5)}円の自動振替を設定`,'給料日に貯金用の口座へ');
+    if(s.res)add('autores',due1,`特別費 ${yen(s.res)}円の口座を分ける`,'旅行・家電・冠婚葬祭はここから払う');
+    add('notify',addDays(TD,3),'カードの利用通知をオンにする','使いすぎにその場で気づく');
+    add('fixrev',addDays(TD,14),'通信・サブスク・保険を見直す',`固定費 ${yen(s.rent+s.fixo)}円`);
+    if(s.inv)add('invset',addDays(TD,30),`投資の積立 ${yen(s.inv)}円を設定`,'将来タブで見通しを確認','plan');
+    add('snap-'+NOWK,`${NOWK}-${pad(dim(NOWK))}`,`${mparts(NOWK)[1]}月末の残高を記録`,'','plan');
+    (CONF.myTasks||[]).forEach(t=>add(t.id,t.due||'',t.t,'',null));
+    return L.sort((a,b)=>(a.due||'9')<(b.due||'9')?-1:1);
+  };
+  rTicker=function(){
+    const k=NOWK,[,m]=mparts(k),A=agg(k),budget=bsum(bud(k)),rest=budget-A.var,W=week(),lim=cardLim(k),{save5,s,hit}=PLAN,v=VIS();
+    const it=(c,l,t)=>`<span class="tk-i"><span class="tk-l" style="--c:var(${c})">${l}</span><span>${t}</span></span>`,n=x=>`<b class="${x<0?'dn':''}">${yen(x)}</b>円`;
+    const L=[it('--accent','貯金',`給料日に${n(save5)}を先取り`),it('--gold','今週',`あと${n(W.left)}・1日${n(Math.max(W.perDay,0))}まで`),it('--gold','変動費',`${m}月はあと${n(rest)}`),
+     MYP().includes(CARD)?it(A.card>lim*.9?'--bad':'--e3','カード',`あと${n(lim-A.card)}（上限 ${yen(lim)}円）`):'',it('--warn','敵④',`特別費に毎月${n(s.res)}`),
+     s.inv?it('--e3','投資',`毎月${n(s.inv)}・${v.yrs}年後に約${man(fvm(v.init,s.inv,v.rate,v.yrs*12))}円`):'',
+     hit>=0?it('--good',GL(),`${ym(hit).join('年')}月に到達予定`):it('--bad','目標','このままだと届きません')].join('');
+    const tr=$('tkTrack');if(tr._h===L)return;tr._h=L;tr.innerHTML=L+L;requestAnimationFrame(()=>tr.style.setProperty('--dur',Math.max(20,tr.scrollWidth/2/45)+'s'));
+  };
+  rKy=function(){$('kyP').hidden=true};
+  rFoes=function(){
+    const {s}=PLAN,dl=a=>'<dl>'+a.map(x=>`<dt>${x[0]}</dt><dd>${yen(x[1])}</dd>`).join('')+'</dl>';
+    const foe=(g,tag,big,unit,list,note)=>`<div class="foe" style="--c:var(${GC[g]})"><h3>${GN[g]}<span>${tag}</span></h3><div class="big">${yen(big)}<small>${unit}</small></div>${dl(list)}<p>${note}</p></div>`;
+    $('foes').innerHTML=foe('e1','毎月ほぼ同じ額',s.rent+s.fixo,'円／月',[['家賃',s.rent],['通信・サブスク・保険',s.fixo]],'見直すと毎月ずっと効く、いちばん大事なところ')+
+     foe('e2','毎月の予算',s.v,'円／月',VAR.filter(c=>bud(NOWK)[c]).map(c=>[CAT[c].n,bud(NOWK)[c]]),'1週間ごとに分けて使いすぎを防ぐ')+
+     foe('e3','時期と額が決まっている',s.irr,'円／月ならし',[['年間',s.irr*12]],'税金・更新料・年払いのサブスクなど。月割りで準備する')+
+     foe('e4','時期も額も読めない',s.res,'円／月の積立',[['年間の枠',s.res*12]],'旅行・家電・冠婚葬祭は特別費の口座からだけ払う');
+    const base=s.income,lim=base*.8,parts=[[s.rent+s.fixo,'--accent'],[s.v,'--gold'],[s.irr,'--e3'],[s.res,'--warn']],tot=parts.reduce((a,b)=>a+b[0],0),mx=Math.max(base,tot);
+    $('g8t').innerHTML=parts.map(a=>`<i style="width:${a[0]/mx*100}%;background:var(${a[1]})"></i>`).join('');
+    $('g8m').innerHTML=`<b style="left:${lim/mx*100}%"></b><span style="left:${lim/mx*100}%">8割ライン ${yen(lim)}円</span>`;
+    $('g8s').textContent=`手取り${yen(base)}円に対して4つの敵の合計は${yen(tot)}円（${Math.round(tot/base*100)}%）。${tot<=lim?'8割以内に収まっています':'8割を超えています。固定費から見直しましょう'}。`;
+  };
+  document.querySelector('#pSeg [data-p="pay"]').hidden=true;
+  // ===== 最初の5つの質問 =====
+  const QS=[
+   {h:'いくら貯めたいですか？',why:'目標と今の貯金から、届く月を計算します。生活防衛資金なら生活費の6か月分が目安です。',f:[['goal','目標の金額','円'],['saved','今の貯金','円']]},
+   {h:'毎月の手取りはいくらですか？',why:'先取り貯金の金額と、使っていいお金の上限を決めるのに使います。',f:[['income','手取り（残業代は除く）','円'],['payday','給料日','日']]},
+   {h:'毎月決まって出ていくお金は？',why:'支出の「4つの敵」の①固定費です。ここが一番見直しの効果が大きいところです。',f:[['rent','家賃（光熱費込みなら込みで）','円'],['fixo','通信・サブスク・保険などの合計','円']]},
+   {h:'食費・日用品・美容などに毎月だいたいいくら使いますか？',why:'②変動費です。費目ごとの予算に分け、1週間ずつ使いすぎをチェックします。',f:[['vari','1か月の変動費','円']]},
+   {h:'よく使う支払い方法は？',why:'選んだものが記録画面に並び、毎回選ばなくて済むようになります（複数選べます）。',pays:true}];
+  let qi=0;const QA={...S(),vari:bsum(bud(NOWK))||60000,pays:CONF.myPays||['クレジットカード','QRコード決済']};
+  const onb=document.createElement('section');onb.className='panel onbq';onb.id='onb';document.querySelector('.app').insertBefore(onb,document.querySelector('.app').children[1]);
+  const st=document.createElement('style');st.textContent=`body.onb .app>*:not(header):not(#onb),body.onb .bnav,body.onb #addTop{display:none!important}body:not(.onb) #onb{display:none}
+   .onbq{max-width:560px;margin:3vh auto 0;width:100%}.onbq .stp{display:flex;gap:4px}.onbq .stp i{flex:1;height:4px;border-radius:2px;background:var(--line)}.onbq .stp i.on{background:var(--accent)}
+   .onbq h2{font-size:20px;line-height:1.4}.onbq .fld{display:flex;flex-direction:column;gap:4px}.onbq .fld label{font-size:12px;font-weight:700}.onbq .fld .in{display:flex;align-items:center;gap:8px}
+   .onbq .fld .in input{flex:1;font-size:22px;font-weight:600;text-align:right}.onbq .qn{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.onbq .qn .sp{flex:1}`;document.head.appendChild(st);
+  function rQ(){
+    const q=QS[qi];
+    onb.innerHTML=`<div class="stp">${QS.map((_,j)=>`<i class="${j<=qi?'on':''}"></i>`).join('')}</div><div class="hint">質問 ${qi+1} / ${QS.length}</div><h2>${q.h}</h2><p class="hint" style="margin:0;font-size:13px">${q.why}</p>
+     ${q.f?q.f.map(([k,l,u])=>`<div class="fld"><label for="q_${k}">${l}</label><div class="in">${u=='円'?`<input type="text" class="yen" id="q_${k}" value="${yen(QA[k])}" placeholder="例：100万">`:`<input type="number" id="q_${k}" value="${QA[k]}" min="1" max="31" inputmode="numeric">`}<span class="hint">${u}</span></div></div>`).join(''):''}
+     ${q.pays?`<div class="chips" id="qPays">${PAYS.filter(p=>p!='口座引き落とし').map(p=>`<button type="button" class="chip" data-qp2="${p}" aria-pressed="${QA.pays.includes(p)}">${p}</button>`).join('')}</div>
+       ${QA.pays.includes(CARD)?`<div class="fld"><label for="q_cardDay">カードの引き落とし日</label><div class="in"><input type="number" id="q_cardDay" value="${QA.cardDay}" min="1" max="31" inputmode="numeric"><span class="hint">日</span></div></div>`:''}`:''}
+     <div class="qn">${qi?'<button class="btn" type="button" id="qB">戻る</button>':''}<span class="sp"></span><button class="btn" type="button" id="qS">見本の数字で見る</button><button class="btn pri" type="button" id="qN">${qi==QS.length-1?'家計簿を作る':'次へ'}</button></div>`;
+    const read=()=>{(q.f||[]).forEach(([k,,u])=>{const v=u=='円'?evalAmt($('q_'+k).value):parseFloat($('q_'+k).value);if(!isNaN(v)&&v>=0)QA[k]=v});if($('q_cardDay')){const v=parseFloat($('q_cardDay').value);if(v>=1&&v<=31)QA.cardDay=v}};
+    if($('qPays'))$('qPays').onclick=e=>{const b=e.target.closest('[data-qp2]');if(!b)return;read();const p=b.dataset.qp2;QA.pays=QA.pays.includes(p)?QA.pays.filter(x=>x!=p):[...QA.pays,p];rQ()};
+    if($('qB'))$('qB').onclick=()=>{read();qi--;rQ()};
+    $('qS').onclick=()=>{Object.assign(QA,DEF,{vari:60000,pays:['クレジットカード','QRコード決済']});finish()};
+    $('qN').onclick=()=>{read();if(q.pays&&!QA.pays.length){toast('1つ以上選んでください');return}if(qi<QS.length-1){qi++;rQ()}else finish()};
+  }
+  function finish(){
+    const {vari,pays,...rest}=QA;CONF.S={...(CONF.S||{}),...rest};
+    const b={};Object.entries(RATIO).forEach(([c,r])=>b[c]=Math.round(vari*r/500)*500);b.food+=vari-bsum(b);CONF.bud1=b;
+    CONF.myPays=pays;CONF.lastPay=pays[0];QP=null;CONF.demoDone=true;
+    if(!Object.keys(TX).length){const p0=pays[0],p1=pays[1]||p0;[[0,780,'ランチ','food',p1],[1,2380,'ドラッグストア','daily',p0],[2,1200,'カフェ','food',p1],[3,3300,'映画','fun',p0]].forEach(([d,a,m,c,p],j)=>TX['sample'+j]={date:addDays(TD,-d),amt:a,kind:'out',cat:c,pay:p,memo:m+'（見本）',ts:j})}
+    saveLocal();document.body.classList.remove('onb');setBuilt=false;tab('home');
+  }
+  window.demoRedo=()=>{qi=0;Object.assign(QA,S(),{vari:bsum(bud(NOWK)),pays:MYP()});document.body.classList.add('onb');rQ();window.scrollTo(0,0)};
+  const rb=document.createElement('button');rb.className='btn sm';rb.type='button';rb.textContent='質問に答え直す';rb.onclick=()=>demoRedo();document.querySelector('header.top').insertBefore(rb,document.getElementById('addTop'));
+  if(!CONF.demoDone){document.body.classList.add('onb');rQ()}
+}
 qInit();
 const H0=location.hash.slice(1);
 tab(H0=='add'||SHORT[H0.split('.')[0]]?'home':H0||'home');
