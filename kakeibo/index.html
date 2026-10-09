@@ -986,7 +986,7 @@ function fillMemos(){$('memos').innerHTML=[...new Set(Object.values(TX).map(x=>x
 function qPaySeg(){const c=curPay(),y=KY(),PL0=MYP().slice();$('qPaySeg').innerHTML=PL0.map(p=>`<button type="button" data-qp="${p}" aria-pressed="${c==p}">${p}${p=='Kyash個人'&&NOWK>=y.start?'<small>変動費はこちら</small>':p=='楽天カード'&&NOWK>=y.start&&y.mode=='all'?'<small>固定費だけ</small>':''}</button>`).join('')}
 function qPreview(){
   qPaySeg();const raw=$('qAmt').value.trim(),a=evalAmt(raw),W=week(),el=$('qPrev'),memo=$('qMemo').value;
-  $('qFoe').innerHTML=FOE4.map(([g,n,d])=>{const q=guess(g,memo,a>0?a:0);return `<button type="button" data-qg="${g}" style="--c:var(${GC[g]})"><b>${n} ${d.replace('毎月の','').replace('不定期の','不定期')}</b><span>${q.how=='none'?(memo?'品目はあとで確認':'品目は自動'):`→ <em>${CAT[q.cat].n}</em>`}</span></button>`}).join('');
+  $('qFoe').innerHTML=FOE4.map(([g,n,d])=>{const q=guess(g,memo,a>0?a:0);return `<button type="button" data-qg="${g}" style="--c:var(${GC[g]})"><b>${n} ${d.replace('毎月の','').replace('不定期の','不定期')}</b><span>${q.how=='none'?(memo?'品目はあとで確認':{e1:'家賃・奨学金・通信',e2:'食・日用・美容',e3:'税金・ローン・シーモア',e4:'旅行・家電・冠婚葬祭'}[g]):`→ <em>${CAT[q.cat].n}</em>`}</span></button>`}).join('');
   const un=txOf(NOWK).filter(t=>t.auto=='none').length;
   $('qUnc').innerHTML=un?`<button class="btn sm" type="button" id="toUnc">品目の確認 ${un}件</button>`:'';
   if($('toUnc'))$('toUnc').onclick=()=>{UI.lm=NOWK;UI.lf='unc';UI.q='';$('q').value='';tab('list')};
