@@ -371,7 +371,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
       <div id="wk"></div>
       <div class="mo" id="mo"></div>
       <div class="qe">
-        <div class="ph"><h3>すぐ記録</h3><span class="hint">支払い方法 → 金額 → 4つの敵</span></div>
+        <div class="ph"><h3>すぐ記録</h3></div>
         <div class="pm" id="qPaySeg" role="group" aria-label="支払い方法"></div>
         <div class="amtbox"><span>¥</span><input id="qAmt" inputmode="decimal" placeholder="金額" aria-label="すぐ記録する金額"></div>
         <input type="text" id="qMemo" placeholder="お店・内容（入れると品目を自動で分けます）" list="memos" aria-label="お店・内容">
@@ -395,7 +395,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
         <div id="schSum"></div>
         <ul class="plain sch" id="sch"></ul>
         <div id="pForm"></div>
-        <div class="srow"><button class="btn sm" id="addPlan" type="button">＋ 予定を追加</button><span class="hint">丸で記録、行を押すと金額の変更・今月はなし</span></div>
+        <div class="srow"><button class="btn sm" id="addPlan" type="button">＋ 予定を追加</button></div>
       </section>
       <section class="panel">
         <div class="ph"><h2>最近の記録</h2><button class="btn sm" data-go="list" type="button">すべて見る</button></div>
@@ -423,13 +423,13 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
   </div>
   <section class="panel" id="ssP" hidden>
     <div class="ph"><h2>明細のスクリーンショットから取り込む</h2><button class="btn sm" id="ssClose" type="button">閉じる</button></div>
-    <p class="hint">楽天カード・Kyash（個人）・PayPayアプリの利用履歴の画面をスクリーンショットして選ぶと、Claudeが日付・金額・お店を読み取ります。取り込む前に一覧で確認でき、記録済みのものには印が付きます。</p>
+    <p class="hint">利用履歴のスクショをClaudeが読み取ります</p>
     <div class="srow"><span class="hint">どの明細？</span><select id="ssPay" aria-label="明細の支払い方法"></select><label class="btn pri sm" for="ssFile">画像を選ぶ</label><input type="file" id="ssFile" class="vh" accept="image/*" multiple></div>
     <div id="ssOut"></div>
   </section>
   <div class="sum3" id="lSum"></div>
   <div class="seg" id="lFilter"></div>
-  <section class="panel" id="calP" hidden><div class="cal" id="cal"></div><p class="hint">数字はその日の変動費。1日あたりの予算を超えた日は赤字です。日付を押すとその日の記録だけ表示します。</p></section>
+  <section class="panel" id="calP" hidden><div class="cal" id="cal"></div><p class="hint">その日の変動費。赤は1日の予算オーバー</p></section>
   <section class="panel"><div id="lDayNote"></div><ul class="plain txl" id="lList"></ul></section>
 </div>
 
@@ -437,7 +437,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
 <div id="p-report" class="col" hidden>
   <div class="toolbar">
     <div class="msw"><button class="icon-btn" data-mv="-1" type="button" aria-label="前の月"><svg class="i" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button><b id="rMonth"></b><button class="icon-btn" data-mv="1" type="button" aria-label="次の月"><svg class="i" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button></div>
-    <span class="hint">使った月で集計（カード払いも使った日の月に入ります）</span>
+    
   </div>
   <div class="grid g2">
     <section class="panel">
@@ -470,7 +470,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
         <section class="panel">
           <h2>実際の残高を記録</h2>
           <div class="srow"><input type="date" id="snD" aria-label="日付"><input type="number" id="snA" placeholder="総資産（円）" inputmode="numeric" aria-label="総資産" style="flex:1;font-family:var(--num);font-size:16px;text-align:right"><button class="btn pri sm" id="snSave" type="button">記録</button></div>
-          <p class="hint">楽天銀行・ドコモSMTB・Kyash・PayPayの合計（カードの未払い分は引かない）。月末に1回記録すると、計画とのずれがグラフに出ます。</p>
+          <p class="hint">口座とPayPayの合計。月末に1回記録</p>
           <ul class="plain txl" id="snList"></ul>
         </section>
         <section class="panel"><h2>ロードマップ</h2><ol class="road" id="road"></ol></section>
@@ -480,7 +480,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
   <div id="pp-whatif" class="col" hidden>
     <section class="panel">
       <div class="ph"><h2>もしも別の月に払ったら</h2><button class="btn sm" id="wfClear" type="button">リセット</button></div>
-      <p class="hint">支払いの月を変えたら、月末の残高がどうなるか試せます。カード払いは引き落としの月で計算します。</p>
+      <p class="hint">カード払いは引き落としの月で計算</p>
       <div id="wf"></div>
     </section>
   </div>
@@ -488,7 +488,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
     <section class="panel">
       <div class="ph"><h2>支出管理表（計画）</h2><div class="seg" id="span"><button data-n="6" type="button">6か月</button><button data-n="12" type="button">12か月</button><button data-n="24" type="button">24か月</button></div></div>
       <div class="scroll"><table id="sheet" class="sheet-t"></table></div>
-      <p class="hint">口座から実際に出ていく月で並べています（カード払いは翌月、シーモアは翌々月）。支出割合は、敵①〜④の合計を給料の手取り（賞与・未払給料を除く）で割ったもので、80%以下が目安です。</p>
+      <p class="hint">口座から出ていく月で表示。支出割合は80%以下が目安</p>
     </section>
   </div>
   <div id="pp-foes" class="col" hidden>
@@ -503,7 +503,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
     <section class="panel">
       <h2>昇給後の給料明細の試算</h2>
       <div class="scroll" style="max-width:620px"><table id="pay"></table></div>
-      <p class="hint">6〜9月の給与明細をもとに計算。基本給26万円＋通勤手当14,290円＋残業代（時間単価は約1,767円が基本給に比例して約1,998円になると仮定）。社会保険料は明細の料率（健康保険5.055%、子ども・子育て支援金0.115%、厚生年金9.15%、雇用保険0.5%）。昇給から3か月は標準報酬月額24万円のまま、4か月目から新しい等級に上がる想定。所得税は明細の実績から近似。住民税は2027年6月〜が均等割のみ（年約5,000円）、2028年6月〜が2027年の収入をもとにした概算です。</p>
+      <p class="hint">6〜9月の給与明細をもとにした試算です</p>
     </section>
   </div>
 </div>
@@ -512,9 +512,9 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
 <div id="p-set" class="col" hidden>
   <div class="grid g2">
     <section class="panel">
-      <div class="ph"><h2>変動費の予算（費目ごと）</h2><span class="hint">合計が月の予算になります</span></div>
+      <div class="ph"><h2>変動費の予算（費目ごと）</h2></div>
       <div class="scroll"><table class="budt" id="budt"></table></div>
-      <div class="f"><label for="cardLim">今月の楽天カード利用の上限</label><div class="in"><input type="number" id="cardLim" step="100" inputmode="numeric"><span class="u">円</span></div><span class="hint">サブスク・通信費も含めたカード払いの合計。10月は47,900円（できれば45,000円）。70%・90%・100%でホームに警告が出ます</span></div>
+      <div class="f"><label for="cardLim">今月の楽天カード利用の上限</label><div class="in"><input type="number" id="cardLim" step="100" inputmode="numeric"><span class="u">円</span></div><span class="hint">サブスク・通信費も含む。70%・90%・100%で警告</span></div>
     </section>
     <section class="panel">
       <div class="ph"><h2>計画の条件</h2><button class="btn sm" id="reset" type="button">おすすめの計画に戻す</button></div>
@@ -527,13 +527,13 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
       <div class="f">
         <label for="mfFile">マネーフォワードのCSVを取り込む</label>
         <input type="file" id="mfFile" accept=".csv,text/csv">
-        <span class="hint">マネーフォワードの「家計簿」→「入出金」→ 月ごとのCSVダウンロード。大項目・中項目の名前から費目を当てはめ、同じ明細は二重に入りません。計算対象外の行は飛ばします。</span>
+        <span class="hint">入出金のCSV。同じ明細は二重に入りません</span>
         <div id="mfPrev"></div>
       </div>
       <div class="f">
         <label>いつも使う支払い方法</label>
         <div class="chips" id="myPays"></div>
-        <span class="hint">選んだものだけが記録画面に出ます。最後に使った支払い方法は次回も選ばれたままになります。</span>
+        
         <div id="shorts"></div>
       </div>
       <div class="f">
@@ -560,7 +560,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
     <div class="ph"><h2 id="shT">記録する</h2><div class="seg" id="kSeg"><button data-k="out" type="button">支出</button><button data-k="in" type="button">収入</button><button data-k="mv" type="button">振替</button></div></div>
     <div class="chips" id="quick"></div>
     <div class="amtbox" id="amtBox"><span>¥</span><input id="amt" inputmode="decimal" placeholder="0" aria-label="金額"></div>
-    <span class="hint" id="amtHint">「1200+380」のような足し算・引き算もできます</span>
+    <span class="hint" id="amtHint">1200+380 のような計算もOK</span>
     <div class="chips" id="cats"></div>
     <div class="srow"><div class="seg" id="dSeg"><button data-d="0" type="button">今日</button><button data-d="-1" type="button">昨日</button></div><input type="date" id="dt" aria-label="日付"></div>
     <div class="chips" id="pays"></div>
@@ -771,14 +771,14 @@ function sched(k){
   const [y,m]=mparts(k),{P,s,save5}=PLAN,L=[];
   const add=(key,day,name,amt,cat,kind='out',note='',pay,plan)=>{const ov=CONF.ov?.[key];if(ov&&k>=ov.from&&key!='card')amt=ov.amt;
     const id=`s-${k}-${key}`;L.push({key,day,name,amt:Math.round(amt),cat,kind,note,pay:pay||DEFPAY[cat]||'楽天銀行',plan,id,skip:!!CONF.skip?.[id]})};
-  add('salary',10,'給料',i<3?s.now:i<6?P.p1.net:P.p2.net,'salary','in','残業代で変わるので明細の額に直して保存');
+  add('salary',10,'給料',i<3?s.now:i<6?P.p1.net:P.p2.net,'salary','in','明細の額に直して記録');
   add('rent',10,'家賃（Kyashへ入金）',50000,'rent');
   if(i>=3&&save5)add('save',10,'先取り貯金',save5,'save','mv','ドコモSMTBへ');
   if(i>=3&&s.res)add('res',10,'特別費の積立',s.res,'save','mv','ドコモSMTBへ');
   if(i>=3&&s.nisa)add('nisa',10,'NISAの積立',s.nisa,'nisa','mv');
   if((m==12&&i>=2)||(m==7&&i>=9))add('bonus',0,'賞与',s.bonus,'bonus','in','支給日は未確認');
   if(i==1&&s.back)add('back',0,'未払給料',s.back,'back','in','入ったら全額を貯金へ');
-  {const y=KY();if(k>=y.start)add('kcharge',10,'Kyash個人へチャージ',y.mode=='all'?bsum(bud(k)):+bud(k).food||0,'kcharge','mv',k==y.start?'切り替えの最初の月。毎週に分けてもOK':'毎週に分けるなら1週あたり'+yen((y.mode=='all'?bsum(bud(k)):+bud(k).food||0)/dim(k)*7)+'円')}
+  {const y=KY();if(k>=y.start)add('kcharge',10,'Kyash個人へチャージ',y.mode=='all'?bsum(bud(k)):+bud(k).food||0,'kcharge','mv','1週 '+yen((y.mode=='all'?bsum(bud(k)):+bud(k).food||0)/dim(k)*7)+'円')}
   const cd=cardDue(k);add('card',27,'楽天カード引き落とし',cd.amt,'card','mv',cd.note);
   add('scholar',27,'奨学金',39312,'scholar');
   if(i<=6)add('phone',27,'携帯機種代（オリコ）',5150+(i==2?10000:0),'phone','out',i==2?'ボーナス払い＋10,000円':'');
@@ -787,8 +787,8 @@ function sched(k){
   add('ins',27,'生命保険',2838,'ins');
   if(i==1||i==4)add('jumin',dim(k),'住民税',25000,'tax','out',i==1?'12月10日以降にできないか窓口に相談':'');
   // 想定している出費（カードで払うものは、使った月の予定として出す）
-  if(k=='2026-11'){add('hair',1,'美容室',13000,'beauty','out','11月に入ってからカードで（引き落としは12月27日）','楽天カード');add('trip',0,'旅行',50000,'travel','out','確定分。現地の食費などは別（引き落としは12月27日）','楽天カード')}
-  if(i>=1&&(m==4||m==7||m==11))add('seyb',0,'シーモアのまとめ買い',m==4?22000:44000,'seymour','out',`引き落としは${(m+1)%12+1}月27日`,'楽天カード');
+  if(k=='2026-11'){add('hair',1,'美容室',13000,'beauty','out','引き落とし 12/27','楽天カード');add('trip',0,'旅行',50000,'travel','out','引き落とし 12/27','楽天カード')}
+  if(i>=1&&(m==4||m==7||m==11))add('seyb',0,'シーモアのまとめ買い',m==4?22000:44000,'seymour','out',`引き落とし ${(m+1)%12+1}/27`,'楽天カード');
   // 自分で追加した予定
   Object.entries(PL).forEach(([pid,q])=>{if(!q||!q.start)return;
     const on=q.rep=='once'?k==q.start:q.rep=='y'?k>=q.start&&mparts(k)[1]==mparts(q.start)[1]:k>=q.start&&(!q.end||k<=q.end);
@@ -883,7 +883,7 @@ function rHome(){
   $('wk').innerHTML=`<div class="row" style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap"><div><div class="lbl">今週あと使えるお金（${md(W.ws)}〜${md(W.we)}）</div><div class="big ${W.left<0?'neg':''}">${yen(W.left)}<small>円</small></div></div>
    <div class="perday"><span class="pill ${wst[0]}">${wst[1]}</span><div class="hint">残り${W.dl}日・1日あたり</div><b class="${W.perDay<0?'neg':''}">${yen(Math.max(W.perDay,0))}</b><span class="hint"> 円</span></div></div>
    <div class="meter"><i class="${W.left<0?'over':''}" style="width:${Math.min(100,W.spent/W.tot*100||0)}%"></i><b style="left:${(W.dow+1)/7*100}%" title="今日の位置"></b></div>
-   <div class="meter-l"><span>使った ${yen(W.spent)}円</span><span>今週の予算 ${yen(W.tot)}円${W.carry?`（先週までの${W.carry>0?'余り +':'超過 '}${yen(W.carry)}円込み）`:''}</span></div>`;
+   <div class="meter-l"><span>使った ${yen(W.spent)}円</span><span>予算 ${yen(W.tot)}円${W.carry?`（繰越 ${W.carry>0?'+':'−'}${yen(Math.abs(W.carry))}）`:''}</span></div>`;
   $('mo').innerHTML=`<div class="lbl">${m}月の変動費 あと</div><div class="mv ${rest<0?'neg':''}">${yen(rest)}<small>円</small> <span class="pill ${st[0]}" style="vertical-align:4px">${st[1]}</span></div>
    <div class="meter thin"><i class="${A.var>budget?'over':''}" style="width:${Math.min(100,A.var/budget*100||0)}%"></i><b style="left:${d/days*100}%"></b></div>
    <div class="meter-l"><span>使った ${yen(A.var)}円</span><span>予算 ${yen(budget)}円</span></div>
@@ -891,7 +891,7 @@ function rHome(){
    <div class="meter thin"><i class="${A.card>lim0*.9?'over':''}" style="width:${Math.min(100,A.card/lim0*100||0)}%"></i></div>
    <div class="meter-l"><span>上限 ${yen(lim0)}円</span><span>あと ${yen(lim0-A.card)}円</span></div>`;
   const cr=A.card/lim0,lv=cr>=1?3:cr>=.9?2:cr>=.7?1:0;
-  $('warn').innerHTML=lv?`<div class="warn l${lv}"><b style="white-space:nowrap">楽天カードが上限の${Math.round(cr*100)}%</b><span>${lv==3?`上限を${yen(A.card-lim0)}円超えています。今月はもうカードを使わず、PayPayや現金で払ってください。`:lv==2?`あと${yen(lim0-A.card)}円で上限です。急ぎでない買い物は来月に回しましょう。`:`あと${yen(lim0-A.card)}円。残り${left}日なので1日${yen((lim0-A.card)/left)}円までのペースです。`}</span></div>`:'';
+  $('warn').innerHTML=lv?`<div class="warn l${lv}"><b style="white-space:nowrap">楽天カードが上限の${Math.round(cr*100)}%</b><span>${lv==3?`${yen(A.card-lim0)}円オーバー。今月はカードを使わない`:lv==2?`あと${yen(lim0-A.card)}円。急がない買い物は来月に`:`あと${yen(lim0-A.card)}円（1日${yen((lim0-A.card)/left)}円まで）`}</span></div>`:'';
   fillMemos();qPreview();rKy(A);
   // KPI
   const lim=cardLim(k),hit=PLAN.hit,snaps=Object.values(SNAP).sort((a,b)=>a.date<b.date?1:-1),last=snaps[0];
@@ -901,17 +901,17 @@ function rHome(){
    kpi('今月の支出',yen(A.out),'円',`固定 ${yen(A.e1)}・変動 ${yen(A.e2)}・特別 ${yen(A.e3+A.e4)}`)+
    kpi('今月の収支',`<span class="${A.inc-A.out<0?'neg':''}">${yen(A.inc-A.out)}</span>`,'円','収入−支出（振替は除く）')+
    kpi('200万円に届く月',hit>=0?(()=>{const[a,b]=ym(hit);return `${a}<small>年</small>${b}`})():'未定',hit>=0?'月':'',
-     diff==null?'計画タブで実際の残高を記録すると比べられます':`計画より ${diff>=0?'+':''}${yen(diff)}円（${+last.date.slice(5,7)}/${+last.date.slice(8)}時点）`);
+     diff==null?'計画タブで残高を記録すると表示':`計画より ${diff>=0?'+':''}${yen(diff)}円（${+last.date.slice(5,7)}/${+last.date.slice(8)}時点）`);
   // 予算
   $('budT').textContent=`${m}月の変動費の予算`;
   $('brows').innerHTML=VAR.filter(c=>B[c]||A.cat[c]).map(c=>{
     const a=A.cat[c]||0,b=+B[c]||0,r=b?a/b:1,over=a>b;
     return `<button class="brow" type="button" data-cat="${c}"><span class="nm"><i class="dot" style="background:${ccol(c)}"></i>${CAT[c].n}</span><span class="bar"><i style="width:${Math.min(100,r*100)}%;background:${over?'var(--bad)':ccol(c)}"></i></span><span class="amt"><span class="${over?'neg':''}">${yen(a)}</span><span> / ${yen(b)}</span></span></button>`}).join('')
-   +(A.refund?`<div class="hint">割り勘の受け取り ${yen(A.refund)}円を変動費から差し引いています</div>`:'');
+   +(A.refund?`<div class="hint">割り勘 ${yen(A.refund)}円を差し引き済み</div>`:'');
   rSched();
   // 最近
   const R=Object.entries(TX).map(([id,t])=>({id,...t})).sort((a,b)=>(b.date+(b.ts||0))>(a.date+(a.ts||0))?1:-1).slice(0,6);
-  $('recent').innerHTML=R.length?R.map(txRow).join(''):emptyState(ST.loaded?'まだ記録がありません。お昼ごはんやカードで払ったものを入れていくと、上の予算が減っていきます。':'記録を読み込んでいます…');
+  $('recent').innerHTML=R.length?R.map(txRow).join(''):emptyState(ST.loaded?'まだ記録がありません':'記録を読み込んでいます…');
   // やること
   const {save5,s,P}=PLAN,i=pidx(k);
   const rows=PLAN.rows,short=rows[1]&&rows[1].bal<0;
@@ -931,17 +931,17 @@ function rKy(A){
   const tot=kyv.reduce((a,t)=>a+(+t.amt||0),0),kys=kyv.filter(t=>t.pay=='Kyash個人').reduce((a,t)=>a+(+t.amt||0),0),sh=tot?kys/tot:0;
   const after=NOWK>=y.start,paid=TD>=`${nk}-27`;
   const steps=[
-   [after,`${sm==1?sy-1+'年':''}${mparts(madd(y.start,-1))[1]}月まで：楽天カードのまま週の予算で管理`,`上の「今週あと」を見ながら使う。カードの上限は${yen(cardLim(NOWK))}円`],
-   [charged,`${sm}月：${src}から${yen(fund)}円をKyash個人へチャージ`,`切り替えの1か月だけ必要なお金。${nm}月27日の引き落としが減るので、そこで戻ってきます`],
-   [after&&tot>0&&sh>=.8,`${sm}月から：${y.mode=='all'?'変動費':'食費'}はKyash個人で払う`,after?`今月の${y.mode=='all'?'変動費':'食費'}のKyash払い ${Math.round(sh*100)}%（${yen(kys)} / ${yen(tot)}円）`:'楽天カードはサブスク・通信費・機種代などの決まった支払いだけに'],
-   [paid,`${nm}月27日：カードの引き落としが${y.mode=='all'?'固定費だけ':'食費の分だけ減る'}`,`${yen(fund)}円が手元に戻る。以後は給料日（できれば毎週）にKyash個人へチャージ`]];
+   [after,`${sm==1?sy-1+'年':''}${mparts(madd(y.start,-1))[1]}月まで：楽天カードのまま週の予算で管理`,`上限 ${yen(cardLim(NOWK))}円`],
+   [charged,`${sm}月：${src}から${yen(fund)}円をKyash個人へチャージ`,`${nm}/27の引き落としが減って戻ってくる`],
+   [after&&tot>0&&sh>=.8,`${sm}月から：${y.mode=='all'?'変動費':'食費'}はKyash個人で払う`,after?`今月の${y.mode=='all'?'変動費':'食費'}のKyash払い ${Math.round(sh*100)}%（${yen(kys)} / ${yen(tot)}円）`:'カードは固定費だけに'],
+   [paid,`${nm}月27日：カードの引き落としが${y.mode=='all'?'固定費だけ':'食費の分だけ減る'}`,`以後は給料日にKyashへチャージ`]];
   const cur=steps.findIndex(x=>!x[0]);
   const bal=kyBal(),W=week(),need=bal==null?null:Math.max(0,Math.round(W.left)-bal);
   $('kyP').innerHTML=`<div class="ph"><h2>Kyashへの切り替え</h2><span class="pill ${after?'ok':'n'}">${after?'切り替え中':`${sy}年${sm}月から`}</span></div>
    <ol class="steps">${steps.map((x,j)=>`<li class="${x[0]?'done':j==cur?'now':''}"><i>${x[0]?'✓':j+1}</i><span><b>${x[1]}</b><span class="hint">${x[2]}</span></span></li>`).join('')}</ol>
    ${after&&tot?`<div class="share" title="Kyash個人 ${Math.round(sh*100)}%"><i style="width:${sh*100}%;background:var(--accent)"></i><i style="flex:1;background:var(--gold)"></i></div><div class="legend"><span><i style="background:var(--accent)"></i>Kyash個人</span><span><i style="background:var(--gold)"></i>楽天カードなど</span></div>`:''}
    <div class="kyb"><div><div class="hint">Kyash個人の残高</div><div class="v">${bal==null?'—':yen(bal)+'<small style="font-family:var(--body);font-size:12px"> 円</small>'}</div></div>
-    <div class="hint" style="max-width:15em">${bal==null?'今の残高を入れると、チャージと支払いの記録から計算します':need>0?`今週の分まであと${yen(need)}円チャージ`:'今週の分はチャージ済み'}</div></div>
+    <div class="hint" style="max-width:15em">${bal==null?'今の残高を入れてください':need>0?`今週の分まであと${yen(need)}円チャージ`:'今週の分はチャージ済み'}</div></div>
    <div class="srow"><input type="number" id="kyIn" placeholder="残高" inputmode="numeric" aria-label="Kyash個人の今の残高" style="flex:1;min-width:6em;font-family:var(--num);font-size:15px;text-align:right"><button class="btn sm" id="kyFix" type="button">残高を合わせる</button><button class="btn sm pri" id="kyCh" type="button">チャージを記録</button></div>
    <div class="srow"><span class="hint">始める月</span><select id="kyStart" aria-label="切り替えを始める月">${['2026-11','2026-12','2027-01','2027-02'].map(x=>`<option value="${x}" ${x==y.start?'selected':''}>${mlabel(x)}</option>`).join('')}</select>
     <div class="seg" id="kyMode"><button type="button" data-km="food" aria-pressed="${y.mode=='food'}">食費から</button><button type="button" data-km="all" aria-pressed="${y.mode=='all'}">変動費すべて</button></div></div>`;
@@ -962,7 +962,7 @@ function qPreview(){
   if($('toUnc'))$('toUnc').onclick=()=>{UI.lm=NOWK;UI.lf='unc';UI.q='';$('q').value='';tab('list')};
   const ask=UI.kyAsk?`<span class="ask">Kyash個人として記録します。共通で払ったときは記録しなくてOK <button class="btn sm" type="button" id="kySkip">共通なので記録しない</button></span>`:'';
   if(ask&&!raw){el.className='qprev';el.innerHTML=ask+'金額を入れて4つのどれかを押してください';bindKySkip();return}
-  if(!raw){el.className='qprev hint';el.textContent=`金額を入れて4つのどれかを押すと、${curPay()}で今日の日付に記録します`;return}
+  if(!raw){el.className='qprev hint';el.textContent=`${curPay()}・今日で記録`;return}
   if(!(a>0)){el.className='qprev neg';el.textContent='数字と＋−だけ使えます';return}
   const L=W.left-a,pd=L/W.dl;
   el.className='qprev '+(L<0?'neg':'');
@@ -1058,7 +1058,7 @@ function rReport(){
    `<table><tbody>${parts.map(([g,v])=>`<tr><td><i class="dot" style="background:var(${GC[g]});margin-right:6px"></i>${GN[g]}</td><td class="n">${yen(v)}</td><td class="n hint">${tot?Math.round(v/tot*100)+'%':''}</td></tr>`).join('')}
    <tr class="tot"><td>合計</td><td class="n">${yen(tot)}</td><td></td></tr>
    <tr><td>給料（手取り）</td><td class="n">${sal?yen(sal):'未記録'}</td><td>${sal?`<span class="pill ${tot/sal>.8?'ng':'ok'}">${Math.round(tot/sal*100)}%</span>`:''}</td></tr></tbody></table>`+
-   `<p class="hint">${sal?'4つの敵の合計を給料の手取りで割った割合。80%以下が目安です。':'給料を記録すると、8割ルールに収まっているかが出ます（ホームの支払い予定から記録できます）。'}</p>`;
+   `<p class="hint">${sal?'80%以下が目安':'給料を記録すると表示されます'}</p>`;
   // 推移
   const ks=[...Array(6)].map((_,j)=>madd(k,j-5)),vals=ks.map(x=>({k:x,v:agg(x).var,b:pidx(x)>=0?bsum(bud(x)):0}));
   $('trend').innerHTML=trendChart(vals);
@@ -1207,7 +1207,7 @@ function rWhatIf(){
   const left=v=>`<span class="${v<0?'neg':'pos'}">${yen(v)}</span>`;
   // 賞与・未払給料が入る月は、残高が急に増える理由として書き添える
   const incs={};R.forEach(r=>{const a=[];if(r.val[1])a.push(`賞与 ${yen(r.val[1])}が入る`);if(r.val[2])a.push(`未払給料 ${yen(r.val[2])}が入る`);if(a.length)incs[r.i]=a});
-  $('wf').innerHTML=`<div class="wfl">${li||'<p class="hint">まだ何も動かしていません。下から予定を選んでください。</p>'}</div>
+  $('wf').innerHTML=`<div class="wfl">${li||'<p class="hint">下から予定を選んでください</p>'}</div>
    <div class="wfadd"><b style="font-size:13px">予定を別の月に動かす</b>
     <div class="srow">${items.length?`<select id="wfItem" aria-label="動かす予定" style="flex:1">${opt}</select>`:'<span class="hint">動かせる予定はすべて選んでいます</span>'}</div>
     <div class="srow"><span class="hint">動かす先</span><select id="wfTo" aria-label="動かす先の月">${mopt(W.to&&W.to!=selK?W.to:selK?madd(selK,1):NOWK,selK)}</select><button class="btn pri sm" type="button" id="wfAdd">試す</button></div></div>
@@ -1216,7 +1216,7 @@ function rWhatIf(){
     <div class="srow"><input type="text" id="wfExN" placeholder="名前（例：美容室）" aria-label="名前" style="flex:1"><input type="number" id="wfExA" placeholder="金額" inputmode="numeric" aria-label="金額" style="width:7.5em;text-align:right"><button class="btn sm" type="button" id="wfExAdd">足す</button></div></div>
    ${msg.length?`<div class="wfmsg">${msg.map(([c,t])=>`<div class="${c}">${t}</div>`).join('')}</div>`:''}
    <div class="scroll"><table class="wft"><thead><tr><th>月</th><th>出ていくお金</th><th>月末</th></tr></thead><tbody>${R.map(r=>`<tr class="${notes[r.i]?'aff':''}"><td>${ml(madd('2026-10',r.i))}</td><td class="n" style="white-space:normal"><b>${yen(outOf(r))}</b>${notes[r.i]||incs[r.i]?`<div class="hint" style="font-family:var(--body);font-size:11px">${[...(notes[r.i]||[]),...(incs[r.i]||[])].join('<br>')}</div>`:''}</td><td class="n" style="font-weight:700">${left(N[r.i])}</td></tr>`).join('')}</tbody></table></div>
-   <p class="hint">試すだけなら予定は変わりません。</p>
+   
    ${W.list.some(c=>c.t=='mv')?`<div class="sact"><span class="sp"></span><button class="btn sm" type="button" id="wfApply">動かした予定を支払い予定に反映する</button></div>`:''}`;
   if($('wfItem'))$('wfItem').onchange=()=>{const q=items[+$('wfItem').value];W.sel=q.k+'|'+q.x.key;W.to=null;rWhatIf()};
   $('wfTo').onchange=()=>{W.to=$('wfTo').value};
@@ -1276,9 +1276,9 @@ let setBuilt=false;
 function rSet(){if(!setBuilt){fillSettings();setBuilt=true}
   const my=MYP();
   $('myPays').innerHTML=PAYS.map(p=>`<button type="button" class="chip" data-mp="${p}" aria-pressed="${my.includes(p)}">${p}</button>`).join('');
-  $('shorts').innerHTML=`<label style="margin-top:8px;display:block">支払い方法ごとの記録リンク</label><span class="hint">スマホのホーム画面やブックマークに置くと、押した瞬間にその支払い方法で金額入力が始まります。</span>`+
-    my.map(p=>`<div class="short"><b>${p}で記録</b><code>${ART}#${SHORTK[p]}</code><button class="btn sm" type="button" data-copy="${ART}#${SHORTK[p]}">コピー</button></div>`).join('')+`<p class="hint">iPhoneのショートカットのオートメーションから開くときは、最後に「.金額」を付けると金額も入った状態で開きます（例：${ART}#card.980）。お店の名前はさらに「.」のあとにBase64で付けられます。</p>`;
-  $('storeNote').textContent=ST.cloud?'記録はこのページのクラウド保存領域に入っています。リンクを知っている人がいても、あなた以外には見えない設定です。':'いまはこのブラウザの中だけに保存しています。消えると困るので、ときどきCSVで書き出してください。';
+  $('shorts').innerHTML=`<label style="margin-top:8px;display:block">支払い方法ごとの記録リンク</label><span class="hint">ホーム画面に置くとすぐ記録できます</span>`+
+    my.map(p=>`<div class="short"><b>${p}で記録</b><code>${ART}#${SHORTK[p]}</code><button class="btn sm" type="button" data-copy="${ART}#${SHORTK[p]}">コピー</button></div>`).join('')+`<p class="hint">ショートカット用：末尾に「.金額」で金額入り</p>`;
+  $('storeNote').textContent=ST.cloud?'あなただけが見られるクラウドに保存しています':'この端末だけに保存。CSVで書き出しておくと安心です';
 }
 function fillSettings(){
   const b0={...BUD0,...(CONF.bud0||{})},b1={...BUD1,...(CONF.bud1||{})};
@@ -1375,7 +1375,7 @@ async function saveSheet(next){
   if(ED.src)t.src=ED.src;
   if(ED.auto&&ED.cat==ED.cat0&&ED.auto!='none')t.auto=ED.auto;
   const id=ED.id||('t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
-  $('amtHint').textContent='「1200+380」のような足し算・引き算もできます';
+  $('amtHint').textContent='1200+380 のような計算もOK';
   write('tx',id,t);
   if(t.kind=='out'&&!DEFPAY[t.cat]&&MYP().includes(t.pay)&&CONF.lastPay!=t.pay){QP=t.pay;CONF.lastPay=t.pay;saveConf()}
   toast(`${CAT[t.cat].n} ${yen(a)}円（${t.pay}）を記録しました`);
