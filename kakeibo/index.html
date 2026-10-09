@@ -834,8 +834,8 @@ const KW=[[/家賃/,'rent'],[/奨学/,'scholar'],[/オリコ|機種/,'phone'],[/
  [/マクド|マック|吉野家|松屋|すき家|ガスト|サイゼ|スタバ|ドトール|タリーズ|コメダ|カフェ|ランチ|弁当|パン|ラーメン|うどん|そば|寿司|定食|居酒屋|焼肉|ご?はん|食|セブン|ローソン|ファミ|ミニストップ|スーパー|イオン|まいばす|ライフ|西友|コンビニ|uber|出前|飲み物/i,'food']];
 const FOE4=[['e1','敵①','毎月の固定費'],['e2','敵②','毎月の変動費'],['e3','敵③','不定期の固定費'],['e4','敵④','不定期の変動費']];
 const FALLBACK={e1:'fix_other',e2:'other',e3:'irr',e4:'special'};
-// シーモアは月額（サブスク）とまとめ買い（ゲリラ）がある。22,000円以上ならゲリラとみなす
-function seyCat(memo,amt){const t=memo||'';if(/ゲリラ/.test(t))return 'seymour';if(/シーモア/.test(t))return amt>=22000?'seymour':'subs';return null}
+// シーモア：550円は月額（サブスク）、22,000円以上はまとめ買い（ゲリラ）、それ以外（1,100円・2,200円など）は娯楽
+function seyCat(memo,amt){const t=memo||'';if(/ゲリラ/.test(t))return 'seymour';if(/シーモア/.test(t))return amt>=22000?'seymour':amt==550?'subs':'fun';return null}
 function guess(g,memo,amt,k=NOWK){
   const mm=(memo||'').trim().toLowerCase(),inG=c=>(CAT[c]||{}).g==g;
   {const sc=seyCat(memo,amt);if(sc&&inG(sc))return {cat:sc,how:'kw'}}
