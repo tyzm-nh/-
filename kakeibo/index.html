@@ -329,6 +329,8 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
 .f input[type=range]{width:100%;accent-color:var(--accent)}
 .f .u{font-size:12px;color:var(--mute);white-space:nowrap}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+input.yen{text-align:right;font-variant-numeric:tabular-nums}
+.f input.yen{font-family:var(--num);font-size:17px;width:100%}
 .budt input{width:6.5em;font-family:var(--num);font-size:15px;text-align:right;padding:3px 7px}
 .banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--gold-soft);color:var(--ink);border-radius:10px;padding:10px 14px;font-size:13px}
 /* entry sheet */
@@ -477,7 +479,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
       <div class="col">
         <section class="panel">
           <h2>実際の残高を記録</h2>
-          <div class="srow"><input type="date" id="snD" aria-label="日付"><input type="number" id="snA" placeholder="総資産（円）" inputmode="numeric" aria-label="総資産" style="flex:1;font-family:var(--num);font-size:16px;text-align:right"><button class="btn pri sm" id="snSave" type="button">記録</button></div>
+          <div class="srow"><input type="date" id="snD" aria-label="日付"><input type="text" class="yen" id="snA" placeholder="総資産（例：50万）" aria-label="総資産" style="flex:1;font-family:var(--num);font-size:16px;text-align:right"><button class="btn pri sm" id="snSave" type="button">記録</button></div>
           <p class="hint">口座とPayPayの合計。月末に1回記録</p>
           <ul class="plain txl" id="snList"></ul>
         </section>
@@ -522,7 +524,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
     <section class="panel">
       <div class="ph"><h2>変動費の予算（費目ごと）</h2></div>
       <div class="scroll"><table class="budt" id="budt"></table></div>
-      <div class="f"><label for="cardLim">今月の楽天カード利用の上限</label><div class="in"><input type="number" id="cardLim" step="100" inputmode="numeric"><span class="u">円</span></div><span class="hint">サブスク・通信費も含む。70%・90%・100%で警告</span></div>
+      <div class="f"><label for="cardLim">今月の楽天カード利用の上限</label><div class="in"><input type="text" class="yen" id="cardLim"><span class="u">円</span></div><span class="hint">サブスク・通信費も含む。70%・90%・100%で警告</span></div>
     </section>
     <section class="panel">
       <div class="ph"><h2>計画の条件</h2><button class="btn sm" id="reset" type="button">おすすめの計画に戻す</button></div>
@@ -986,7 +988,7 @@ function rKy(A){
    ${after&&tot?`<div class="share" title="Kyash個人 ${Math.round(sh*100)}%"><i style="width:${sh*100}%;background:var(--accent)"></i><i style="flex:1;background:var(--gold)"></i></div><div class="legend"><span><i style="background:var(--accent)"></i>Kyash個人</span><span><i style="background:var(--gold)"></i>楽天カードなど</span></div>`:''}
    <div class="kyb"><div><div class="hint">Kyash個人の残高</div><div class="v">${bal==null?'—':yen(bal)+'<small style="font-family:var(--body);font-size:12px"> 円</small>'}</div></div>
     <div class="hint" style="max-width:15em">${bal==null?'今の残高を入れてください':need>0?`今週の分まであと${yen(need)}円チャージ`:'今週の分はチャージ済み'}</div></div>
-   <div class="srow"><input type="number" id="kyIn" placeholder="残高" inputmode="numeric" aria-label="Kyash個人の今の残高" style="flex:1;min-width:6em;font-family:var(--num);font-size:15px;text-align:right"><button class="btn sm" id="kyFix" type="button">残高を合わせる</button><button class="btn sm pri" id="kyCh" type="button">チャージを記録</button></div>
+   <div class="srow"><input type="text" class="yen" id="kyIn" placeholder="残高" aria-label="Kyash個人の今の残高" style="flex:1;min-width:6em;font-family:var(--num);font-size:15px;text-align:right"><button class="btn sm" id="kyFix" type="button">残高を合わせる</button><button class="btn sm pri" id="kyCh" type="button">チャージを記録</button></div>
    <div class="srow"><span class="hint">始める月</span><select id="kyStart" aria-label="切り替えを始める月">${['2026-11','2026-12','2027-01','2027-02'].map(x=>`<option value="${x}" ${x==y.start?'selected':''}>${mlabel(x)}</option>`).join('')}</select>
     <div class="seg" id="kyMode"><button type="button" data-km="food" aria-pressed="${y.mode=='food'}">食費から</button><button type="button" data-km="all" aria-pressed="${y.mode=='all'}">変動費すべて</button></div></div>`;
   $('kyFix').onclick=()=>{const v=evalAmt($('kyIn').value);if(isNaN(v)){toast('Kyashアプリに出ている残高を入れてください');return}CONF.ky={...KY(),base:{date:TD,amt:v,ts:Date.now()}};saveConf();toast(`Kyash個人の残高を${yen(v)}円に合わせました`)};
@@ -1023,7 +1025,7 @@ function rSched(){
     let h=`<li class="${done?'done':''} ${late?'late':''} ${x.skip?'skip':''} ${sel?'sel':''}" data-sk="${x.key}"><span class="d">${x.day?x.day+'<small>日</small>':'<small>未定</small>'}</span><span class="nm">${esc(x.name)}${x.skip?'<span class="hint">今月はなし</span>':x.note?`<span class="hint">${esc(x.note)}</span>`:''}</span><span class="a ${x.kind=='in'?'pos':''}">${x.kind=='in'?'+':''}${yen(done?TX[x.id].amt:x.amt)}</span><button class="chk ${done?'on':''} ${x.skip?'skp':''}" type="button" data-sch="${x.key}" aria-label="${esc(x.name)}を${done?'取り消す':x.skip?'予定に戻す':'記録する'}">${x.skip?'':svgCheck}</button></li>`;
     if(sel){const dt=done?TX[x.id].date:`${k}-${pad(x.day||Math.min(TODAY.getDate(),dim(k)))}`;
       h+=`<li class="ed">${done?`<div class="srow"><span class="hint">${TX[x.id].date.replace(/-/g,'/')}に ${yen(TX[x.id].amt)}円で記録済み</span></div><div class="srow"><button class="btn sm" type="button" data-se="open">記録を直す</button><button class="btn sm" type="button" data-se="undo">記録を取り消す</button><button class="btn sm" type="button" data-se="close">閉じる</button></div>`:
-      `<div class="srow"><input type="number" id="seAmt" value="${x.amt}" inputmode="numeric" aria-label="金額"><span class="hint">円</span><input type="date" id="seDate" value="${dt}" aria-label="日付"></div>
+      `<div class="srow"><input type="text" class="yen" id="seAmt" value="${yen(x.amt)}" aria-label="金額"><span class="hint">円</span><input type="date" id="seDate" value="${dt}" aria-label="日付"></div>
        ${x.key=='card'||x.key=='salary'||x.key=='bonus'||x.key=='back'?'':`<label><input type="checkbox" id="seKeep"> 次の月からもこの金額にする</label>`}
        <div class="srow"><button class="btn pri sm" type="button" data-se="rec">この金額で記録</button><button class="btn sm" type="button" data-se="skip">今月はなし</button><button class="btn sm" type="button" data-se="wf">別の月に払ったら？</button>${x.plan?'<button class="btn sm" type="button" data-se="edit">予定を編集</button>':''}<button class="btn sm" type="button" data-se="close">閉じる</button></div>`}</li>`}
     return h}).join(''):'<li class="hint" style="cursor:default">この月の予定はありません</li>';
@@ -1039,7 +1041,7 @@ function rPForm(force){
   const g=(CAT[f.cat]||CAT.other).g,cats=CATS.filter(c=>c[2]==g);
   $('pForm').innerHTML=`<div class="pform"><h3>${f.id?'予定を編集':'予定を追加'}</h3>
    <input type="text" id="pfName" value="${esc(f.name)}" placeholder="名前（例：美容室、Netflix）" aria-label="名前">
-   <div class="row2"><input type="number" id="pfAmt" value="${f.amt||''}" placeholder="金額" inputmode="numeric" aria-label="金額"><select id="pfDay" aria-label="日">${[0,...Array.from({length:31},(_,j)=>j+1)].map(x=>`<option value="${x}" ${x==f.day?'selected':''}>${x?x+'日':'日付未定'}</option>`).join('')}</select></div>
+   <div class="row2"><input type="text" class="yen" id="pfAmt" value="${f.amt?yen(f.amt):''}" placeholder="金額" aria-label="金額"><select id="pfDay" aria-label="日">${[0,...Array.from({length:31},(_,j)=>j+1)].map(x=>`<option value="${x}" ${x==f.day?'selected':''}>${x?x+'日':'日付未定'}</option>`).join('')}</select></div>
    <div class="seg" id="pfFoe">${FOE4.map(([e,a,n])=>`<button type="button" data-pg="${e}" aria-pressed="${g==e}">${a} ${n.replace('毎月の','').replace('不定期の','不定期')}</button>`).join('')}</div>
    <div class="row2"><select id="pfCat" aria-label="品目">${cats.map(([c,n])=>`<option value="${c}" ${c==f.cat?'selected':''}>品目：${n}</option>`).join('')}</select><select id="pfPay" aria-label="支払い方法">${PAYS.map(x=>`<option ${x==f.pay?'selected':''}>${x}</option>`).join('')}</select></div>
    <div class="seg" id="pfRep">${[['m','毎月'],['once',mlabel(f.start)+'だけ'],['y','毎年'+mparts(f.start)[1]+'月']].map(([v,n])=>`<button type="button" data-pr="${v}" aria-pressed="${f.rep==v}">${n}</button>`).join('')}</div>
@@ -1260,7 +1262,7 @@ function rWhatIf(){
     <div class="srow"><span class="hint">動かす先</span><select id="wfTo" aria-label="動かす先の月">${mopt(W.to&&W.to!=selK?W.to:selK?madd(selK,1):NOWK,selK)}</select><button class="btn pri sm" type="button" id="wfAdd">試す</button></div></div>
    <div class="wfadd"><b style="font-size:13px">臨時の出費・収入を足す</b>
     <div class="srow"><div class="seg" id="wfSign"><button type="button" data-ws="-1" aria-pressed="${(W.sign||-1)<0}">出費</button><button type="button" data-ws="1" aria-pressed="${W.sign>0}">収入</button></div><select id="wfExK" aria-label="月">${mopt(NOWK)}</select></div>
-    <div class="srow"><input type="text" id="wfExN" placeholder="名前（例：美容室）" aria-label="名前" style="flex:1"><input type="number" id="wfExA" placeholder="金額" inputmode="numeric" aria-label="金額" style="width:7.5em;text-align:right"><button class="btn sm" type="button" id="wfExAdd">足す</button></div></div>
+    <div class="srow"><input type="text" id="wfExN" placeholder="名前（例：美容室）" aria-label="名前" style="flex:1"><input type="text" class="yen" id="wfExA" placeholder="金額" aria-label="金額" style="width:7.5em;text-align:right"><button class="btn sm" type="button" id="wfExAdd">足す</button></div></div>
    ${msg.length?`<div class="wfmsg">${msg.map(([c,t])=>`<div class="${c}">${t}</div>`).join('')}</div>`:''}
    <div class="scroll"><table class="wft"><thead><tr><th>月</th><th>出ていくお金</th><th>月末</th></tr></thead><tbody>${R.map(r=>`<tr class="${notes[r.i]?'aff':''}"><td>${ml(madd('2026-10',r.i))}</td><td class="n" style="white-space:normal"><b>${yen(outOf(r))}</b>${notes[r.i]||incs[r.i]?`<div class="hint" style="font-family:var(--body);font-size:11px">${[...(notes[r.i]||[]),...(incs[r.i]||[])].join('<br>')}</div>`:''}</td><td class="n" style="font-weight:700">${left(N[r.i])}</td></tr>`).join('')}</tbody></table></div>
    
@@ -1330,18 +1332,18 @@ function rSet(){if(!setBuilt){fillSettings();setBuilt=true}
 function fillSettings(){
   const b0={...BUD0,...(CONF.bud0||{})},b1={...BUD1,...(CONF.bud1||{})};
   $('budt').innerHTML=`<thead><tr><th>費目</th><th>7〜9月の平均</th><th>12月まで</th><th>1月から</th></tr></thead><tbody>`+
-    VAR.map(c=>`<tr><td><i class="dot" style="background:${ccol(c)};margin-right:6px"></i>${CAT[c].n}</td><td class="n hint">${AVG[c]?yen(AVG[c]):''}</td><td><input type="number" step="500" min="0" id="b0_${c}" value="${b0[c]}" data-b="bud0" data-c="${c}" aria-label="${CAT[c].n} 12月まで"></td><td><input type="number" step="500" min="0" id="b1_${c}" value="${b1[c]}" data-b="bud1" data-c="${c}" aria-label="${CAT[c].n} 1月から"></td></tr>`).join('')+
+    VAR.map(c=>`<tr><td><i class="dot" style="background:${ccol(c)};margin-right:6px"></i>${CAT[c].n}</td><td class="n hint">${AVG[c]?yen(AVG[c]):''}</td><td><input type="text" class="yen" id="b0_${c}" value="${yen(b0[c])}" data-b="bud0" data-c="${c}" aria-label="${CAT[c].n} 12月まで"></td><td><input type="text" class="yen" id="b1_${c}" value="${yen(b1[c])}" data-b="bud1" data-c="${c}" aria-label="${CAT[c].n} 1月から"></td></tr>`).join('')+
     `<tr class="tot"><td>合計</td><td class="n hint">67,732</td><td class="n" id="bs0">${yen(bsum(b0))}</td><td class="n" id="bs1">${yen(bsum(b1))}</td></tr></tbody>`;
-  $('cardLim').value=cardLim(NOWK);
+  $('cardLim').value=yen(cardLim(NOWK));
   const s=S();
-  $('fields').innerHTML=FIELDS.map(([k,l,mn,mx,st,u,h])=>`<div class="f"><label for="n_${k}">${l}</label><div class="in"><input type="number" id="n_${k}" min="${mn}" max="${mx}" step="${st}" value="${s[k]}" inputmode="decimal"><span class="u">${u}</span></div><input type="range" id="r_${k}" min="${mn}" max="${mx}" step="${st}" value="${s[k]}" aria-label="${l}">${h?`<span class="hint">${h}</span>`:''}</div>`).join('');
+  $('fields').innerHTML=FIELDS.map(([k,l,mn,mx,st,u,h])=>`<div class="f"><label for="n_${k}">${l}</label><div class="in">${u=='円'?`<input type="text" class="yen" id="n_${k}" value="${yen(s[k])}">`:`<input type="number" id="n_${k}" min="${mn}" max="${mx}" step="${st}" value="${s[k]}" inputmode="decimal">`}<span class="u">${u}</span></div><input type="range" id="r_${k}" min="${mn}" max="${mx}" step="${st}" value="${s[k]}" aria-label="${l}">${h?`<span class="hint">${h}</span>`:''}</div>`).join('');
   FIELDS.forEach(([k])=>{const n=$('n_'+k),r=$('r_'+k),setv=x=>{CONF.S={...(CONF.S||{}),[k]:x};saveConf()};
-    n.oninput=()=>{const x=parseFloat(n.value);if(isNaN(x)||x<0)return;r.value=x;setv(x)};
-    r.oninput=()=>{n.value=r.value;setv(+r.value)}});
+    n.oninput=()=>{const x=n.classList.contains('yen')?evalAmt(n.value):parseFloat(n.value);if(isNaN(x)||x<0)return;r.value=x;setv(x)};
+    r.oninput=()=>{n.value=n.classList.contains('yen')?yen(+r.value):r.value;setv(+r.value)}});
 }
-$('budt').addEventListener('input',e=>{const t=e.target;if(!t.dataset.b)return;const x=parseFloat(t.value);if(isNaN(x)||x<0)return;
+$('budt').addEventListener('input',e=>{const t=e.target;if(!t.dataset.b)return;const x=evalAmt(t.value);if(isNaN(x)||x<0)return;
   CONF[t.dataset.b]={...(CONF[t.dataset.b]||{}),[t.dataset.c]:x};$('bs0').textContent=yen(bsum({...BUD0,...(CONF.bud0||{})}));$('bs1').textContent=yen(bsum({...BUD1,...(CONF.bud1||{})}));saveConf()});
-$('cardLim').addEventListener('input',e=>{const x=parseFloat(e.target.value);if(isNaN(x)||x<0)return;CONF.cardLim={...(CONF.cardLim||{}),[NOWK]:x};saveConf()});
+$('cardLim').addEventListener('input',e=>{const x=evalAmt(e.target.value);if(isNaN(x)||x<0)return;CONF.cardLim={...(CONF.cardLim||{}),[NOWK]:x};saveConf()});
 $('reset').onclick=()=>{CONF.S={...DEF};delete CONF.bud0;delete CONF.bud1;setBuilt=false;saveConf();fillSettings();toast('おすすめの計画に戻しました')};
 
 // MFのCSV
@@ -1415,7 +1417,10 @@ function drawSheet(){
   $('quick').hidden=!Q.length;$('quick')._Q=Q;
 }
 const evalAmt=s=>{s=String(s).replace(/[０-９＋－]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/[−ー]/g,'-').replace(/[,，円¥\s]/g,'');
-  if(!/^[\d.+\-]+$/.test(s))return NaN;const p=s.match(/[+\-]?[\d.]+/g);return p?Math.round(p.reduce((a,b)=>a+parseFloat(b),0)):NaN};
+  if(!/^[\d.+\-万億千]+$/.test(s))return NaN;const p=[...s.matchAll(/([+\-]?)([\d.]+)(億|万|千)?/g)];
+  return p.length?Math.round(p.reduce((a,[,sg,n,u])=>a+(sg=='-'?-1:1)*parseFloat(n)*(u=='億'?1e8:u=='万'?1e4:u=='千'?1e3:1),0)):NaN};
+// 金額の入力欄：「100万」「1.5万」「1,000,000」のどれでも入力でき、入力し終わるとカンマ区切りで表示する
+document.addEventListener('focusout',e=>{const t=e.target;if(!t.matches?.('input.yen'))return;const v=evalAmt(t.value);if(!isNaN(v))t.value=v.toLocaleString('ja-JP')});
 async function saveSheet(next){
   const a=evalAmt($('amt').value);
   if(!(a>0)){$('amtHint').innerHTML='<span class="neg">金額を入れてください（数字と＋−だけ使えます）</span>';$('amt').focus();return}

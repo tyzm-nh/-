@@ -54,7 +54,7 @@ input[type=number],input[type=text],select{font:inherit;padding:8px 10px;border:
 .fld{display:flex;flex-direction:column;gap:4px}
 .fld label{font-size:12px;font-weight:700}
 .fld .in{display:flex;align-items:center;gap:8px}
-.fld .in input{flex:1;font-size:22px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.fld .in input.yen,.fld .in input{flex:1;font-size:22px;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
 .fld .in span{font-size:13px;color:var(--mute)}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:1.5px solid var(--line);background:var(--panel);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer}
@@ -180,9 +180,9 @@ svg.ch text{font-family:var(--body);font-size:11px;fill:var(--mute)}
       <div class="col">
         <section class="panel">
           <h2>条件</h2>
-          <div class="fld"><label for="iInv">毎月の積立</label><div class="in"><input type="number" id="iInv" step="1000" min="0" inputmode="numeric"><span>円</span></div><input type="range" id="iInvR" min="0" max="100000" step="1000" aria-label="毎月の積立"></div>
+          <div class="fld"><label for="iInv">毎月の積立</label><div class="in"><input type="text" class="yen" id="iInv"><span>円</span></div><input type="range" id="iInvR" min="0" max="100000" step="1000" aria-label="毎月の積立"></div>
           <div class="fld"><label>想定の利回り（年）</label><div class="seg" id="iRate"></div></div>
-          <div class="fld"><label for="iInit">最初にまとめて入れる額</label><div class="in"><input type="number" id="iInit" step="10000" min="0" inputmode="numeric"><span>円</span></div></div>
+          <div class="fld"><label for="iInit">最初にまとめて入れる額</label><div class="in"><input type="text" class="yen" id="iInit" placeholder="例：10万"><span>円</span></div></div>
           <p class="hint" id="iNote" style="margin:0"></p>
         </section>
         <section class="panel">
@@ -212,6 +212,9 @@ const $=id=>document.getElementById(id);
 const yen=n=>(n<0?'−':'')+Math.abs(Math.round(n)).toLocaleString('ja-JP');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ld=x=>`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`;
+// 金額は「100万」「1.5万」「1,000,000」のどれでも入力でき、入力し終わるとカンマ区切りで表示する
+const parseYen=v=>{v=String(v).replace(/[０-９．]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/[,，円¥\s]/g,'');const m=v.match(/^([\d.]+)(億|万|千)?$/);return m?Math.round(parseFloat(m[1])*(m[2]=='億'?1e8:m[2]=='万'?1e4:m[2]=='千'?1e3:1)):NaN};
+document.addEventListener('focusout',e=>{const t=e.target;if(!t.matches?.('input.yen'))return;const v=parseYen(t.value);if(!isNaN(v))t.value=v.toLocaleString('ja-JP')});
 const chkSvg='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
 const PAYS=['クレジットカード','デビットカード','QRコード決済','交通系IC','現金','プリペイドカード'];
 const FOE=[['e1','敵①','固定費','家賃・通信・サブスク','--accent'],['e2','敵②','変動費','食・日用・美容','--gold'],['e3','敵③','不定期の固定費','税金・更新料・年払い','--e3'],['e4','敵④','不定期の変動費','旅行・家電・冠婚葬祭','--warn']];
@@ -238,11 +241,11 @@ function rQ(){
   const q=QS[step];
   $('Q').innerHTML=`<div class="step">${QS.map((_,j)=>`<i class="${j<=step?'on':''}"></i>`).join('')}</div>
    <div class="hint">質問 ${step+1} / ${QS.length}</div><h2>${q.h}</h2><p class="why" style="margin:0">${q.why}</p>
-   ${q.f?q.f.map(([k,l,u])=>`<div class="fld"><label for="f_${k}">${l}</label><div class="in"><input type="number" id="f_${k}" value="${A[k]}" inputmode="numeric" min="0"><span>${u}</span></div></div>`).join(''):''}
+   ${q.f?q.f.map(([k,l,u])=>`<div class="fld"><label for="f_${k}">${l}</label><div class="in">${u=='円'?`<input type="text" class="yen" id="f_${k}" value="${yen(A[k])}" placeholder="例：100万">`:`<input type="number" id="f_${k}" value="${A[k]}" inputmode="numeric" min="1" max="31">`}<span>${u}</span></div></div>`).join(''):''}
    ${q.pays?`<div class="chips" id="payC">${PAYS.map(p=>`<button type="button" class="chip" data-p="${p}" aria-pressed="${A.pays.includes(p)}">${p}</button>`).join('')}</div>
      <div class="fld" id="cdF" ${A.pays.includes('クレジットカード')?'':'hidden'}><label for="f_cardDay">カードの引き落とし日</label><div class="in"><input type="number" id="f_cardDay" value="${A.cardDay}" min="1" max="31" inputmode="numeric"><span>日</span></div></div>`:''}
    <div class="qnav">${step?'<button class="btn" type="button" id="qBack">戻る</button>':''}<span class="sp"></span><button class="btn" type="button" id="qSkip">見本の数字で見る</button><button class="btn pri" type="button" id="qNext">${step==QS.length-1?'家計簿を作る':'次へ'}</button></div>`;
-  const read=()=>{(q.f||[]).forEach(([k])=>{const v=parseFloat($('f_'+k).value);if(!isNaN(v)&&v>=0)A[k]=v});if($('f_cardDay')){const v=parseFloat($('f_cardDay').value);if(v>=1&&v<=31)A.cardDay=v}};
+  const read=()=>{(q.f||[]).forEach(([k,,u])=>{const v=u=='円'?parseYen($('f_'+k).value):parseFloat($('f_'+k).value);if(!isNaN(v)&&v>=0)A[k]=v});if($('f_cardDay')){const v=parseFloat($('f_cardDay').value);if(v>=1&&v<=31)A.cardDay=v}};
   if($('payC'))$('payC').onclick=e=>{const b=e.target.closest('[data-p]');if(!b)return;read();const p=b.dataset.p;A.pays=A.pays.includes(p)?A.pays.filter(x=>x!=p):[...A.pays,p];rQ()};
   if($('qBack'))$('qBack').onclick=()=>{read();step--;rQ()};
   $('qSkip').onclick=()=>{A={...DEF};finish()};
@@ -337,7 +340,7 @@ function rInv(c){
     .map(([k,v,u,sub])=>`<div class="kpi"><div class="k">${k}</div><div class="v">${v}<small>${u}</small></div><div class="s">${sub}</div></div>`).join('');
   $('iYrs').innerHTML=[10,20,30].map(y=>`<button type="button" data-y="${y}" aria-pressed="${y==yrs}">${y}年</button>`).join('');
   $('iRate').innerHTML=[1,3,5,7].map(r=>`<button type="button" data-r="${r}" aria-pressed="${r==rate}">${r}%</button>`).join('');
-  if(document.activeElement!==$('iInv'))$('iInv').value=A.inv;$('iInvR').value=A.inv;if(document.activeElement!==$('iInit'))$('iInit').value=A.init;
+  if(document.activeElement!==$('iInv'))$('iInv').value=yen(A.inv);$('iInvR').value=A.inv;if(document.activeElement!==$('iInit'))$('iInit').value=yen(A.init);
   $('iNote').innerHTML=A.inv>pmt?`<span class="neg">毎月の黒字（${yen(Math.max(0,c.surplus))}円）を超えるので、${yen(pmt)}円で計算しています。</span>`:`積立の分だけ先取り貯金が減ります（貯金 ${yen(c.saveAmt)}円＋投資 ${yen(pmt)}円）。生活費6か月分が貯まるまでは、少額から始めるのがおすすめです。`;
   // 積立チャート
   const W=420,H=240,L=54,R=8,T=14,B=24,hi=Math.max(...Hi)*1.05||1,x=i=>L+(W-L-R)*i/yrs,y=v=>T+(H-T-B)*(1-v/hi),st=niceStep(hi/5);
@@ -370,13 +373,13 @@ function bindTip(box){
 }
 $('iYrs').onclick=e=>{const b=e.target.closest('[data-y]');if(!b)return;A.yrs=+b.dataset.y;save(true);render()};
 $('iRate').onclick=e=>{const b=e.target.closest('[data-r]');if(!b)return;A.rate=+b.dataset.r;save(true);render()};
-$('iInv').oninput=()=>{const v=parseFloat($('iInv').value);if(isNaN(v)||v<0)return;A.inv=v;save(true);render()};
-$('iInvR').oninput=()=>{A.inv=+$('iInvR').value;$('iInv').value=A.inv;save(true);render()};
-$('iInit').oninput=()=>{const v=parseFloat($('iInit').value);if(isNaN(v)||v<0)return;A.init=v;save(true);render()};
+$('iInv').oninput=()=>{const v=parseYen($('iInv').value);if(isNaN(v)||v<0)return;A.inv=v;save(true);render()};
+$('iInvR').oninput=()=>{A.inv=+$('iInvR').value;$('iInv').value=yen(A.inv);save(true);render()};
+$('iInit').oninput=()=>{const v=parseYen($('iInit').value);if(isNaN(v)||v<0)return;A.init=v;save(true);render()};
 
 // ===== 操作 =====
 $('qPay').onclick=e=>{const b=e.target.closest('[data-qp]');if(!b)return;QP=b.dataset.qp;render();$('qAmt').focus()};
-$('qFoe').onclick=e=>{const b=e.target.closest('[data-g]');if(!b)return;const a=Math.round(parseFloat($('qAmt').value.replace(/[^\d.]/g,'')));
+$('qFoe').onclick=e=>{const b=e.target.closest('[data-g]');if(!b)return;const a=parseYen($('qAmt').value);
   if(!(a>0)){$('qAmt').focus();toast('先に金額を入れてください');return}
   TX.push({d:ld(new Date()),amt:a,memo:'',g:b.dataset.g,pay:QP});$('qAmt').value='';save(true);render();toast(`${FOE.find(f=>f[0]==b.dataset.g)[1]} ${yen(a)}円（${QP}）を記録しました`)};
 $('tasks').onclick=e=>{const b=e.target.closest('[data-tk]');if(!b)return;done[b.dataset.tk]=!done[b.dataset.tk];save(true);render()};
