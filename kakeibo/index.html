@@ -581,7 +581,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
 const CATS=[
  ['food','食費','e2'],['trans','交通費','e2'],['beauty','美容費','e2'],['daily','日用品','e2'],['fun','娯楽','e2'],['med','医療','e2'],['cloth','被服','e2'],['other','その他','e2'],
  ['rent','家賃','e1'],['scholar','奨学金','e1'],['phone','携帯機種代','e1'],['net','通信費','e1'],['subs','サブスク','e1'],['ins','保険','e1'],
- ['fix_other','その他(固定)','e1'],['tax','税金','e3'],['loan','ローン返済','e3'],['seymour','シーモア','e3'],['irr','その他(不定期)','e3'],
+ ['fix_other','その他(固定)','e1'],['tax','税金','e3'],['loan','ローン返済','e3'],['seymour','ゲリラ','e3'],['irr','その他(不定期)','e3'],
  ['travel','旅行','e4'],['appliance','家電・家具','e4'],['ceremony','冠婚葬祭','e4'],['gift','プレゼント','e4'],['self','自己投資','e4'],['special','その他特別費','e4'],
  ['salary','給料','inc'],['bonus','賞与','inc'],['refund','割り勘・返金','inc'],['back','未払給料','inc'],['inc_other','その他収入','inc'],
  ['card','カード引き落とし','mv'],['save','貯金・特別費へ','mv'],['nisa','NISA','mv'],['kcharge','Kyash個人へチャージ','mv'],['mv_other','その他の振替','mv']];
@@ -726,7 +726,7 @@ const ITEMS=[
  ['e2','9月のカード利用分の超過',i=>i==0?53120:0],
  ['e3','住民税',i=>i==1||i==4?25000:0],
  ['e3','過去のローン',i=>i==1||i==2?73000:0],
- ['e3','シーモアのまとめ買い',(i,m)=>i>=3&&(m==1||m==9)?44000:i>=3&&m==6?22000:0],
+ ['e3','ゲリラ（まとめ買い）',(i,m)=>i>=3&&(m==1||m==9)?44000:i>=3&&m==6?22000:0],
  ['e3','機種代のボーナス払い',i=>i==2?10000:0],
  ['e4','旅行（11月分）',i=>i==2?50000:0],
  ['e4','特別費の積立',(i,m,s)=>i>=3?s.res:0],
@@ -769,7 +769,7 @@ function cardDue(k){
   const pk=madd(k,-1),pk2=madd(k,-2);
   const L=txOf(pk).filter(t=>t.kind=='out'&&t.pay=='楽天カード'&&t.cat!='seymour'),S2=txOf(pk2).filter(t=>t.kind=='out'&&t.pay=='楽天カード'&&t.cat=='seymour');
   const sey=S2.reduce((a,t)=>a+(+t.amt||0),0),m=mparts(k)[1],seyPlan=i>=3?(m==1||m==9?44000:m==6?22000:0):0;
-  if(L.length)return {amt:L.reduce((a,t)=>a+(+t.amt||0),0)+(sey||seyPlan),note:`${mparts(pk)[1]}月のカード記録の合計`+(sey||seyPlan?`＋シーモア${yen(sey||seyPlan)}円`:'')};
+  if(L.length)return {amt:L.reduce((a,t)=>a+(+t.amt||0),0)+(sey||seyPlan),note:`${mparts(pk)[1]}月のカード記録の合計`+(sey||seyPlan?`＋ゲリラ${yen(sey||seyPlan)}円`:'')};
   return {amt:cardLim(pk)+(sey||seyPlan),note:`${mparts(pk)[1]}月の記録がないので上限額で見積もり`};
 }
 function sched(k){
@@ -794,7 +794,7 @@ function sched(k){
   if(i==1||i==4)add('jumin',dim(k),'住民税',25000,'tax','out',i==1?'12月10日以降にできないか窓口に相談':'');
   // 想定している出費（カードで払うものは、使った月の予定として出す）
   if(k=='2026-11'){add('hair',1,'美容室',13000,'beauty','out','引き落とし 12/27','楽天カード');add('trip',0,'旅行',50000,'travel','out','引き落とし 12/27','楽天カード')}
-  if(i>=1&&(m==4||m==7||m==11))add('seyb',0,'シーモアのまとめ買い',m==4?22000:44000,'seymour','out',`引き落とし ${(m+1)%12+1}/27`,'楽天カード');
+  if(i>=1&&(m==4||m==7||m==11))add('seyb',0,'ゲリラ（まとめ買い）',m==4?22000:44000,'seymour','out',`引き落とし ${(m+1)%12+1}/27`,'楽天カード');
   // 自分で追加した予定
   Object.entries(PL).forEach(([pid,q])=>{if(!q||!q.start)return;
     const on=q.rep=='once'?k==q.start:q.rep=='y'?k>=q.start&&mparts(k)[1]==mparts(q.start)[1]:k>=q.start&&(!q.end||k<=q.end);
@@ -822,8 +822,8 @@ function kyBal(){const b=CONF.ky?.base;if(!b)return null;let v=b.amt;
 const md=ds=>`${+ds.slice(5,7)}/${+ds.slice(8)}`;
 
 // 4つの敵だけ選べば、品目は「前に同じお店で選んだ品目」→「お店・内容の言葉」→「予定の金額」の順に自動で決める
-const KW=[[/家賃/,'rent'],[/奨学/,'scholar'],[/オリコ|機種/,'phone'],[/ドコモ|docomo|ahamo|povo|linemo|楽天モバイル|ソフトバンク|\bau\b|通信|wi-?fi/i,'net'],[/netflix|prime|プライム|spotify|apple ?music|youtube|icloud|disney|サブスク|hulu|u-?next/i,'subs'],[/保険/,'ins'],
- [/税/,'tax'],[/ローン|返済/,'loan'],[/シーモア/,'seymour'],
+const KW=[[/家賃/,'rent'],[/奨学/,'scholar'],[/オリコ|機種/,'phone'],[/ドコモ|docomo|ahamo|povo|linemo|楽天モバイル|ソフトバンク|\bau\b|通信|wi-?fi/i,'net'],[/netflix|prime|プライム|spotify|apple ?music|youtube|icloud|disney|サブスク|hulu|u-?next|シーモア/i,'subs'],[/保険/,'ins'],
+ [/税/,'tax'],[/ローン|返済/,'loan'],[/ゲリラ/,'seymour'],
  [/旅行|ホテル|旅館|航空|ana|jal|じゃらん|トラベル|airbnb|新幹線/i,'travel'],[/家電|家具|ビック|ヨドバシ|ケーズ|ニトリ|ikea/i,'appliance'],[/結婚|祝儀|香典|葬/,'ceremony'],[/プレゼント|ギフト|誕生日|お祝い/,'gift'],[/セミナー|講座|資格|教材|自己投資|撮影|カメラ/,'self'],
  [/美容|ヘア|カット|カラー|ネイル|まつ|化粧|コスメ|ロフト|cosme|下着|エステ|脱毛|サロン/i,'beauty'],
  [/病院|クリニック|医院|歯科|薬局|処方|診察/,'med'],
@@ -991,7 +991,7 @@ function fillMemos(){$('memos').innerHTML=[...new Set(Object.values(TX).map(x=>x
 function qPaySeg(){const c=curPay(),y=KY(),PL0=MYP().slice();$('qPaySeg').innerHTML=PL0.map(p=>`<button type="button" data-qp="${p}" aria-pressed="${c==p}">${p}${p=='Kyash個人'&&NOWK>=y.start?'<small>変動費はこちら</small>':p=='楽天カード'&&NOWK>=y.start&&y.mode=='all'?'<small>固定費だけ</small>':''}</button>`).join('')}
 function qPreview(){
   qPaySeg();const raw=$('qAmt').value.trim(),a=evalAmt(raw),W=week(),el=$('qPrev'),memo=$('qMemo').value;
-  $('qFoe').innerHTML=FOE4.map(([g,n,d])=>{const q=guess(g,memo,a>0?a:0);return `<button type="button" data-qg="${g}" style="--c:var(${GC[g]})"><b>${n} ${d.replace('毎月の','').replace('不定期の','不定期')}</b><span>${q.how=='none'?(memo?'品目はあとで確認':{e1:'家賃・奨学金・通信',e2:'食・日用・美容',e3:'税金・ローン・シーモア',e4:'旅行・家電・冠婚葬祭'}[g]):`→ <em>${CAT[q.cat].n}</em>`}</span></button>`}).join('');
+  $('qFoe').innerHTML=FOE4.map(([g,n,d])=>{const q=guess(g,memo,a>0?a:0);return `<button type="button" data-qg="${g}" style="--c:var(${GC[g]})"><b>${n} ${d.replace('毎月の','').replace('不定期の','不定期')}</b><span>${q.how=='none'?(memo?'品目はあとで確認':{e1:'家賃・奨学金・通信',e2:'食・日用・美容',e3:'税金・ローン・ゲリラ',e4:'旅行・家電・冠婚葬祭'}[g]):`→ <em>${CAT[q.cat].n}</em>`}</span></button>`}).join('');
   const un=txOf(NOWK).filter(t=>t.auto=='none').length;
   $('qUnc').innerHTML=un?`<button class="btn sm" type="button" id="toUnc">品目の確認 ${un}件</button>`:'';
   if($('toUnc'))$('toUnc').onclick=()=>{UI.lm=NOWK;UI.lf='unc';UI.q='';$('q').value='';tab('list')};
@@ -1297,7 +1297,7 @@ function rFoes(){
   $('foes').innerHTML=
    foe('e1','毎月ほぼ同じ額',yen(102180),'円／月',[['家賃（光熱費込み）',50000],['奨学金（第一種12,800＋第二種26,512）',39312],['携帯機種代（27年4月まで）',5150],['サブスク',3330],['生命保険',2838],['通信費',1550]],'家賃は毎月10日にKyashへ入金。奨学金と機種代は27日ごろ楽天銀行から引き落とし。')+
    foe('e2','7〜9月の平均',yen(67732),`円／月　予算 ${yen(s.v)}円`,VAR.filter(c=>AVG[c]).map(c=>[CAT[c].n,AVG[c]]),'美容費のうち4,000円は補整下着のローン（27年1月まで）。働いていた2024年11月〜2025年10月の平均は月約118,000円（美容 約40,000円、食費 約30,000円）。')+
-   foe('e3','時期と額が決まっている',yen(e3y),'円　これから1年間',[['過去のローン（11月・12月）',146000],['シーモアのまとめ買い（年3回）',110000],['住民税（11月末・2月末）',50000],['機種代のボーナス払い（12月）',10000]],'シーモアは4月22,000円、7月・11月に各44,000円を購入し、翌々月（6月・9月・1月）に引き落とし。')+
+   foe('e3','時期と額が決まっている',yen(e3y),'円　これから1年間',[['過去のローン（11月・12月）',146000],['ゲリラ（年3回）',110000],['住民税（11月末・2月末）',50000],['機種代のボーナス払い（12月）',10000]],'ゲリラは4月22,000円、7月・11月に各44,000円を購入し、翌々月（6月・9月・1月）に引き落とし。')+
    foe('e4','時期も額も読めない',yen(s.res),'円／月　1月からの積立',[['11月の旅行（確定分、12月引き落とし）',50000],['家電・家具（7月の実績）',28600],['趣味・娯楽（5月の実績）',33800]],'旅行の現地での食費などは入れていません。予定が立たない支出は特別費の口座から出します。');
   const base=pay(0).net,lim=base*.8,e3m=110000/12,parts=[[97030,'--accent'],[s.v,'--gold'],[e3m,'--e3'],[s.res,'--warn']],tot=parts.reduce((a,b)=>a+b[0],0),mx=Math.max(base,tot);
   $('g8t').innerHTML=parts.map(a=>`<i style="width:${a[0]/mx*100}%;background:var(${a[1]})"></i>`).join('');
@@ -1340,7 +1340,7 @@ function parseCSV(s){const R=[];let row=[],f='',q=false;for(let i=0;i<s.length;i
   if(q){if(c=='"'){if(s[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
   else if(c=='"')q=true;else if(c==','){row.push(f);f=''}else if(c=='\n'){row.push(f);R.push(row);row=[];f=''}else if(c!='\r')f+=c}
   if(f||row.length){row.push(f);R.push(row)}return R}
-const MAP=[[/家賃|住宅|住居/,'rent'],[/奨学金/,'scholar'],[/機種|端末|オリコ/,'phone'],[/通信|携帯|インターネット|スマホ/,'net'],[/サブスク|動画|音楽|配信/,'subs'],[/保険/,'ins'],[/税|年金/,'tax'],[/ローン|返済/,'loan'],[/シーモア|電子書籍|漫画/,'seymour'],[/旅行/,'travel'],[/家電|家具/,'appliance'],[/冠婚|葬/,'ceremony'],[/プレゼント|贈/,'gift'],[/自己投資|教養|教育|セミナー|資格/,'self'],
+const MAP=[[/家賃|住宅|住居/,'rent'],[/奨学金/,'scholar'],[/機種|端末|オリコ/,'phone'],[/通信|携帯|インターネット|スマホ/,'net'],[/サブスク|動画|音楽|配信|シーモア/,'subs'],[/保険/,'ins'],[/税|年金/,'tax'],[/ローン|返済/,'loan'],[/ゲリラ/,'seymour'],[/旅行/,'travel'],[/家電|家具/,'appliance'],[/冠婚|葬/,'ceremony'],[/プレゼント|贈/,'gift'],[/自己投資|教養|教育|セミナー|資格/,'self'],
  [/美容|化粧|コスメ|ヘア|下着|エステ|ネイル/,'beauty'],[/食|ランチ|カフェ|外食/,'food'],[/交通|電車|バス|タクシー|定期|ガソリン/,'trans'],[/衣服|洋服|被服|服|靴/,'cloth'],[/日用品|ドラッグ|雑貨/,'daily'],[/趣味|娯楽|レジャー|ゲーム|本|映画|イベント/,'fun'],[/医療|病院|薬|歯科/,'med']];
 const IMAP=[[/給与|給料/,'salary'],[/賞与|ボーナス/,'bonus'],[/返金|割り勘|立替/,'refund']];
 let MF=null;
