@@ -88,7 +88,7 @@ svg.i{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stro
 /* hero */
 .hero{background:linear-gradient(160deg,var(--accent-soft),var(--panel) 70%)}
 .hero .lbl{font-size:12px;font-weight:700;color:var(--mute)}
-.hero .big{font-family:var(--num);font-size:46px;font-weight:600;line-height:1;letter-spacing:.01em}
+.hero .big{font-family:var(--num);font-size:clamp(34px,11vw,46px);font-weight:600;line-height:1;letter-spacing:.01em}
 .hero .big small{font-family:var(--body);font-size:15px;font-weight:700;margin-left:3px}
 .hero .row{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap}
 .perday{text-align:right}
@@ -199,7 +199,7 @@ ol.steps li.done b{color:var(--mute)}
 @media(max-width:720px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:0}
 .kpi .k{font-size:11px;color:var(--mute);font-weight:700}
-.kpi .v{font-family:var(--num);font-size:26px;font-weight:600;line-height:1.15;white-space:nowrap}
+.kpi .v{font-family:var(--num);font-size:clamp(18px,5.6vw,26px);font-weight:600;line-height:1.15;white-space:nowrap}
 .kpi .v small{font-family:var(--body);font-size:12px;margin-left:2px}
 .kpi .s{font-size:11px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .neg{color:var(--bad)} .pos{color:var(--good)}
@@ -259,9 +259,9 @@ ol.todo{margin:0;padding-left:1.2em;font-size:13px;display:flex;flex-direction:c
 .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
 .toolbar .sp{flex:1}
 .sum3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.sum3>div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 14px}
+.sum3>div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0;overflow:hidden}
 .sum3 .k{font-size:11px;color:var(--mute);font-weight:700}
-.sum3 .v{font-family:var(--num);font-size:24px;font-weight:600;white-space:nowrap}
+.sum3 .v{font-family:var(--num);font-size:clamp(15px,4.6vw,24px);font-weight:600;white-space:nowrap}
 /* calendar */
 .cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .cal .wd{font-size:11px;text-align:center;color:var(--mute);font-weight:700;padding:2px}
@@ -281,6 +281,8 @@ table{border-collapse:collapse;font-size:13px;width:100%}
 th,td{padding:6px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
 thead th{color:var(--mute);font-weight:500;font-size:12px}
 th:first-child,td:first-child{text-align:left}
+td.actual{font-weight:700;color:var(--accent)}
+.sheet-t td:first-child,.sheet-t th:first-child{min-width:7.5em}
 td.n{font-family:var(--num);font-size:15px;font-variant-numeric:tabular-nums}
 .sheet-t th:first-child,.sheet-t td:first-child{position:sticky;left:0;background:var(--panel);z-index:1;max-width:11em;white-space:normal;line-height:1.3}
 tr.grp td{font-weight:700;font-size:12px;letter-spacing:.04em}
@@ -494,7 +496,7 @@ input[type=number],input[type=text],input[type=date],input[type=search],select{f
     <section class="panel">
       <div class="ph"><h2>支出管理表（計画）</h2><div class="seg" id="span"><button data-n="6" type="button">6か月</button><button data-n="12" type="button">12か月</button><button data-n="24" type="button">24か月</button></div></div>
       <div class="scroll"><table id="sheet" class="sheet-t"></table></div>
-      <p class="hint">口座から出ていく月で表示。支出割合は80%以下が目安</p>
+      <p class="hint">口座から出ていく月で表示。<b style="color:var(--accent)">緑の太字</b>は記録した実績。支出割合は80%以下が目安</p>
     </section>
   </div>
   <div id="pp-foes" class="col" hidden>
@@ -737,10 +739,14 @@ function sim(){
   const p1=pay(s.ot,240000),p2=pay(s.ot),P={p1,p2,jm:jumin(p1,p2)};
   let bal=START,rows=[],hit=-1;
   for(let i=0;i<240;i++){
-    const m=(9+i)%12+1,val=ITEMS.map(t=>t[2](i,m,s,P)),g={inc:0,e1:0,e2:0,e3:0,e4:0,inv:0};
+    const m=(9+i)%12+1,val=ITEMS.map(t=>t[2](i,m,s,P)),g={inc:0,e1:0,e2:0,e3:0,e4:0,inv:0},act=new Set();
+    // 記録した実績があれば、見込みの代わりにその金額を使う（収入と、予定から記録した固定の支払い）
+    if(i<=pidx(NOWK)+1){const k=madd('2026-10',i),L=txOf(k),sum=c=>L.filter(t=>t.kind=='in'&&t.cat==c).reduce((a,t)=>a+(+t.amt||0),0);
+      [[0,'salary'],[1,'bonus'],[2,'back']].forEach(([ix,c])=>{const v=sum(c);if(v){val[ix]=v;act.add(ix)}});
+      [[4,'rent'],[5,'scholar'],[6,'phone'],[9,'ins'],[12,'jumin'],[13,'loan']].forEach(([ix,key])=>{const t=TX[`s-${k}-${key}`];if(t){val[ix]=Math.max(0,(+t.amt||0)-(key=='phone'?val[15]:0));act.add(ix)}})}
     ITEMS.forEach((t,k)=>g[t[0]]+=val[k]);
     const out=g.e1+g.e2+g.e3+g.e4;bal+=g.inc-out-g.inv;
-    rows.push({i,m,val,g,out,bal,sal:val[0]});
+    rows.push({i,m,val,g,out,bal,sal:val[0],act});
     if(hit<0&&bal>=GOAL)hit=i;
     if(hit>=0&&i>=Math.max(hit+1,24))break;
   }
@@ -870,7 +876,7 @@ $('ticker').onkeydown=e=>{if(e.key==' '||e.key=='Enter'){e.preventDefault();$('t
 function render(){
   PLAN=sim();
   $('store').className='st'+(ST.cloud?' cloud':'');
-  $('store').lastElementChild.textContent=ST.cloud?'クラウドに保存（どの端末でも同じ）':'この端末にだけ保存';
+  $('store').lastElementChild.textContent=ST.cloud?'クラウド保存':'この端末に保存';
   $('banner').innerHTML=ST.cloud&&ST.localTx&&ST.loaded?`<div class="banner"><span>この端末にだけ保存された記録が${ST.localTx}件あります。</span><button class="btn sm pri" id="mig" type="button">クラウドに移す</button></div>`:'';
   if($('mig'))$('mig').onclick=migrate;
   rTicker();
@@ -1281,11 +1287,11 @@ function rSheet(){
   const {rows}=PLAN,R=rows.slice(0,UI.span);
   document.querySelectorAll('#span button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.n==UI.span));
   const hd=R.map(r=>{const[y,m]=ym(r.i);return `<th>${m==1||r.i==0?y+'/':''}${m}月</th>`}).join('');
-  const line=(name,f,c='')=>`<tr class="${c}"><td>${name}</td>${R.map(r=>{const x=f(r);return `<td class="n ${x<0?'neg':''}">${x===0?'':yen(x)}</td>`}).join('')}</tr>`;
+  const line=(name,f,c='',isA)=>`<tr class="${c}"><td>${name}</td>${R.map(r=>{const x=f(r);return `<td class="n ${x<0?'neg':''} ${isA&&isA(r)?'actual':''}">${x===0?'':yen(x)}</td>`}).join('')}</tr>`;
   let h=`<thead><tr><th></th>${hd}</tr></thead><tbody>`;
   ['inc','e1','e2','e3','e4','inv'].forEach(g=>{
     h+=`<tr class="grp ${g}"><td>${GN[g]}</td>${R.map(()=>'<td></td>').join('')}</tr>`;
-    ITEMS.forEach((t,k)=>{if(t[0]==g&&R.some(r=>r.val[k]))h+=line(t[1],r=>r.val[k])});
+    ITEMS.forEach((t,k)=>{if(t[0]==g&&R.some(r=>r.val[k]))h+=line(t[1],r=>r.val[k],'',r=>r.act.has(k))});
     if(g!='inv')h+=line('小計',r=>r.g[g],'tot')});
   h+=`<tr class="grp sum"><td>まとめ</td>${R.map(()=>'<td></td>').join('')}</tr>`+line('敵①〜④ 合計',r=>r.out,'tot')+
     `<tr><td>支出割合</td>${R.map(r=>{const p=Math.round(r.out/r.sal*100);return `<td><span class="pill ${p>80?'ng':'ok'}">${p}%</span></td>`}).join('')}</tr>`+
