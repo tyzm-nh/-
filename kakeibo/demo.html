@@ -130,6 +130,14 @@ svg.ch{display:block;width:100%;height:auto}
 svg.ch text{font-family:var(--body);font-size:11px;fill:var(--mute)}
 @media(max-width:720px){svg.ch text{font-size:13px}}
 .neg{color:var(--bad)} .pos{color:var(--good)}
+.seg{display:inline-flex;background:var(--sunk);border-radius:9px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{font-size:12px;font-weight:700;padding:5px 11px;border:none;border-radius:7px;background:none;color:var(--mute);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.fld input[type=range]{width:100%;accent-color:var(--accent)}
+.fld .in input{font-size:20px}
+.chartbox{position:relative}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 9px;border-radius:7px;white-space:nowrap;transform:translate(-50%,-110%);box-shadow:var(--shadow);line-height:1.5}
+.tip b{font-size:14px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;background:var(--ink);color:var(--bg);border-radius:10px;padding:9px 14px;font-size:13px;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
 </style>
 
@@ -142,7 +150,7 @@ svg.ch text{font-family:var(--body);font-size:11px;fill:var(--mute)}
 <!-- 家計簿 -->
 <div id="App" class="col" hidden>
   <div class="ticker" id="ticker" title="押すと止まります"><div class="tk-track" id="tk"></div></div>
-  <nav class="tabs" role="tablist" id="tabs"><button role="tab" data-t="home" aria-selected="true">ホーム</button><button role="tab" data-t="plan" aria-selected="false">計画</button></nav>
+  <nav class="tabs" role="tablist" id="tabs"><button role="tab" data-t="home" aria-selected="true">ホーム</button><button role="tab" data-t="plan" aria-selected="false">計画</button><button role="tab" data-t="inv" aria-selected="false">投資</button></nav>
   <div id="p-home" class="col">
     <div class="grid">
       <div class="col">
@@ -160,6 +168,31 @@ svg.ch text{font-family:var(--body);font-size:11px;fill:var(--mute)}
         <section class="panel"><div class="ph"><h2>最近の記録</h2></div><ul class="list" id="recent"></ul></section>
       </div>
     </div>
+  </div>
+  <div id="p-inv" class="col" hidden>
+    <div class="kpis" id="ikpis"></div>
+    <div class="grid" style="align-items:start">
+      <section class="panel">
+        <div class="ph"><h2>積立のシミュレーション</h2><div class="seg" id="iYrs"></div></div>
+        <div class="chartbox" id="ichart"></div>
+        <div class="legend"><span><i style="background:var(--accent)"></i>積み立てた元本</span><span><i style="background:var(--gold)"></i>増えた分（運用益）</span><span><i style="background:none;border-top:2px dashed var(--mute);border-radius:0;height:0;vertical-align:3px"></i>利回り±2%の幅</span></div>
+      </section>
+      <div class="col">
+        <section class="panel">
+          <h2>条件</h2>
+          <div class="fld"><label for="iInv">毎月の積立</label><div class="in"><input type="number" id="iInv" step="1000" min="0" inputmode="numeric"><span>円</span></div><input type="range" id="iInvR" min="0" max="100000" step="1000" aria-label="毎月の積立"></div>
+          <div class="fld"><label>想定の利回り（年）</label><div class="seg" id="iRate"></div></div>
+          <div class="fld"><label for="iInit">最初にまとめて入れる額</label><div class="in"><input type="number" id="iInit" step="10000" min="0" inputmode="numeric"><span>円</span></div></div>
+          <p class="hint" id="iNote" style="margin:0"></p>
+        </section>
+        <section class="panel">
+          <div class="ph"><h2>資産の推移</h2><span class="sample">見本</span></div>
+          <div class="chartbox" id="hchart"></div>
+          <div class="legend"><span><i style="background:var(--accent)"></i>預金</span><span><i style="background:var(--gold)"></i>投資（評価額）</span></div>
+        </section>
+      </div>
+    </div>
+    <p class="hint" style="margin:0">シミュレーションは一定の利回りが続いた場合の計算で、将来の成果を約束するものではありません。実際の値動きで元本を下回ることもあります。</p>
   </div>
   <div id="p-plan" class="col" hidden>
     <div class="kpis" id="kpis"></div>
@@ -183,7 +216,7 @@ const chkSvg='<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></svg>';
 const PAYS=['クレジットカード','デビットカード','QRコード決済','交通系IC','現金','プリペイドカード'];
 const FOE=[['e1','敵①','固定費','家賃・通信・サブスク','--accent'],['e2','敵②','変動費','食・日用・美容','--gold'],['e3','敵③','不定期の固定費','税金・更新料・年払い','--e3'],['e4','敵④','不定期の変動費','旅行・家電・冠婚葬祭','--warn']];
 // 見本の答え（あとから変えられる）
-const DEF={goal:1000000,saved:100000,income:220000,payday:25,rent:60000,fixo:15000,vari:60000,pays:['クレジットカード','QRコード決済'],cardDay:27};
+const DEF={goal:1000000,saved:100000,income:220000,payday:25,rent:60000,fixo:15000,vari:60000,pays:['クレジットカード','QRコード決済'],cardDay:27,inv:10000,rate:3,yrs:20,init:0};
 let A={...DEF},step=0,QP=null,done={},TX=[];
 const LK='kakeibo-demo-v1';
 try{const o=JSON.parse(localStorage.getItem(LK)||'null');if(o){A={...DEF,...o.A};done=o.done||{};TX=o.TX||[];step=o.fin?6:0}}catch(e){}
@@ -224,10 +257,10 @@ function finish(){
 // ===== 計算 =====
 function calc(){
   const fixed=A.rent+A.fixo,special=Math.round(A.income*0.05/1000)*1000,irregular=Math.round(A.income*0.03/1000)*1000;
-  const out=fixed+A.vari+irregular+special,surplus=A.income-out,saveAmt=Math.max(0,Math.floor(surplus/1000)*1000);
+  const out=fixed+A.vari+irregular+special,surplus=A.income-out,inv=Math.max(0,Math.min(A.inv,Math.floor(Math.max(0,surplus)/1000)*1000)),saveAmt=Math.max(0,Math.floor((surplus-inv)/1000)*1000);
   const left=A.goal-A.saved,months=saveAmt>0?Math.ceil(Math.max(0,left)/saveAmt):null;
   const living=fixed+A.vari;
-  return {fixed,special,irregular,out,surplus,saveAmt,months,living,ratio:out/A.income};
+  return {fixed,special,irregular,out,surplus,inv,saveAmt,months,living,ratio:out/A.income};
 }
 const now=new Date(),Y=now.getFullYear(),M=now.getMonth()+1,DIM=new Date(Y,M,0).getDate();
 function week(){const dow=(now.getDay()+6)%7,ws=new Date(now);ws.setDate(now.getDate()-dow);const wsS=ld(ws),base=A.vari/DIM*7;
@@ -240,7 +273,7 @@ function render(){
   // 帯
   const n=v=>`<b class="${v<0?'neg':''}">${yen(v)}</b>円`,it=(cv,l,t)=>`<span class="tk-i"><span class="tk-l" style="--c:var(${cv})">${l}</span><span>${t}</span></span>`;
   const L=[it('--accent','貯金',`給料日に${n(c.saveAmt)}を先取り`),it('--gold','今週',`あと${n(W.left)}・1日${n(Math.max(0,W.left/W.dl))}まで`),
-    it('--gold','変動費',`今月は${n(A.vari)}まで`),it('--warn','敵④',`特別費に毎月${n(c.special)}を積み立て`),
+    it('--gold','変動費',`今月は${n(A.vari)}まで`),it('--warn','敵④',`特別費に毎月${n(c.special)}を積み立て`),c.inv?it('--e3','投資',`毎月${n(c.inv)}・${A.yrs}年後に約${man(fv(A.init,c.inv,A.rate,A.yrs*12))}円`):'',
     goalMonth(c)?it('--good','目標',`${man(A.goal)}円まで${span(c.months)}`):it('--bad','目標','このままだと届きません。変動費を見直しましょう')].join('');
   const tr=$('tk');if(tr._h!==L){tr._h=L;tr.innerHTML=L+L;requestAnimationFrame(()=>tr.style.setProperty('--dur',Math.max(18,tr.scrollWidth/2/45)+'s'))}
   // 今週
@@ -262,9 +295,10 @@ function render(){
   $('recent').innerHTML=TX.slice().sort((a,b)=>a.d<b.d?1:-1).slice(0,6).map(t=>{const f=FOE.find(x=>x[0]==t.g);return `<li><span class="dot" style="--c:var(${f[4]})"></span><span class="t">${esc(t.memo||f[2])}${t.s?'<span class="sample">見本</span>':''}<small>${+t.d.slice(5,7)}/${+t.d.slice(8)}・${f[1]}・${esc(t.pay)}</small></span><span class="a">−${yen(t.amt)}</span></li>`}).join('')||'<li class="hint">まだ記録がありません</li>';
   // 計画
   const gm=goalMonth(c);
-  $('kpis').innerHTML=[['目標に届く月',gm?(c.months>=24?`約${Math.round(c.months/12)}年後`:gm):'届かない','',gm?(c.months>120?'<span class="neg">目標か貯金額の見直しを</span>':`あと${span(c.months)}`):'毎月の黒字がありません'],['毎月の先取り貯金',yen(c.saveAmt),'円','給料日に別口座へ'],['毎月の黒字',`<span class="${c.surplus<0?'neg':''}">${yen(c.surplus)}</span>`,'円','手取り − 4つの敵'],['生活費6か月分',yen(c.living*6),'円','生活防衛資金の目安']]
+  $('kpis').innerHTML=[['目標に届く月',gm?(c.months>=24?`約${Math.round(c.months/12)}年後`:gm):'届かない','',gm?(c.months>120?'<span class="neg">目標か貯金額の見直しを</span>':`あと${span(c.months)}`):'毎月の黒字がありません'],['毎月の先取り貯金',yen(c.saveAmt),'円',c.inv?`ほかに投資へ ${yen(c.inv)}円`:'給料日に別口座へ'],['毎月の黒字',`<span class="${c.surplus<0?'neg':''}">${yen(c.surplus)}</span>`,'円','手取り − 4つの敵'],['生活費6か月分',yen(c.living*6),'円','生活防衛資金の目安']]
     .map(([k,v,u,s])=>`<div class="kpi"><div class="k">${k}</div><div class="v">${v}<small>${u}</small></div><div class="s">${s}</div></div>`).join('');
   $('chart').innerHTML=chart(c);
+  rInv(c);
   $('chartNote').innerHTML=c.months>120?`<p class="hint neg" style="margin:0">今のペースだと${span(c.months)}かかります。まずは生活費6か月分（${man(c.living*6)}円）を最初の目標にするのがおすすめです。</p>`:'';
   const parts=[[c.fixed,'--accent'],[A.vari,'--gold'],[c.irregular,'--e3'],[c.special,'--warn']],mx=Math.max(A.income,c.out),lim=A.income*.8;
   $('g8').innerHTML=parts.map(([v,cv])=>`<i style="width:${v/mx*100}%;background:var(${cv})"></i>`).join('');
@@ -292,13 +326,61 @@ function chart(c){
   return s+'</svg>';
 }
 
+// ===== 投資 =====
+// 毎月積み立てて月複利で増える計算。元本と運用益を積み上げで見せ、利回り±2%の幅を点線で出す
+const fv=(init,pmt,ratePct,m)=>{const r=ratePct/100/12;return r?init*Math.pow(1+r,m)+pmt*(Math.pow(1+r,m)-1)/r:init+pmt*m};
+function rInv(c){
+  const yrs=A.yrs,rate=A.rate,pmt=c.inv,init=A.init,ys=[...Array(yrs+1)].map((_,i)=>i);
+  const V=ys.map(i=>fv(init,pmt,rate,i*12)),P=ys.map(i=>init+pmt*12*i),Lo=ys.map(i=>fv(init,pmt,Math.max(0,rate-2),i*12)),Hi=ys.map(i=>fv(init,pmt,rate+2,i*12));
+  const end=V[yrs],prin=P[yrs],gain=end-prin;
+  $('ikpis').innerHTML=[[`${yrs}年後の評価額`,man(end),'円',`利回り${rate}%の場合`],['積み立てた元本',man(prin),'円',`毎月${yen(pmt)}円`],['増えた分',`<span class="pos">+${man(Math.max(0,gain))}</span>`,'円',`元本の${prin?Math.round(gain/prin*100):0}%`],['幅（±2%）',`${man(Lo[yrs])}〜${man(Hi[yrs])}`,'円','利回りが上下した場合']]
+    .map(([k,v,u,sub])=>`<div class="kpi"><div class="k">${k}</div><div class="v">${v}<small>${u}</small></div><div class="s">${sub}</div></div>`).join('');
+  $('iYrs').innerHTML=[10,20,30].map(y=>`<button type="button" data-y="${y}" aria-pressed="${y==yrs}">${y}年</button>`).join('');
+  $('iRate').innerHTML=[1,3,5,7].map(r=>`<button type="button" data-r="${r}" aria-pressed="${r==rate}">${r}%</button>`).join('');
+  if(document.activeElement!==$('iInv'))$('iInv').value=A.inv;$('iInvR').value=A.inv;if(document.activeElement!==$('iInit'))$('iInit').value=A.init;
+  $('iNote').innerHTML=A.inv>pmt?`<span class="neg">毎月の黒字（${yen(Math.max(0,c.surplus))}円）を超えるので、${yen(pmt)}円で計算しています。</span>`:`積立の分だけ先取り貯金が減ります（貯金 ${yen(c.saveAmt)}円＋投資 ${yen(pmt)}円）。生活費6か月分が貯まるまでは、少額から始めるのがおすすめです。`;
+  // 積立チャート
+  const W=420,H=240,L=54,R=8,T=14,B=24,hi=Math.max(...Hi)*1.05||1,x=i=>L+(W-L-R)*i/yrs,y=v=>T+(H-T-B)*(1-v/hi),st=niceStep(hi/5);
+  let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="積立の見込み">`;
+  for(let g=0;g<=hi;g+=st)s+=`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="var(--line)"/><text x="${L-6}" y="${y(g)+4}" text-anchor="end">${man(g)}</text>`;
+  const pts=a=>a.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  s+=`<polygon points="${x(0)},${y(0)} ${pts(V)} ${x(yrs)},${y(0)}" fill="var(--gold)" opacity=".85"/>`;
+  s+=`<polygon points="${x(0)},${y(0)} ${pts(P)} ${x(yrs)},${y(0)}" fill="var(--accent)"/>`;
+  s+=`<polyline points="${pts(Hi)}" fill="none" stroke="var(--mute)" stroke-width="1.3" stroke-dasharray="4 4"/><polyline points="${pts(Lo)}" fill="none" stroke="var(--mute)" stroke-width="1.3" stroke-dasharray="4 4"/>`;
+  s+=`<circle cx="${x(yrs)}" cy="${y(end)}" r="4.5" fill="var(--gold)" stroke="var(--panel)" stroke-width="2"/>`;
+  const sp=yrs<=10?2:5;for(let i=0;i<=yrs;i+=sp)s+=`<text x="${x(i)}" y="${H-7}" text-anchor="${i==0?'start':i==yrs?'end':'middle'}">${i?i+'年後':'今'}</text>`;
+  ys.forEach(i=>{if(!i)return;s+=`<rect x="${x(i-.5)}" y="${T}" width="${x(1)-x(0)}" height="${H-T-B}" fill="transparent" data-tip="${i}年後<br>評価額 <b>${yen(V[i])}</b>円<br>元本 ${yen(P[i])}円・増えた分 ${yen(V[i]-P[i])}円"/>`});
+  $('ichart').innerHTML=s+'</svg>';bindTip($('ichart'));
+  // 資産の推移（見本）：過去12か月の預金と投資の評価額を積み上げ棒で
+  const n=12,dep=[...Array(n)].map((_,i)=>Math.round(A.saved*(0.55+0.45*i/(n-1)))),inv=[...Array(n)].map((_,i)=>{const k=i+1;return Math.round(pmt*k*(1+0.03*Math.sin(k*1.3)+0.004*k))});
+  const mx=Math.max(...dep.map((d,i)=>d+inv[i]))*1.1||1,hx=i=>L+(W-L-R)*(i+.5)/n,bw=(W-L-R)/n*.62,hy=v=>T+(H-T-B)*(1-v/mx),hs=niceStep(mx/4);
+  let h=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="資産の推移（見本）">`;
+  for(let g=0;g<=mx;g+=hs)h+=`<line x1="${L}" x2="${W-R}" y1="${hy(g)}" y2="${hy(g)}" stroke="var(--line)"/><text x="${L-6}" y="${hy(g)+4}" text-anchor="end">${man(g)}</text>`;
+  dep.forEach((d,i)=>{const t=d+inv[i],m=new Date(Y,M-1-(n-1-i),1);
+    h+=`<rect x="${hx(i)-bw/2}" y="${hy(d)}" width="${bw}" height="${hy(0)-hy(d)}" fill="var(--accent)"/><rect x="${hx(i)-bw/2}" y="${hy(t)}" width="${bw}" height="${Math.max(0,hy(d)-hy(t)-1)}" fill="var(--gold)" rx="2"/>`;
+    if(i%3==2||i==n-1)h+=`<text x="${hx(i)}" y="${H-7}" text-anchor="middle">${m.getMonth()+1}月</text>`;
+    h+=`<rect x="${hx(i)-(W-L-R)/n/2}" y="${T}" width="${(W-L-R)/n}" height="${H-T-B}" fill="transparent" data-tip="${m.getFullYear()}年${m.getMonth()+1}月<br>合計 <b>${yen(t)}</b>円<br>預金 ${yen(d)}・投資 ${yen(inv[i])}"/>`});
+  $('hchart').innerHTML=h+'</svg>';bindTip($('hchart'));
+}
+function bindTip(box){
+  let tip=box.querySelector('.tip');if(!tip){tip=document.createElement('div');tip.className='tip';tip.hidden=true;box.appendChild(tip)}
+  box.onpointermove=e=>{const t=e.target.closest('[data-tip]');if(!t){tip.hidden=true;return}const r=box.getBoundingClientRect(),tr=t.getBoundingClientRect();
+    tip.innerHTML=t.dataset.tip;tip.hidden=false;tip.style.left=Math.min(r.width-90,Math.max(90,tr.left-r.left+tr.width/2))+'px';tip.style.top=(e.clientY-r.top)+'px'};
+  box.onpointerleave=()=>tip.hidden=true;
+}
+$('iYrs').onclick=e=>{const b=e.target.closest('[data-y]');if(!b)return;A.yrs=+b.dataset.y;save(true);render()};
+$('iRate').onclick=e=>{const b=e.target.closest('[data-r]');if(!b)return;A.rate=+b.dataset.r;save(true);render()};
+$('iInv').oninput=()=>{const v=parseFloat($('iInv').value);if(isNaN(v)||v<0)return;A.inv=v;save(true);render()};
+$('iInvR').oninput=()=>{A.inv=+$('iInvR').value;$('iInv').value=A.inv;save(true);render()};
+$('iInit').oninput=()=>{const v=parseFloat($('iInit').value);if(isNaN(v)||v<0)return;A.init=v;save(true);render()};
+
 // ===== 操作 =====
 $('qPay').onclick=e=>{const b=e.target.closest('[data-qp]');if(!b)return;QP=b.dataset.qp;render();$('qAmt').focus()};
 $('qFoe').onclick=e=>{const b=e.target.closest('[data-g]');if(!b)return;const a=Math.round(parseFloat($('qAmt').value.replace(/[^\d.]/g,'')));
   if(!(a>0)){$('qAmt').focus();toast('先に金額を入れてください');return}
   TX.push({d:ld(new Date()),amt:a,memo:'',g:b.dataset.g,pay:QP});$('qAmt').value='';save(true);render();toast(`${FOE.find(f=>f[0]==b.dataset.g)[1]} ${yen(a)}円（${QP}）を記録しました`)};
 $('tasks').onclick=e=>{const b=e.target.closest('[data-tk]');if(!b)return;done[b.dataset.tk]=!done[b.dataset.tk];save(true);render()};
-$('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-selected',x==b));$('p-home').hidden=b.dataset.t!='home';$('p-plan').hidden=b.dataset.t!='plan'};
+$('tabs').onclick=e=>{const b=e.target.closest('[data-t]');if(!b)return;document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-selected',x==b));$('p-home').hidden=b.dataset.t!='home';$('p-plan').hidden=b.dataset.t!='plan';$('p-inv').hidden=b.dataset.t!='inv'};
 $('ticker').onclick=()=>$('ticker').classList.toggle('paused');
 $('redo').onclick=()=>{step=0;$('App').hidden=true;$('Q').hidden=false;$('redo').hidden=true;rQ()};
 if(step>=QS.length){$('Q').hidden=true;$('App').hidden=false;$('redo').hidden=false;render()}else rQ();
