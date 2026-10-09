@@ -1526,19 +1526,33 @@ Extract every transaction row you can read. Return ONLY JSON: {"rows":[{"date":"
     const pay=$('ssPay').value;
     const rows=(Array.isArray(r?.rows)?r.rows:[]).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x?.date)&&+x.amount>0).map(x=>{
       const amt=Math.round(+x.amount),memo=String(x.merchant||'').slice(0,80),type=['charge','refund'].includes(x.type)?x.type:'payment';
-      const dup=Object.values(TX).some(t=>t.date==x.date&&+t.amt==amt);
       const [g,q]=autoFoe(memo,amt);
       let h=0;for(const ch of memo)h=(h*31+ch.charCodeAt(0))|0;
-      return {date:x.date,amt,memo,type,g,cat:q.cat,how:q.how,dup,on:!dup,id:`ss-${x.date}-${amt}-${(h>>>0).toString(36)}`}});
+      const id=`ss-${x.date}-${amt}-${(h>>>0).toString(36)}`,m=findDup(id,x.date,amt,memo,pay);
+      return {date:x.date,amt,memo,type,g,cat:q.cat,how:q.how,dup:m,on:!m,id}});
     if(!rows.length){out.innerHTML='<p class="hint">読み取れる明細がありませんでした。履歴の一覧が写っている画面で試してください。</p>';return}
     SS={pay,rows};rSS();
   }catch(err){
     const m={not_granted:'画像の読み取りが許可されませんでした。',rate_limited:'続けて使いすぎました。少し時間をおいてから試してください。',image_rejected:'この画像の形式は読めません。スクリーンショット（PNG・JPEG）を選んでください。',invalid_json:'うまく読み取れませんでした。画像を減らしてもう一度試してください。',cancelled:'読み取りを止めました。'};
     out.innerHTML=`<p class="hint neg">${m[err?.code]||'読み取れませんでした。もう一度試してください。'}</p>`}
 };
+// すでにある記録と重なっていないか：金額が同じ・日付が前後1日以内・支払い方法が同じ（どちらか不明なら比べない）
+// お店の名前が一致すれば「記録済み」、違う・空なら「記録済みかも」。見比べられるように相手の記録も返す
+function findDup(id,date,amt,memo,pay){
+  if(TX[id])return {lv:'取り込み済み',t:TX[id]};
+  const norm=v=>String(v||'').replace(/\s/g,'').toLowerCase(),mm=norm(memo);
+  let best=null;
+  Object.entries(TX).forEach(([tid,t])=>{
+    if(+t.amt!==amt||!t.date)return;
+    const dd=Math.abs((new Date(t.date+'T00:00')-new Date(date+'T00:00'))/864e5);if(dd>1)return;
+    if(t.pay&&pay&&t.pay!==pay)return;
+    const tm=norm(t.memo),same=mm&&tm&&(mm.includes(tm)||tm.includes(mm)),sc=(dd==0?2:0)+(same?3:0);
+    if(!best||sc>best.sc)best={sc,lv:same&&dd==0?'記録済み':'記録済みかも',t:{...t,id:tid}}});
+  return best;
+}
 function rSS(){
   if(!SS)return;const n=SS.rows.filter(r=>r.on).length;
-  $('ssOut').innerHTML=`<div class="scroll"><table class="ssT"><thead><tr><th></th><th>日付</th><th>お店・内容</th><th>金額</th><th>分類</th></tr></thead><tbody>${SS.rows.map((r,j)=>`<tr class="${r.dup?'dup':''}"><td><input type="checkbox" data-ssc="${j}" ${r.on?'checked':''} aria-label="取り込む"></td><td class="n">${md(r.date)}</td><td>${esc(r.memo)}${r.dup?'<span class="unc">記録済みかも</span>':''}</td><td class="n">${r.type=='payment'?'−':'+'}${yen(r.amt)}</td><td>${r.type=='charge'?'チャージ（振替）':r.type=='refund'?'返金・割り勘（収入）':`<select data-ssg="${j}" aria-label="4つの敵">${FOE4.map(([g,a,d])=>`<option value="${g}" ${g==r.g?'selected':''}>${a} ${d.replace('毎月の','').replace('不定期の','不定期')}</option>`).join('')}</select> <span class="hint">→ ${CAT[r.cat].n}${r.how=='none'?'（あとで確認）':''}</span>`}</td></tr>`).join('')}</tbody></table></div>
+  $('ssOut').innerHTML=`<div class="scroll"><table class="ssT"><thead><tr><th></th><th>日付</th><th>お店・内容</th><th>金額</th><th>分類</th></tr></thead><tbody>${SS.rows.map((r,j)=>`<tr class="${r.dup?'dup':''}"><td><input type="checkbox" data-ssc="${j}" ${r.on?'checked':''} aria-label="取り込む"></td><td class="n">${md(r.date)}</td><td>${esc(r.memo)}${r.dup?`<span class="unc">${r.dup.lv}</span><div class="hint" style="font-size:11px">${r.dup.lv=='取り込み済み'?'前回':'手入力'}：${md(r.dup.t.date)} ${esc(r.dup.t.memo||(CAT[r.dup.t.cat]||CAT.other).n)} ${yen(r.dup.t.amt)}・${esc(r.dup.t.pay||'')}</div>`:''}</td><td class="n">${r.type=='payment'?'−':'+'}${yen(r.amt)}</td><td>${r.type=='charge'?'チャージ（振替）':r.type=='refund'?'返金・割り勘（収入）':`<select data-ssg="${j}" aria-label="4つの敵">${FOE4.map(([g,a,d])=>`<option value="${g}" ${g==r.g?'selected':''}>${a} ${d.replace('毎月の','').replace('不定期の','不定期')}</option>`).join('')}</select> <span class="hint">→ ${CAT[r.cat].n}${r.how=='none'?'（あとで確認）':''}</span>`}</td></tr>`).join('')}</tbody></table></div>
    <div class="sact"><span class="hint">支払い方法：${esc(SS.pay)}</span><span class="sp"></span><button class="btn pri sm" type="button" id="ssGo" ${n?'':'disabled'}>選んだ${n}件を取り込む</button></div>`;
   $('ssGo').onclick=ssImport;
 }
