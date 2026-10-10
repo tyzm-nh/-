@@ -11,8 +11,8 @@ src = (here / "index.html").read_text(encoding="utf-8")
 
 swaps = [
     ("const DEMO=false;", "const DEMO=true;"),
-    ("<title>200万円家計簿</title>", "<title>目標貯金の家計簿</title>"),
-    ("<h1>200万円家計簿</h1>", '<h1>目標貯金の家計簿</h1><span class="pill mid">デモ</span>'),
+    ("<title>103万円家計簿</title>", "<title>目標貯金の家計簿</title>"),
+    ("<h1>103万円家計簿</h1>", '<h1>目標貯金の家計簿</h1><span class="pill mid">デモ</span>'),
     ("const LK='kakeibo200-v1';", "const LK='kakeibo-demo-v2';"),
 ]
 out = src

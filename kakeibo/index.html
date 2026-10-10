@@ -1,4 +1,4 @@
-<title>200万円家計簿</title>
+<title>103万円家計簿</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap">
 <style>
 /* layout: 上に見出しとタブ（スマホは下部タブ＋中央の記録ボタン）。ホームは「今月あと使えるお金」→予算→支払い予定→やることを1画面に。記録は下からせり上がるシートで入力 */
@@ -366,7 +366,7 @@ input.yen{text-align:right;font-variant-numeric:tabular-nums}
 
 <div class="app">
 <header class="top">
-  <h1>200万円家計簿</h1>
+  <h1>103万円家計簿</h1>
   <span class="st" id="store"><i></i><span>この端末に保存</span></span>
   <span class="sp"></span>
   <button class="btn pri" id="addTop" type="button">＋ 記録する <span class="hint" style="color:inherit;opacity:.75">N</span></button>
@@ -654,7 +654,8 @@ let START=5243,GOAL=2000000;const LK='kakeibo200-v1';
 // ===== 小道具 =====
 const $=id=>document.getElementById(id);
 const man=v=>v>=1e8?`${+(v/1e8).toFixed(2)}億`:v>=1e4?`${+(v/1e4).toFixed(1)}万`:`${Math.round(v)}`;
-const GL=()=>man(GOAL)+'円';
+// 目標額は「103万円」のように万円の整数で見せる（億を超えるときだけ億で）
+const GL=()=>GOAL>=1e8?man(GOAL)+'円':`${Math.round(GOAL/1e4)}万円`;
 const yen=n=>(n<0?'−':'')+Math.abs(Math.round(n)).toLocaleString('ja-JP');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad=n=>String(n).padStart(2,'0');

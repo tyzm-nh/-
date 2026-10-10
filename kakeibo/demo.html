@@ -654,7 +654,8 @@ let START=5243,GOAL=2000000;const LK='kakeibo-demo-v2';
 // ===== 小道具 =====
 const $=id=>document.getElementById(id);
 const man=v=>v>=1e8?`${+(v/1e8).toFixed(2)}億`:v>=1e4?`${+(v/1e4).toFixed(1)}万`:`${Math.round(v)}`;
-const GL=()=>man(GOAL)+'円';
+// 目標額は「103万円」のように万円の整数で見せる（億を超えるときだけ億で）
+const GL=()=>GOAL>=1e8?man(GOAL)+'円':`${Math.round(GOAL/1e4)}万円`;
 const yen=n=>(n<0?'−':'')+Math.abs(Math.round(n)).toLocaleString('ja-JP');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const pad=n=>String(n).padStart(2,'0');
