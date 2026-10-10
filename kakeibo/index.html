@@ -647,7 +647,7 @@ const FIELDS=[
  ['now','10〜12月の給料の手取り',190000,240000,1000,'円','7〜9月の明細の平均は213,878円'],
  ['ot','昇給後の残業時間（月）',0,25,0.5,'時間','7〜9月の実績は月5.7〜10.6時間'],
  ['res','敵④ 特別費の積立（1月から）',0,50000,1000,'円','旅行・家電・冠婚葬祭など。年18万円の枠'],
- ['nisa','NISAの積立（1月から）',0,30000,1000,'円','200万円とは別枠で引きます'],
+ ['nisa','NISAの積立（1月から）',0,30000,1000,'円','貯金とは別枠で引きます'],
  ['side','副業などの上乗せ（27年4月〜）',0,50000,1000,'円','YouTubeの収益など']];
 let START=5243,GOAL=2000000;const LK='kakeibo200-v1';
 
@@ -780,6 +780,8 @@ let ITEMS=[
 let PLAN=null;
 function sim(minLen=0){
   const s={...S(),v0:bsum({...BUD0,...(CONF.bud0||{})}),v:bsum({...BUD1,...(CONF.bud1||{})})};
+  // 目標＝生活費6か月分（毎月の固定費102,180円＋1月からの変動費予算）。予算を変えると目標も変わる
+  GOAL=Math.round(6*(102180+s.v)/1000)*1000;
   const p1=pay(s.ot,240000),p2=pay(s.ot),P={p1,p2,jm:jumin(p1,p2)};
   let bal=START,rows=[],hit=-1;
   for(let i=0;i<Math.max(240,minLen+1);i++){
@@ -1280,8 +1282,7 @@ function rPlan(){
      [2,'2026年12月','ローン完済',`過去のローンが終わる。年末の残高見込み 約${yen(rows[2].bal)}円`],
      [3,'2027年1月','貯金の仕組みを始める',`昇給が反映。先取り貯金${yen(save5)}円＋特別費${yen(s.res)}円を自動化`],
      [first(lv*3)?.i,dt(first(lv*3)),'生活費3か月分',`約${yen(lv*3)}円。急な出費があっても借りずに済む最初のライン`],
-     [first(lv*6)?.i,dt(first(lv*6)),'生活費6か月分',`約${yen(lv*6)}円。生活防衛資金の目安の下限`],
-     [hit,hit>=0?dt(rows[hit]):'未定',GL(),`生活防衛資金の完成。ここからNISAの積立額を増やす`]
+     [hit,hit>=0?dt(rows[hit]):'未定',`生活費6か月分（${GL()}）`,`生活防衛資金の完成。ここからNISAの積立額を増やす`]
     ]).map(a=>`<li class="${a[0]!=null&&a[0]<nowI?'past':''}"><span class="w">${a[1]}</span><span><strong>${a[2]}</strong>${a[3]}</span></li>`).join('');
     if(!$('snD').value)$('snD').value=TD;
     $('snList').innerHTML=snaps.slice(0,4).map(x=>{const p=planAt(x.date),df=p==null?null:x.amt-p;
@@ -1301,7 +1302,7 @@ function roadChart(rows,lv){
   const step=hi>1200000?500000:hi>500000?200000:100000;
   let s=`<svg class="ch" viewBox="0 0 ${W} ${H}" role="img" aria-label="貯金残高の推移">`;
   for(let g=Math.ceil(lo/step)*step;g<=hi;g+=step)s+=`<line x1="${L}" x2="${W-R}" y1="${y(g)}" y2="${y(g)}" stroke="var(--line)" stroke-width="${g==0?1.5:1}"/><text x="${L-7}" y="${y(g)+4}" text-anchor="end">${g/10000}万</text>`;
-  [[3,'3か月分'],[6,'6か月分']].forEach(([k,t])=>{const v=lv*k;if(v<hi){const yy=y(v);s+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="4 4"/><text x="${L+6}" y="${yy-5}" style="fill:var(--gold)">生活費${t}（${Math.round(v/10000)}万円）</text>`}});
+  [[3,'3か月分'],[6,'6か月分']].forEach(([k,t])=>{const v=lv*k;if(v<hi&&Math.abs(v-GOAL)>GOAL*.02){const yy=y(v);s+=`<line x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}" stroke="var(--gold)" stroke-width="1.2" stroke-dasharray="4 4"/><text x="${L+6}" y="${yy-5}" style="fill:var(--gold)">生活費${t}（${Math.round(v/10000)}万円）</text>`}});
   if(GOAL<=hi)s+=`<line x1="${L}" x2="${W-R}" y1="${y(GOAL)}" y2="${y(GOAL)}" stroke="var(--accent)" stroke-width="1.5"/><text x="${L+6}" y="${y(GOAL)-6}" style="fill:var(--accent);font-weight:700">目標 ${GL()}</text>`;
   // 月の目盛り：2年以内は毎月、それ以上は2か月・3か月ごと
   const stp=n<=24?1:n<=40?2:3;
