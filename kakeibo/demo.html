@@ -1614,7 +1614,8 @@ document.addEventListener('click',e=>{
   const sk=e.target.closest('li[data-sk]');if(sk){UI.se=UI.se==sk.dataset.sk?null:sk.dataset.sk;rSched();return}
   const f=e.target.closest('#lFilter [data-f]');if(f){UI.lf=f.dataset.f;render();return}
   const v=e.target.closest('#lView [data-v]');if(v){UI.lv=v.dataset.v;UI.day=null;saveUI();render();return}
-  const dd=e.target.closest('#cal [data-day]');if(dd){UI.day=UI.day==dd.dataset.day?null:dd.dataset.day;render();return}
+  // 日付を押したら、その日の記録（カレンダーの下）まで自動でスクロールする
+  const dd=e.target.closest('#cal [data-day]');if(dd){UI.day=UI.day==dd.dataset.day?null:dd.dataset.day;render();if(UI.day)$('lDayNote').closest('.panel').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});return}
   const p=e.target.closest('#pSeg [data-p]');if(p){UI.pp=p.dataset.p;saveUI();render();return}
   const r=e.target.closest('#rng [data-r]');if(r){UI.rng=+r.dataset.r;saveUI();render();return}
   const sp=e.target.closest('#span [data-n]');if(sp){UI.span=+sp.dataset.n;saveUI();render();return}
