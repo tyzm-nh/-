@@ -352,6 +352,11 @@ input.yen{text-align:right;font-variant-numeric:tabular-nums}
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
 .chip.q{background:var(--sunk);border-color:transparent;font-weight:500}
 .chip.q b{font-family:var(--num);font-size:14px}
+.flab{font-size:12px;font-weight:700;color:var(--mute);margin-bottom:-6px}
+.flow{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:var(--sunk);border-radius:12px;padding:10px 12px;font-weight:700}
+.flow .fb{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}.flow .fb small{font-size:11px;color:var(--mute);font-weight:600}
+.flow .fb b{font-size:15px;overflow-wrap:anywhere}.flow .ar{font-size:20px;color:var(--mute)}
+.flow .fn{width:100%;text-align:center;font-size:11px;color:var(--mute);font-weight:500}
 .glab{font-size:11px;font-weight:700;color:var(--mute);width:100%;margin-top:2px}
 .srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .srow input[type=text]{flex:1}
@@ -605,9 +610,14 @@ input.yen{text-align:right;font-variant-numeric:tabular-nums}
     <div class="chips" id="quick"></div>
     <div class="amtbox" id="amtBox"><span>¥</span><input id="amt" inputmode="decimal" placeholder="0" aria-label="金額"></div>
     <span class="hint" id="amtHint">1200+380 のような計算もOK</span>
+    <div class="flow" id="flow" hidden></div>
+    <span class="flab" id="catLab">費目</span>
     <div class="chips" id="cats"></div>
     <div class="srow"><div class="seg" id="dSeg"><button data-d="0" type="button">今日</button><button data-d="-1" type="button">昨日</button></div><input type="date" id="dt" aria-label="日付"></div>
+    <span class="flab" id="payLab">支払い方法</span>
     <div class="chips" id="pays"></div>
+    <span class="flab" id="toLab" hidden>どこへ</span>
+    <div class="chips" id="tos" hidden></div>
     <div class="srow"><input type="text" id="memo" placeholder="メモ（お店や内容）" list="memos" aria-label="メモ"><datalist id="memos"></datalist></div>
     <div class="sact"><button class="btn danger" id="del" type="button" hidden>削除</button><span class="sp"></span><button class="btn" id="cancel" type="button">閉じる</button><button class="btn" id="saveNext" type="button">続けて入力</button><button class="btn pri" type="submit">保存</button></div>
   </form>
@@ -687,6 +697,7 @@ const bsum=b=>VAR.reduce((a,c)=>a+(+b[c]||0),0);
 // Kyashへの切り替え（start＝変動費をKyash個人で払い始める月、mode＝all か food）
 const KY=()=>({start:'2026-12',mode:'all',...(CONF.ky||{})});
 // 支払い方法は「いつも使うもの」から最後に選んだものを使う。家賃・奨学金など決まった支払いだけは費目で決める
+const toDef=c=>({card:CARD,kcharge:PAYS.includes('Kyash個人')?'Kyash個人':'現金',save:PAYS.includes('ドコモSMTB')?'ドコモSMTB':'貯金用の口座',nisa:'証券口座（NISA）'})[c]||'現金';
 const MYP=()=>{const a=(CONF.myPays||['楽天カード','Kyash個人','PayPay']).filter(p=>PAYS.includes(p));return a.length?a:[PAYS[0]]};
 const SHORT={card:'楽天カード',kyash:'Kyash個人',kyashk:'Kyash共通',paypay:'PayPay',cash:'現金',bank:'楽天銀行',smtb:'ドコモSMTB'};
 const SHORTK=Object.fromEntries(Object.entries(SHORT).map(([k,v])=>[v,k]));
@@ -933,7 +944,7 @@ function render(){
 function txRow(t){
   const c=CAT[t.cat]||CAT.other,sign=t.kind=='in'?'+':t.kind=='mv'?'':'−';
   const [,mm,dd]=t.date.split('-');
-  return `<li data-id="${esc(t.id)}"><span class="cat" style="background:${ccol(c.k)}">${esc(c.n.slice(0,2))}</span><span class="m"><b>${esc(t.memo||c.n)}${t.auto=='none'?'<span class="unc">品目を確認</span>':''}</b><span>${+mm}/${+dd}・${esc(c.n)}・${esc(t.pay||'')}</span></span><span class="a ${t.kind}">${sign}${yen(t.amt)}</span></li>`;
+  return `<li data-id="${esc(t.id)}"><span class="cat" style="background:${ccol(c.k)}">${esc(c.n.slice(0,2))}</span><span class="m"><b>${esc(t.memo||c.n)}${t.auto=='none'?'<span class="unc">品目を確認</span>':''}</b><span>${+mm}/${+dd}・${esc(c.n)}・${t.kind=='mv'?esc((t.pay||'')+' → '+(t.to||toDef(t.cat))):esc(t.pay||'')}</span></span><span class="a ${t.kind}">${sign}${yen(t.amt)}</span></li>`;
 }
 function emptyState(msg){return `<li class="empty" style="cursor:default">${msg}<button class="btn pri sm" type="button" data-add="1">＋ 最初の1件を記録</button></li>`}
 
@@ -1534,7 +1545,20 @@ function drawSheet(){
   $('cats').innerHTML=g.map(x=>(g.length>1?`<span class="glab">${GN[x]}</span>`:'')+CATS.filter(c=>c[2]==x).map(([k,n])=>`<button type="button" class="chip" data-c="${k}" aria-pressed="${ED.cat==k}"><i class="dot" style="background:${ccol(k)}"></i>${n}</button>`).join('')).join('')+
     (ED.kind=='out'?`<button type="button" class="chip q" id="more">${ED.more?'変動費だけ表示':'固定費・特別費も表示'}</button>`:'');
   const PL=ED.allPay?PAYS:[...new Set([...MYP(),...(ED.pay?[ED.pay]:[])])];
-  $('pays').innerHTML=PL.map(p=>`<button type="button" class="chip" data-p="${p}" aria-pressed="${ED.pay==p}">${esc(p)}</button>`).join('')+(ED.allPay?'':`<button type="button" class="chip q" data-p="_all">ほかの支払い方法</button>`);
+  const mv=ED.kind=='mv';
+  $('pays').innerHTML=PL.map(p=>`<button type="button" class="chip" data-p="${p}" aria-pressed="${ED.pay==p}">${esc(p)}</button>`).join('')+(ED.allPay?'':`<button type="button" class="chip q" data-p="_all">${mv?'ほかの口座':ED.kind=='in'?'ほかの口座':'ほかの支払い方法'}</button>`);
+  // 振替は「どこから → どこへ」を並べて見せる。支出・収入には数えない
+  $('catLab').textContent=mv?'何の振替？':ED.kind=='in'?'何の収入？':'費目';
+  $('payLab').textContent=mv?'どこから（お金が出ていく口座）':ED.kind=='in'?'どこに入った？':'支払い方法';
+  $('toLab').hidden=$('tos').hidden=$('flow').hidden=!mv;
+  if(mv){
+    if(!ED.to)ED.to=toDef(ED.cat);
+    const TL=[...new Set([toDef(ED.cat),...PAYS.filter(p=>p!='Kyash共通'),ED.to])].filter(p=>p!=ED.pay);
+    if(ED.to==ED.pay)ED.to=TL[0];
+    $('toLab').textContent='どこへ（お金が入る先）';
+    $('tos').innerHTML=TL.map(p=>`<button type="button" class="chip" data-to="${esc(p)}" aria-pressed="${ED.to==p}">${esc(p)}</button>`).join('');
+    $('flow').innerHTML=`<span class="fb"><small>から</small><b>${esc(ED.pay||'—')}</b></span><span class="ar" aria-hidden="true">→</span><span class="fb"><small>へ</small><b>${esc(ED.to)}</b></span><span class="fn">口座どうしの移動なので、支出・収入には数えません</span>`;
+  }
   document.querySelectorAll('#dSeg button').forEach(b=>{const d=new Date();d.setDate(d.getDate()+ +b.dataset.d);b.setAttribute('aria-pressed',dstr(d)==ED.date)});
   const Q=ED.id||ED.kind!='out'?[]:frequent();
   $('quick').innerHTML=Q.map((t,j)=>`<button type="button" class="chip q" data-q="${j}"><i class="dot" style="background:${ccol(t.cat)}"></i>${esc(t.memo)} <b>${yen(t.amt)}</b></button>`).join('');
@@ -1549,13 +1573,14 @@ async function saveSheet(next){
   const a=evalAmt($('amt').value);
   if(!(a>0)){$('amtHint').innerHTML='<span class="neg">金額を入れてください（数字と＋−だけ使えます）</span>';$('amt').focus();return}
   const t={date:$('dt').value||TD,amt:a,kind:ED.kind,cat:ED.cat,pay:ED.pay,memo:$('memo').value.trim().slice(0,80),ts:ED.ts||Date.now()};
+  if(t.kind=='mv'&&ED.to)t.to=ED.to;
   if(ED.src)t.src=ED.src;
   if(ED.auto&&ED.cat==ED.cat0&&ED.auto!='none')t.auto=ED.auto;
   const id=ED.id||('t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
   $('amtHint').textContent='1200+380 のような計算もOK';
   write('tx',id,t);
   if(t.kind=='out'&&!DEFPAY[t.cat]&&MYP().includes(t.pay)&&CONF.lastPay!=t.pay){QP=t.pay;CONF.lastPay=t.pay;saveConf()}
-  toast(`${CAT[t.cat].n} ${yen(a)}円（${t.pay}）を記録しました`);
+  toast(t.kind=='mv'?`振替 ${yen(a)}円（${t.pay} → ${t.to}）を記録しました`:`${CAT[t.cat].n} ${yen(a)}円（${t.pay}）を記録しました`);
   if(next){ED.amt='';$('amt').value='';$('memo').value='';ED.id=null;drawSheet();$('amt').focus()}else closeSheet();
 }
 function closeSheet(){$('ov').hidden=true;ED=null}
@@ -1568,9 +1593,10 @@ $('del').onclick=()=>{
   const id=ED.id,old=TX[id];write('tx',id,null);closeSheet();
   toast('削除しました',()=>write('tx',id,old));
 };
-$('kSeg').onclick=e=>{const k=e.target.closest('[data-k]')?.dataset.k;if(!k)return;ED.kind=k;ED.cat=k=='in'?'salary':k=='mv'?'card':'food';if(!ED.payTouched)ED.pay=defPay(ED.cat);drawSheet()};
-$('cats').onclick=e=>{if(e.target.closest('#more')){ED.more=!ED.more;drawSheet();return}const c=e.target.closest('[data-c]')?.dataset.c;if(!c)return;ED.cat=c;if(!ED.payTouched)ED.pay=defPay(c);drawSheet()};
+$('kSeg').onclick=e=>{const k=e.target.closest('[data-k]')?.dataset.k;if(!k)return;ED.kind=k;ED.cat=k=='in'?'salary':k=='mv'?'card':'food';ED.to=null;if(!ED.payTouched)ED.pay=defPay(ED.cat);drawSheet()};
+$('cats').onclick=e=>{if(e.target.closest('#more')){ED.more=!ED.more;drawSheet();return}const c=e.target.closest('[data-c]')?.dataset.c;if(!c)return;ED.cat=c;ED.to=null;if(!ED.payTouched)ED.pay=defPay(c);drawSheet()};
 $('pays').onclick=e=>{const p=e.target.closest('[data-p]')?.dataset.p;if(!p)return;if(p=='_all'){ED.allPay=true;drawSheet();return}ED.pay=p;ED.payTouched=true;if(ED.kind=='out'&&MYP().includes(p)&&!DEFPAY[ED.cat])QP=p;drawSheet()};
+$('tos').onclick=e=>{const p=e.target.closest('[data-to]')?.dataset.to;if(!p)return;ED.to=p;drawSheet()};
 $('dSeg').onclick=e=>{const b=e.target.closest('[data-d]');if(!b)return;const d=new Date();d.setDate(d.getDate()+ +b.dataset.d);ED.date=dstr(d);$('dt').value=ED.date;drawSheet()};
 $('dt').onchange=()=>{ED.date=$('dt').value;drawSheet()};
 $('quick').onclick=e=>{const j=e.target.closest('[data-q]')?.dataset.q;if(j==null)return;const t=$('quick')._Q[j];ED.cat=t.cat;ED.pay=t.pay;ED.payTouched=true;$('amt').value=t.amt;$('memo').value=t.memo;drawSheet();$('amt').select()};
