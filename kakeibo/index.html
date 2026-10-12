@@ -353,10 +353,10 @@ input.yen{text-align:right;font-variant-numeric:tabular-nums}
 .chip.q{background:var(--sunk);border-color:transparent;font-weight:500}
 .chip.q b{font-family:var(--num);font-size:14px}
 .flab{font-size:12px;font-weight:700;color:var(--mute);margin-bottom:-6px}
-.flow{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;background:var(--sunk);border-radius:12px;padding:10px 12px;font-weight:700}
-.flow .fb{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}.flow .fb small{font-size:11px;color:var(--mute);font-weight:600}
-.flow .fb b{font-size:15px;overflow-wrap:anywhere}.flow .ar{font-size:20px;color:var(--mute)}
-.flow .fn{width:100%;text-align:center;font-size:11px;color:var(--mute);font-weight:500}
+.flow{display:flex;flex-direction:column;gap:4px;background:var(--sunk);border-radius:12px;padding:10px 14px}
+.flow .fr{display:flex;justify-content:space-between;align-items:baseline;gap:12px}.flow .fr b{font-size:15px;min-width:0;overflow-wrap:anywhere}
+.flow .fr .n{font-family:var(--num);font-size:17px;font-weight:700;white-space:nowrap}.flow .pos{color:var(--good)}
+.flow .fn{font-size:11px;color:var(--mute);margin-top:2px}
 .glab{font-size:11px;font-weight:700;color:var(--mute);width:100%;margin-top:2px}
 .srow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .srow input[type=text]{flex:1}
@@ -944,7 +944,7 @@ function render(){
 function txRow(t){
   const c=CAT[t.cat]||CAT.other,sign=t.kind=='in'?'+':t.kind=='mv'?'':'−';
   const [,mm,dd]=t.date.split('-');
-  return `<li data-id="${esc(t.id)}"><span class="cat" style="background:${ccol(c.k)}">${esc(c.n.slice(0,2))}</span><span class="m"><b>${esc(t.memo||c.n)}${t.auto=='none'?'<span class="unc">品目を確認</span>':''}</b><span>${+mm}/${+dd}・${esc(c.n)}・${t.kind=='mv'?esc((t.pay||'')+' → '+(t.to||toDef(t.cat))):esc(t.pay||'')}</span></span><span class="a ${t.kind}">${sign}${yen(t.amt)}</span></li>`;
+  return `<li data-id="${esc(t.id)}"><span class="cat" style="background:${ccol(c.k)}">${esc(c.n.slice(0,2))}</span><span class="m"><b>${esc(t.memo||c.n)}${t.auto=='none'?'<span class="unc">品目を確認</span>':''}</b><span>${+mm}/${+dd}・${esc(c.n)}・${t.kind=='mv'?esc(`${t.pay||''} −${yen(t.amt)}／${t.to||toDef(t.cat)} +${yen(t.amt)}`):esc(t.pay||'')}</span></span><span class="a ${t.kind}">${sign}${yen(t.amt)}</span></li>`;
 }
 function emptyState(msg){return `<li class="empty" style="cursor:default">${msg}<button class="btn pri sm" type="button" data-add="1">＋ 最初の1件を記録</button></li>`}
 
@@ -1557,13 +1557,17 @@ function drawSheet(){
     if(ED.to==ED.pay)ED.to=TL[0];
     $('toLab').textContent='どこへ（お金が入る先）';
     $('tos').innerHTML=TL.map(p=>`<button type="button" class="chip" data-to="${esc(p)}" aria-pressed="${ED.to==p}">${esc(p)}</button>`).join('');
-    $('flow').innerHTML=`<span class="fb"><small>から</small><b>${esc(ED.pay||'—')}</b></span><span class="ar" aria-hidden="true">→</span><span class="fb"><small>へ</small><b>${esc(ED.to)}</b></span><span class="fn">口座どうしの移動なので、支出・収入には数えません</span>`;
+    drawFlow();
   }
   document.querySelectorAll('#dSeg button').forEach(b=>{const d=new Date();d.setDate(d.getDate()+ +b.dataset.d);b.setAttribute('aria-pressed',dstr(d)==ED.date)});
   const Q=ED.id||ED.kind!='out'?[]:frequent();
   $('quick').innerHTML=Q.map((t,j)=>`<button type="button" class="chip q" data-q="${j}"><i class="dot" style="background:${ccol(t.cat)}"></i>${esc(t.memo)} <b>${yen(t.amt)}</b></button>`).join('');
   $('quick').hidden=!Q.length;$('quick')._Q=Q;
 }
+// 振替：出る口座は −、入る口座は ＋ で、残高がいくら動くかを見せる
+function drawFlow(){if(!ED||ED.kind!='mv')return;const a=evalAmt($('amt').value),v=a>0?yen(a):'';
+  $('flow').innerHTML=`<div class="fr"><b>${esc(ED.pay||'—')}</b><span class="n neg">${v?'−'+v:'−'}</span></div><div class="fr"><b>${esc(ED.to)}</b><span class="n pos">${v?'+'+v:'+'}</span></div><span class="fn">口座どうしの移動なので、支出・収入には数えません</span>`}
+$('amt').addEventListener('input',drawFlow);
 const evalAmt=s=>{s=String(s).replace(/[０-９＋－]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/[−ー]/g,'-').replace(/[,，円¥\s]/g,'');
   if(!/^[\d.+\-万億千]+$/.test(s))return NaN;const p=[...s.matchAll(/([+\-]?)([\d.]+)(億|万|千)?/g)];
   return p.length?Math.round(p.reduce((a,[,sg,n,u])=>a+(sg=='-'?-1:1)*parseFloat(n)*(u=='億'?1e8:u=='万'?1e4:u=='千'?1e3:1),0)):NaN};
@@ -1580,7 +1584,7 @@ async function saveSheet(next){
   $('amtHint').textContent='1200+380 のような計算もOK';
   write('tx',id,t);
   if(t.kind=='out'&&!DEFPAY[t.cat]&&MYP().includes(t.pay)&&CONF.lastPay!=t.pay){QP=t.pay;CONF.lastPay=t.pay;saveConf()}
-  toast(t.kind=='mv'?`振替 ${yen(a)}円（${t.pay} → ${t.to}）を記録しました`:`${CAT[t.cat].n} ${yen(a)}円（${t.pay}）を記録しました`);
+  toast(t.kind=='mv'?`振替を記録しました（${t.pay} −${yen(a)}／${t.to} +${yen(a)}）`:`${CAT[t.cat].n} ${yen(a)}円（${t.pay}）を記録しました`);
   if(next){ED.amt='';$('amt').value='';$('memo').value='';ED.id=null;drawSheet();$('amt').focus()}else closeSheet();
 }
 function closeSheet(){$('ov').hidden=true;ED=null}
