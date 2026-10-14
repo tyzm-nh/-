@@ -1676,13 +1676,23 @@ $('ssFile').onchange=async e=>{
   if(!lim?.images){out.innerHTML='<p class="hint neg">この画面では画像を読み取れません。claude.aiにログインした状態で開いてください。</p>';return}
   const F=files.slice(0,lim.images.maxCount);
   out.innerHTML=`<p class="hint">${F.length}枚を読み取っています…（数十秒かかることがあります）${files.length>F.length?`。一度に読めるのは${F.length}枚までです`:''}</p>`;
-  const prompt=`These images are screenshots of a Japanese payment app's transaction history (${$('ssPay').value}). Today is ${TD}.
-Extract every transaction row you can read. Return ONLY JSON: {"rows":[{"date":"YYYY-MM-DD","amount":<positive integer yen>,"merchant":"<store or description as written>","type":"payment"|"charge"|"refund"}]}
-- "charge" = money added to the wallet (チャージ/入金). "refund" = money returned (返金/キャンセル/割り勘の受け取り). Everything paid out is "payment".
+  const app=$('ssPay').value;
+  // アプリごとの画面の癖（PayPayは日付が見出し、ポイントや時刻を金額と取り違えやすい）
+  const HINT={
+   'PayPay':`This is the PayPay app (取引履歴). Each row usually shows the store or person name, a label such as 支払い / 受け取り / チャージ / 送る / 返金 / ポイント, a date and time, and an amount in 円 on the right.
+- Dates may appear as section headers (e.g. "10月14日(火)") that apply to every row under them, or inside each row (e.g. "2026/10/14 12:34"). Never read a time like 12:34 as an amount.
+- The amount is the number followed by 円 on the same row as the store name. Ignore numbers with "pt" or "ポイント", ポイント付与 / 獲得 / 運用 rows, 残高 (balance) and 合計 lines.
+- 支払い and 送る (sending money) are "payment". 受け取り and 返金 are "refund". チャージ is "charge".`,
+   'Kyash個人':`This is the Kyash app. Rows show the store, date/time and amount. 入金 / チャージ rows are "charge"; 返金 / 受け取り rows are "refund"; everything else is "payment".`,
+   '楽天カード':`This is the 楽天カード (楽天e-NAVI) app usage list (ご利用明細). Each row shows the date of use, the store name and the amount. Every row is a "payment" unless it says 返品 / 取消 / キャンセル ("refund"). Ignore 請求額 totals and ポイント.`};
+  const prompt=`These images are screenshots of a Japanese payment app's transaction history (${app}). Today is ${TD}.
+${HINT[app]||''}
+Extract every transaction row you can read, top to bottom, exactly once each (screenshots may overlap; list a row that appears in two images only once). Return ONLY JSON: {"rows":[{"date":"YYYY-MM-DD","amount":<positive integer yen>,"merchant":"<store or person name exactly as written>","type":"payment"|"charge"|"refund"}]}
+- Amount: copy the digits exactly as printed (remove commas, 円 and signs). Double-check each one against the image.
 - If the year is not shown, pick the year that makes the date on or before today.
 - Skip balances, point totals, headers and anything you cannot read clearly. Do not invent rows.`;
   try{
-    const r=await sample.json(prompt,{images:F,modelTier:'default'});
+    const r=await sample.json(prompt,{images:F,modelTier:'complex'});
     const pay=$('ssPay').value;
     const rows=(Array.isArray(r?.rows)?r.rows:[]).filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x?.date)&&+x.amount>0).map(x=>{
       const amt=Math.round(+x.amount),memo=String(x.merchant||'').slice(0,80),type=['charge','refund'].includes(x.type)?x.type:'payment';
@@ -1712,7 +1722,7 @@ function findDup(id,date,amt,memo,pay){
 }
 function rSS(){
   if(!SS)return;const n=SS.rows.filter(r=>r.on).length;
-  $('ssOut').innerHTML=`<div class="scroll"><table class="ssT"><thead><tr><th></th><th>日付</th><th>お店・内容</th><th>金額</th><th>分類</th></tr></thead><tbody>${SS.rows.map((r,j)=>`<tr class="${r.dup?'dup':''}"><td><input type="checkbox" data-ssc="${j}" ${r.on?'checked':''} aria-label="取り込む"></td><td class="n">${md(r.date)}</td><td>${esc(r.memo)}${r.dup?`<span class="unc">${r.dup.lv}</span><div class="hint" style="font-size:11px">${r.dup.lv=='取り込み済み'?'前回':'手入力'}：${md(r.dup.t.date)} ${esc(r.dup.t.memo||(CAT[r.dup.t.cat]||CAT.other).n)} ${yen(r.dup.t.amt)}・${esc(r.dup.t.pay||'')}</div>`:''}</td><td class="n">${r.type=='payment'?'−':'+'}${yen(r.amt)}</td><td>${r.type=='charge'?'チャージ（振替）':r.type=='refund'?'返金・割り勘（収入）':`<select data-ssg="${j}" aria-label="4つの敵">${FOE4.map(([g,a,d])=>`<option value="${g}" ${g==r.g?'selected':''}>${a} ${d.replace('毎月の','').replace('不定期の','不定期')}</option>`).join('')}</select> <span class="hint">→ ${CAT[r.cat].n}${r.how=='none'?'（あとで確認）':''}</span>`}</td></tr>`).join('')}</tbody></table></div>
+  $('ssOut').innerHTML=`<div class="scroll"><table class="ssT"><thead><tr><th></th><th>日付</th><th>お店・内容</th><th>金額</th><th>分類</th></tr></thead><tbody>${SS.rows.map((r,j)=>`<tr class="${r.dup?'dup':''}"><td><input type="checkbox" data-ssc="${j}" ${r.on?'checked':''} aria-label="取り込む"></td><td class="n">${md(r.date)}</td><td>${esc(r.memo)}${r.dup?`<span class="unc">${r.dup.lv}</span><div class="hint" style="font-size:11px">${r.dup.lv=='取り込み済み'?'前回':'手入力'}：${md(r.dup.t.date)} ${esc(r.dup.t.memo||(CAT[r.dup.t.cat]||CAT.other).n)} ${yen(r.dup.t.amt)}・${esc(r.dup.t.pay||'')}</div>`:''}</td><td class="n">${r.type=='payment'?'−':'+'}${yen(r.amt)}</td><td>${r.type=='charge'?`チャージ（振替：${esc(SS.pay)} +）`:r.type=='refund'?'返金・割り勘（収入）':`<select data-ssg="${j}" aria-label="4つの敵">${FOE4.map(([g,a,d])=>`<option value="${g}" ${g==r.g?'selected':''}>${a} ${d.replace('毎月の','').replace('不定期の','不定期')}</option>`).join('')}</select> <span class="hint">→ ${CAT[r.cat].n}${r.how=='none'?'（あとで確認）':''}</span>`}</td></tr>`).join('')}</tbody></table></div>
    <div class="sact"><span class="hint">支払い方法：${esc(SS.pay)}</span><span class="sp"></span><button class="btn pri sm" type="button" id="ssGo" ${n?'':'disabled'}>選んだ${n}件を取り込む</button></div>`;
   $('ssGo').onclick=ssImport;
 }
@@ -1721,8 +1731,8 @@ $('ssOut').addEventListener('change',e=>{if(!SS)return;const c=e.target.dataset.
   if(g!=null){const r=SS.rows[g];r.g=e.target.value;const q=guess(r.g,r.memo,r.amt);r.cat=q.cat;r.how=q.how;rSS()}});
 async function ssImport(){
   const L=SS.rows.filter(r=>r.on),pay=SS.pay;SS=null;$('ssOut').innerHTML=`<p class="hint">取り込み中…</p>`;let n=0;
-  for(const r of L){const t=r.type=='charge'?{kind:'mv',cat:'kcharge'}:r.type=='refund'?{kind:'in',cat:'refund'}:{kind:'out',cat:r.cat};
-    const o={date:r.date,amt:r.amt,...t,pay,memo:r.memo,src:'ss',ts:Date.now()};if(r.type=='payment'&&r.how!='memo')o.auto=r.how;
+  for(const r of L){const t=r.type=='charge'?(pay=='Kyash個人'?{kind:'mv',cat:'kcharge',pay:'楽天銀行',to:'Kyash個人'}:{kind:'mv',cat:'mv_other',pay:'楽天銀行',to:pay}):r.type=='refund'?{kind:'in',cat:'refund'}:{kind:'out',cat:r.cat};
+    const o={date:r.date,amt:r.amt,pay,...t,memo:r.memo,src:'ss',ts:Date.now()};if(r.type=='payment'&&r.how!='memo')o.auto=r.how;
     await write('tx',r.id,o);n++}
   $('ssOut').innerHTML=`<p class="hint">${n}件を取り込みました。「品目を確認」の絞り込みで、自動で決められなかったものを直せます。</p>`;
 }
