@@ -886,8 +886,8 @@ function kyBal(){const b=CONF.ky?.base;if(!b)return null;let v=b.amt;
 const md=ds=>`${+ds.slice(5,7)}/${+ds.slice(8)}`;
 
 // 4つの敵だけ選べば、品目は「前に同じお店で選んだ品目」→「お店・内容の言葉」→「予定の金額」の順に自動で決める
-const KW=[[/家賃/,'rent'],[/奨学/,'scholar'],[/オリコ|機種/,'phone'],[/ドコモ|docomo|ahamo|povo|linemo|楽天モバイル|ソフトバンク|\bau\b|通信|wi-?fi/i,'net'],[/netflix|prime|プライム|spotify|apple ?music|youtube|icloud|disney|サブスク|hulu|u-?next|シーモア/i,'subs'],[/保険/,'ins'],
- [/税/,'tax'],[/ローン|返済/,'loan'],[/ゲリラ/,'seymour'],
+const KW=[[/手数料/,'other'],[/家賃/,'rent'],[/奨学/,'scholar'],[/オリコ|機種/,'phone'],[/ドコモ|docomo|ahamo|povo|linemo|楽天モバイル|ソフトバンク|\bau\b|通信|wi-?fi/i,'net'],[/netflix|prime|プライム|spotify|apple ?music|youtube|icloud|disney|サブスク|hulu|u-?next|シーモア/i,'subs'],[/保険/,'ins'],
+ [/税(?![込抜別])|年金/,'tax'],[/ローン|返済/,'loan'],[/ゲリラ/,'seymour'],
  [/旅行|ホテル|旅館|航空|ana|jal|じゃらん|トラベル|airbnb|新幹線/i,'travel'],[/家電|家具|ビック|ヨドバシ|ケーズ|ニトリ|ikea/i,'appliance'],[/結婚|祝儀|香典|葬/,'ceremony'],[/プレゼント|ギフト|誕生日|お祝い/,'gift'],[/セミナー|講座|資格|教材|自己投資|撮影|カメラ/,'self'],
  [/美容|ヘア|カット|カラー|ネイル|まつ|化粧|コスメ|ロフト|cosme|下着|エステ|脱毛|サロン/i,'beauty'],
  [/病院|クリニック|医院|歯科|薬局|処方|診察/,'med'],
@@ -1486,7 +1486,7 @@ function parseCSV(s){const R=[];let row=[],f='',q=false;for(let i=0;i<s.length;i
   if(q){if(c=='"'){if(s[i+1]=='"'){f+='"';i++}else q=false}else f+=c}
   else if(c=='"')q=true;else if(c==','){row.push(f);f=''}else if(c=='\n'){row.push(f);R.push(row);row=[];f=''}else if(c!='\r')f+=c}
   if(f||row.length){row.push(f);R.push(row)}return R}
-const MAP=[[/家賃|住宅|住居/,'rent'],[/奨学金/,'scholar'],[/機種|端末|オリコ/,'phone'],[/通信|携帯|インターネット|スマホ/,'net'],[/サブスク|動画|音楽|配信|シーモア/,'subs'],[/保険/,'ins'],[/税|年金/,'tax'],[/ローン|返済/,'loan'],[/ゲリラ/,'seymour'],[/旅行/,'travel'],[/家電|家具/,'appliance'],[/冠婚|葬/,'ceremony'],[/プレゼント|贈/,'gift'],[/自己投資|教養|教育|セミナー|資格/,'self'],
+const MAP=[[/手数料/,'other'],[/家賃|住宅|住居/,'rent'],[/奨学金/,'scholar'],[/機種|端末|オリコ/,'phone'],[/通信|携帯|インターネット|スマホ/,'net'],[/サブスク|動画|音楽|配信|シーモア/,'subs'],[/保険/,'ins'],[/税(?![込抜別])|年金/,'tax'],[/ローン|返済/,'loan'],[/ゲリラ/,'seymour'],[/旅行/,'travel'],[/家電|家具/,'appliance'],[/冠婚|葬/,'ceremony'],[/プレゼント|贈/,'gift'],[/自己投資|教養|教育|セミナー|資格/,'self'],
  [/美容|化粧|コスメ|ヘア|下着|エステ|ネイル/,'beauty'],[/食|ランチ|カフェ|外食/,'food'],[/交通|電車|バス|タクシー|定期|ガソリン/,'trans'],[/衣服|洋服|被服|服|靴/,'cloth'],[/日用品|ドラッグ|雑貨/,'daily'],[/趣味|娯楽|レジャー|ゲーム|本|映画|イベント/,'fun'],[/医療|病院|薬|歯科/,'med']];
 const IMAP=[[/給与|給料/,'salary'],[/賞与|ボーナス/,'bonus'],[/返金|割り勘|立替/,'refund']];
 let MF=null;
