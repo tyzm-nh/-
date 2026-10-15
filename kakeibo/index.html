@@ -270,6 +270,7 @@ ol.todo{margin:0;padding-left:1.2em;font-size:13px;display:flex;flex-direction:c
 .cal button.sel{outline:2px solid var(--accent);outline-offset:-1px}
 .cal button.today .dn{background:var(--accent);color:var(--on-accent);border-radius:9px;padding:0 6px}
 .cal .dn{font-size:11px;font-weight:700}
+.cal .dt{display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;min-width:0}
 .cal .hn{font-size:8px;font-weight:600;line-height:1.15;color:var(--bad);width:100%;overflow-wrap:anywhere}
 .cal .wd.sun,.cal button.sun .dn{color:var(--bad)} .cal .wd.sat,.cal button.sat .dn{color:var(--sat)}
 .cal button.sun:not(.today){background-color:color-mix(in srgb,var(--bad) 5%,var(--panel))}
@@ -1153,7 +1154,7 @@ function rList(){
     let h=[...WD].map((w,j)=>`<span class="wd ${j==0?'sun':j==6?'sat':''}">${w}</span>`).join('')+'<span class="blank"></span>'.repeat(first);
     for(let dd=1;dd<=n;dd++){const ds=`${k}-${pad(dd)}`,v=by[ds]||0;
       const hn=holi(ds),dw=(first+dd-1)%7;
-      h+=`<button type="button" data-day="${ds}" class="${ds==TD?'today':''} ${UI.day==ds?'sel':''} ${hn||dw==0?'sun':dw==6?'sat':''}" ${hn?`title="${hn}" aria-label="${dd}日 ${hn}"`:''} style="${v?`background:color-mix(in srgb,var(--accent-soft) ${Math.min(100,v/per*60)}%,var(--panel))`:''}"><span class="dn">${dd}</span>${hn?`<span class="hn">${hn}</span>`:''}${TK[ds]?`<span class="tkd" title="${esc(TK[ds].map(t=>t.t).join('、'))}">期限${TK[ds].length>1?TK[ds].length:''}</span>`:''}<span class="ds ${v>per?'over':''}">${v?yen(v):''}</span></button>`}
+      h+=`<button type="button" data-day="${ds}" class="${ds==TD?'today':''} ${UI.day==ds?'sel':''} ${hn||dw==0?'sun':dw==6?'sat':''}" ${hn?`title="${hn}" aria-label="${dd}日 ${hn}"`:''} style="${v?`background:color-mix(in srgb,var(--accent-soft) ${Math.min(100,v/per*60)}%,var(--panel))`:''}"><span class="dt"><span class="dn">${dd}</span>${hn?`<span class="hn">${hn}</span>`:''}</span>${TK[ds]?`<span class="tkd" title="${esc(TK[ds].map(t=>t.t).join('、'))}">期限${TK[ds].length>1?TK[ds].length:''}</span>`:''}<span class="ds ${v>per?'over':''}">${v?yen(v):''}</span></button>`}
     $('cal').innerHTML=h;
   }
   if(UI.day)L=L.filter(t=>t.date==UI.day);
