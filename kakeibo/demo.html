@@ -263,15 +263,15 @@ ol.todo{margin:0;padding-left:1.2em;font-size:13px;display:flex;flex-direction:c
 .sum3 .k{font-size:11px;color:var(--mute);font-weight:700}
 .sum3 .v{font-family:var(--num);font-size:clamp(15px,4.6vw,24px);font-weight:600;white-space:nowrap}
 /* calendar */
-.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px 3px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
 .cal .wd{font-size:11px;text-align:center;color:var(--mute);font-weight:700;padding:2px}
-.cal button{border:1px solid var(--line);border-radius:8px;background:var(--panel);min-height:58px;padding:4px 5px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;cursor:pointer;min-width:0}
+.cal button{border:1px solid var(--line);border-radius:8px;background:var(--panel);min-height:58px;padding:4px 3px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;cursor:pointer;min-width:0}
 .cal button:hover{border-color:var(--accent)}
 .cal button.sel{outline:2px solid var(--accent);outline-offset:-1px}
 .cal button.today .dn{background:var(--accent);color:var(--on-accent);border-radius:9px;padding:0 6px}
 .cal .dn{font-size:11px;font-weight:700}
-.cal button{position:relative}
-.cal .hn{position:absolute;top:-5px;left:50%;transform:translateX(-50%);font-size:7.5px;font-weight:700;line-height:1;color:var(--bad);background:var(--panel);padding:1px 3px;border-radius:4px;white-space:nowrap;pointer-events:none}
+.cal .dt{display:flex;align-items:baseline;gap:1px;max-width:100%;min-width:0}
+.cal .hn{font-size:7px;font-weight:700;color:var(--bad);white-space:nowrap;overflow:hidden;min-width:0}
 .cal .wd.sun,.cal button.sun .dn{color:var(--bad)} .cal .wd.sat,.cal button.sat .dn{color:var(--sat)}
 .cal button.sun:not(.today){background-color:color-mix(in srgb,var(--bad) 5%,var(--panel))}
 .cal button.today.sun .dn,.cal button.today.sat .dn{color:var(--on-accent)}
@@ -1135,7 +1135,7 @@ function holidays(y){if(HOLI[y])return HOLI[y];const H={},d2=(m,d)=>`${y}-${pad(
   Object.keys(H).sort().forEach(ds=>{const x=add(ds,2),mid=add(ds,1);if(H[x]&&!H[mid]&&new Date(mid+'T00:00').getDay()!=0&&mid.slice(0,4)==String(y))H[mid]='国民の休日'});
   return HOLI[y]=H}
 // マスに載せる短い名前（正式名は押したときの見出しに出す）
-const HS={'成人の日':'成人','建国記念の日':'建国','天皇誕生日':'天皇','春分の日':'春分','昭和の日':'昭和','憲法記念日':'憲法','みどりの日':'みどり','こどもの日':'こども','敬老の日':'敬老','秋分の日':'秋分','スポーツの日':'スポーツ','文化の日':'文化','勤労感謝の日':'勤労','振替休日':'振休','国民の休日':'休日'};
+const HS={'成人の日':'成人','建国記念の日':'建国','天皇誕生日':'天皇','春分の日':'春分','昭和の日':'昭和','憲法記念日':'憲法','みどりの日':'みどり','こどもの日':'こども','敬老の日':'敬老','秋分の日':'秋分','スポーツの日':'スポ','海の日':'海','山の日':'山','文化の日':'文化','勤労感謝の日':'勤労','振替休日':'振休','国民の休日':'休日'};
 const holi=ds=>holidays(+ds.slice(0,4))[ds]||'';
 function rList(){
   const k=UI.lm;$('lMonth').textContent=mlabel(k);
@@ -1156,7 +1156,7 @@ function rList(){
     let h=[...WD].map((w,j)=>`<span class="wd ${j==0?'sun':j==6?'sat':''}">${w}</span>`).join('')+'<span class="blank"></span>'.repeat(first);
     for(let dd=1;dd<=n;dd++){const ds=`${k}-${pad(dd)}`,v=by[ds]||0;
       const hn=holi(ds),dw=(first+dd-1)%7;
-      h+=`<button type="button" data-day="${ds}" class="${ds==TD?'today':''} ${UI.day==ds?'sel':''} ${hn||dw==0?'sun':dw==6?'sat':''}" ${hn?`title="${hn}" aria-label="${dd}日 ${hn}"`:''} style="${v?`background:color-mix(in srgb,var(--accent-soft) ${Math.min(100,v/per*60)}%,var(--panel))`:''}"><span class="dn">${dd}</span>${hn?`<span class="hn" aria-hidden="true">${HS[hn]||hn}</span>`:''}${TK[ds]?`<span class="tkd" title="${esc(TK[ds].map(t=>t.t).join('、'))}">期限${TK[ds].length>1?TK[ds].length:''}</span>`:''}<span class="ds ${v>per?'over':''}">${v?yen(v):''}</span></button>`}
+      h+=`<button type="button" data-day="${ds}" class="${ds==TD?'today':''} ${UI.day==ds?'sel':''} ${hn||dw==0?'sun':dw==6?'sat':''}" ${hn?`title="${hn}" aria-label="${dd}日 ${hn}"`:''} style="${v?`background:color-mix(in srgb,var(--accent-soft) ${Math.min(100,v/per*60)}%,var(--panel))`:''}"><span class="dt"><span class="dn">${dd}</span>${hn?`<span class="hn" aria-hidden="true">${HS[hn]||hn}</span>`:''}</span>${TK[ds]?`<span class="tkd" title="${esc(TK[ds].map(t=>t.t).join('、'))}">期限${TK[ds].length>1?TK[ds].length:''}</span>`:''}<span class="ds ${v>per?'over':''}">${v?yen(v):''}</span></button>`}
     $('cal').innerHTML=h;
   }
   if(UI.day)L=L.filter(t=>t.date==UI.day);
