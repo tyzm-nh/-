@@ -6,7 +6,7 @@
   --bg:#f2f5f4; --panel:#ffffff; --sunk:#e9efed; --ink:#15302b; --mute:#5b716c; --line:#d5dfdc;
   --accent:#0f7b6c; --accent-soft:#d4ebe6; --on-accent:#ffffff;
   --gold:#a87a06; --gold-soft:#f5ebcf; --e3:#6a56a8; --e3-soft:#e6e1f3; --warn:#c2571a; --warn-soft:#fbe6d8;
-  --bad:#c33a3a; --bad-soft:#f8dede; --good:#1d7f45; --good-soft:#d9efe0;
+  --bad:#c33a3a; --sat:#2f6fd0; --bad-soft:#f8dede; --good:#1d7f45; --good-soft:#d9efe0;
   --c-food:#eb6834; --c-trans:#2a78d6; --c-beauty:#e87ba4; --c-daily:#1baf7a; --c-fun:#4a3aa7; --c-med:#e34948; --c-cloth:#eda100; --c-other:#8a9995;
   --shadow:0 10px 30px rgba(21,48,43,.18);
   --body:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;
@@ -16,14 +16,14 @@
   --bg:#0e1917; --panel:#162422; --sunk:#1c2e2b; --ink:#e3efec; --mute:#93a9a4; --line:#2a3d3a;
   --accent:#4cc2ae; --accent-soft:#1c3b36; --on-accent:#0e1917;
   --gold:#e0b84a; --gold-soft:#3a3118; --e3:#a996e6; --e3-soft:#2b2644; --warn:#f0935a; --warn-soft:#402718;
-  --bad:#f07070; --bad-soft:#45201f; --good:#5fcf8c; --good-soft:#1b3a28;
+  --bad:#f07070; --sat:#7fa8ff; --bad-soft:#45201f; --good:#5fcf8c; --good-soft:#1b3a28;
   --c-food:#d95926; --c-trans:#3987e5; --c-beauty:#d55181; --c-daily:#199e70; --c-fun:#9085e9; --c-med:#e66767; --c-cloth:#c98500; --c-other:#7d8f8b;
   --shadow:0 10px 30px rgba(0,0,0,.5); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0e1917; --panel:#162422; --sunk:#1c2e2b; --ink:#e3efec; --mute:#93a9a4; --line:#2a3d3a;
   --accent:#4cc2ae; --accent-soft:#1c3b36; --on-accent:#0e1917;
   --gold:#e0b84a; --gold-soft:#3a3118; --e3:#a996e6; --e3-soft:#2b2644; --warn:#f0935a; --warn-soft:#402718;
-  --bad:#f07070; --bad-soft:#45201f; --good:#5fcf8c; --good-soft:#1b3a28;
+  --bad:#f07070; --sat:#7fa8ff; --bad-soft:#45201f; --good:#5fcf8c; --good-soft:#1b3a28;
   --c-food:#d95926; --c-trans:#3987e5; --c-beauty:#d55181; --c-daily:#199e70; --c-fun:#9085e9; --c-med:#e66767; --c-cloth:#c98500; --c-other:#7d8f8b;
   --shadow:0 10px 30px rgba(0,0,0,.5); color-scheme:dark}
 *{box-sizing:border-box}
@@ -270,6 +270,10 @@ ol.todo{margin:0;padding-left:1.2em;font-size:13px;display:flex;flex-direction:c
 .cal button.sel{outline:2px solid var(--accent);outline-offset:-1px}
 .cal button.today .dn{background:var(--accent);color:var(--on-accent);border-radius:9px;padding:0 6px}
 .cal .dn{font-size:11px;font-weight:700}
+.cal .hn{font-size:8px;font-weight:600;line-height:1.15;color:var(--bad);width:100%;overflow-wrap:anywhere}
+.cal .wd.sun,.cal button.sun .dn{color:var(--bad)} .cal .wd.sat,.cal button.sat .dn{color:var(--sat)}
+.cal button.sun:not(.today){background-color:color-mix(in srgb,var(--bad) 5%,var(--panel))}
+.cal button.today.sun .dn,.cal button.today.sat .dn{color:var(--on-accent)}
 .cal .ds{font-family:var(--num);font-size:13px;align-self:flex-end;white-space:nowrap}
 .cal .ds.over{color:var(--bad)}
 .cal .tkd{font-size:9px;font-weight:700;line-height:1.5;color:var(--panel);background:var(--warn);border-radius:6px;padding:0 4px;white-space:nowrap;max-width:100%;overflow:hidden}
@@ -1118,6 +1122,18 @@ function rPForm(force){
 const kpi=(k,v,u,s)=>`<div class="kpi"><div class="k">${k}</div><div class="v">${v}<small>${u}</small></div><div class="s">${s}</div></div>`;
 const act=(c,q,a,p)=>`<div class="act" style="--c:var(${c})"><i></i><div><div class="q">${q}</div><div class="a">${a}</div><p>${p}</p></div></div>`;
 
+// ===== 日本の祝日（今の祝日法で計算。振替休日・国民の休日も含む） =====
+const HOLI={};
+function holidays(y){if(HOLI[y])return HOLI[y];const H={},d2=(m,d)=>`${y}-${pad(m)}-${pad(d)}`;
+  const nthMon=(m,n)=>{const f=new Date(y,m-1,1).getDay();return 1+((8-f)%7)+(n-1)*7};
+  const sp=Math.floor(20.8431+0.242194*(y-1980)-Math.floor((y-1980)/4)),au=Math.floor(23.2488+0.242194*(y-1980)-Math.floor((y-1980)/4));
+  [[1,1,'元日'],[1,nthMon(1,2),'成人の日'],[2,11,'建国記念の日'],[2,23,'天皇誕生日'],[3,sp,'春分の日'],[4,29,'昭和の日'],[5,3,'憲法記念日'],[5,4,'みどりの日'],[5,5,'こどもの日'],
+   [7,nthMon(7,3),'海の日'],[8,11,'山の日'],[9,nthMon(9,3),'敬老の日'],[9,au,'秋分の日'],[10,nthMon(10,2),'スポーツの日'],[11,3,'文化の日'],[11,23,'勤労感謝の日']].forEach(([m,d,n])=>H[d2(m,d)]=n);
+  const add=(ds,n)=>{const t=new Date(ds+'T00:00');t.setDate(t.getDate()+n);return dstr(t)};
+  Object.keys(H).sort().forEach(ds=>{if(new Date(ds+'T00:00').getDay()==0){let x=add(ds,1);while(H[x])x=add(x,1);H[x]='振替休日'}});
+  Object.keys(H).sort().forEach(ds=>{const x=add(ds,2),mid=add(ds,1);if(H[x]&&!H[mid]&&new Date(mid+'T00:00').getDay()!=0&&mid.slice(0,4)==String(y))H[mid]='国民の休日'});
+  return HOLI[y]=H}
+const holi=ds=>holidays(+ds.slice(0,4))[ds]||'';
 function rList(){
   const k=UI.lm;$('lMonth').textContent=mlabel(k);
   document.querySelectorAll('#lView button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v==UI.lv));
@@ -1134,14 +1150,15 @@ function rList(){
     const [y,m]=mparts(k),first=new Date(y,m-1,1).getDay(),n=dim(k),per=bsum(bud(k))/n,by={};
     txOf(k).forEach(t=>{if(t.kind=='out'&&(CAT[t.cat]||CAT.other).g=='e2'){by[t.date]=(by[t.date]||0)+(+t.amt||0)}});
     const TK=tasksByDay();
-    let h=[...WD].map(w=>`<span class="wd">${w}</span>`).join('')+'<span class="blank"></span>'.repeat(first);
+    let h=[...WD].map((w,j)=>`<span class="wd ${j==0?'sun':j==6?'sat':''}">${w}</span>`).join('')+'<span class="blank"></span>'.repeat(first);
     for(let dd=1;dd<=n;dd++){const ds=`${k}-${pad(dd)}`,v=by[ds]||0;
-      h+=`<button type="button" data-day="${ds}" class="${ds==TD?'today':''} ${UI.day==ds?'sel':''}" style="${v?`background:color-mix(in srgb,var(--accent-soft) ${Math.min(100,v/per*60)}%,var(--panel))`:''}"><span class="dn">${dd}</span>${TK[ds]?`<span class="tkd" title="${esc(TK[ds].map(t=>t.t).join('、'))}">期限${TK[ds].length>1?TK[ds].length:''}</span>`:''}<span class="ds ${v>per?'over':''}">${v?yen(v):''}</span></button>`}
+      const hn=holi(ds),dw=(first+dd-1)%7;
+      h+=`<button type="button" data-day="${ds}" class="${ds==TD?'today':''} ${UI.day==ds?'sel':''} ${hn||dw==0?'sun':dw==6?'sat':''}" ${hn?`title="${hn}" aria-label="${dd}日 ${hn}"`:''} style="${v?`background:color-mix(in srgb,var(--accent-soft) ${Math.min(100,v/per*60)}%,var(--panel))`:''}"><span class="dn">${dd}</span>${hn?`<span class="hn">${hn}</span>`:''}${TK[ds]?`<span class="tkd" title="${esc(TK[ds].map(t=>t.t).join('、'))}">期限${TK[ds].length>1?TK[ds].length:''}</span>`:''}<span class="ds ${v>per?'over':''}">${v?yen(v):''}</span></button>`}
     $('cal').innerHTML=h;
   }
   if(UI.day)L=L.filter(t=>t.date==UI.day);
   const dTk=UI.day?(tasksByDay()[UI.day]||[]):[];
-  $('lDayNote').innerHTML=UI.day?`<div class="ph"><h2>${+UI.day.slice(5,7)}月${+UI.day.slice(8)}日の記録</h2><button class="btn sm" type="button" id="clrDay">月全体に戻す</button></div>${dTk.length?`<ul class="tasks">${dTk.map(t=>`<li><button class="chk" type="button" data-tkc="${t.id}" aria-label="${esc(t.t)}を完了にする">${svgCheck}</button><span class="tt">${esc(t.t)}${t.sub?`<small>${esc(t.sub)}</small>`:''}</span><span class="due">期限</span></li>`).join('')}</ul>`:''}`:'';
+  $('lDayNote').innerHTML=UI.day?`<div class="ph"><h2>${+UI.day.slice(5,7)}月${+UI.day.slice(8)}日${holi(UI.day)?`（${holi(UI.day)}）`:''}の記録</h2><button class="btn sm" type="button" id="clrDay">月全体に戻す</button></div>${dTk.length?`<ul class="tasks">${dTk.map(t=>`<li><button class="chk" type="button" data-tkc="${t.id}" aria-label="${esc(t.t)}を完了にする">${svgCheck}</button><span class="tt">${esc(t.t)}${t.sub?`<small>${esc(t.sub)}</small>`:''}</span><span class="due">期限</span></li>`).join('')}</ul>`:''}`:'';
   $('lDayNote').querySelectorAll('[data-tkc]').forEach(b=>b.onclick=()=>toggleTask(b.dataset.tkc));
   if($('clrDay'))$('clrDay').onclick=()=>{UI.day=null;render()};
   L.sort((a,b)=>a.date==b.date?(b.ts||0)-(a.ts||0):a.date<b.date?1:-1);
