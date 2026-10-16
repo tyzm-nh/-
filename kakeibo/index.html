@@ -707,7 +707,7 @@ const MYP=()=>{const a=(CONF.myPays||['楽天カード','Kyash個人','PayPay'])
 const SHORT={card:'楽天カード',kyash:'Kyash個人',kyashk:'Kyash共通',paypay:'PayPay',cash:'現金',bank:'楽天銀行',smtb:'ドコモSMTB'};
 const SHORTK=Object.fromEntries(Object.entries(SHORT).map(([k,v])=>[v,k]));
 const ART='https://claude.ai/artifact/VV3rr8MEV4FAhXBiNFd5zw';
-let QP=null;
+let QP=null,QD=null;   // QD：メールから開いたときの利用日（今日以外なら、その日で記録する）
 const curPay=()=>QP||(MYP().includes(CONF.lastPay)?CONF.lastPay:MYP()[0]);
 const defPay=cat=>DEFPAY[cat]||curPay();
 // Kyashに切り替えた月からは、カードに残るのは決まった支払い（サブスク・通信 4,880円）と切り替えていない費目だけ
@@ -1069,11 +1069,12 @@ function qPreview(){
   if($('toUnc'))$('toUnc').onclick=()=>{UI.lm=NOWK;UI.lf='unc';UI.q='';$('q').value='';tab('list')};
   const ask=UI.kyAsk?`<span class="ask">Kyash個人として記録します。共通で払ったときは記録しなくてOK <button class="btn sm" type="button" id="kySkip">共通なので記録しない</button></span>`:'';
   if(ask&&!raw){el.className='qprev';el.innerHTML=ask+'金額を入れて4つのどれかを押してください';bindKySkip();return}
-  if(!raw){el.className='qprev hint';el.textContent=`${curPay()}・今日で記録`;return}
+  const dl=QD&&QD!=TD?`${md(QD)}の利用`:'';
+  if(!raw){el.className='qprev hint';el.textContent=`${curPay()}・${dl||'今日'}で記録`;return}
   if(!(a>0)){el.className='qprev neg';el.textContent='数字と＋−だけ使えます';return}
   const L=W.left-a,pd=L/W.dl;
   el.className='qprev '+(L<0?'neg':'');
-  el.innerHTML=ask+(L<0?`使うと今週の予算を<b>${yen(-L)}円</b>超えます。本当に今必要か、もう一度考えてみてください`:`使うと今週あと<b>${yen(L)}円</b>・1日あたり${yen(pd)}円`);bindKySkip();
+  el.innerHTML=ask+(dl?`<b>${dl}</b>・`:'')+(L<0?`使うと今週の予算を<b>${yen(-L)}円</b>超えます。本当に今必要か、もう一度考えてみてください`:`使うと今週あと<b>${yen(L)}円</b>・1日あたり${yen(pd)}円`);bindKySkip();
 }
 // 支払い予定：月を切り替えて先の予定も見られる。行を押すと金額の変更・今月はなし・予定の編集
 function rSched(){
@@ -1765,7 +1766,7 @@ $('qMore').onclick=()=>{const a=evalAmt($('qAmt').value),m=$('qMemo').value;open
 $('qFoe').onclick=e=>{
   const g=e.target.closest('[data-qg]')?.dataset.qg;if(!g)return;const a=evalAmt($('qAmt').value),memo=$('qMemo').value.trim().slice(0,80);
   if(!(a>0)){$('qAmt').focus();$('qPrev').className='qprev neg';$('qPrev').textContent='先に金額を入れてください';return}
-  const q=guess(g,memo,a),id=q.sid||('t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),t={date:TD,amt:a,kind:'out',cat:q.cat,pay:DEFPAY[q.cat]&&g!='e2'?DEFPAY[q.cat]:curPay(),memo,ts:Date.now()};
+  const q=guess(g,memo,a),id=q.sid||('t'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)),t={date:QD||TD,amt:a,kind:'out',cat:q.cat,pay:DEFPAY[q.cat]&&g!='e2'?DEFPAY[q.cat]:curPay(),memo,ts:Date.now()};QD=null;
   if(q.how!='memo')t.auto=q.how;
   UI.kyAsk=false;$('qAmt').value='';$('qMemo').value='';write('tx',id,t);
   toast(`${FOE4.find(f=>f[0]==g)[1]}・${CAT[q.cat].n} ${yen(a)}円（${t.pay}）${q.how=='none'?'。品目はあとで確認できます':''}`,()=>openSheet(TX[id],id),'直す');
@@ -1896,7 +1897,7 @@ if(DEMO){
 }
 qInit();
 const H0=location.hash.slice(1);
-tab(H0=='add'||SHORT[H0.split('.')[0]]?'home':H0||'home');
+tab(H0=='add'||SHORT[H0.split('.')[0]]||H0.startsWith('mail.')?'home':H0||'home');
 if(H0=='add')openSheet();
 // ショートカット用：#card.980 や #kyash.980.<お店の名前をBase64にしたもの>
 {const P=H0.split('.'),k0=P[0];
@@ -1904,5 +1905,19 @@ if(H0=='add')openSheet();
   if(/^\d+$/.test(P[1]||'')){$('qAmt').value=P[1];let mi=2;if(/^\d{1,2}$/.test(P[2]||''))mi=3;
     if(P[mi]){try{const b=atob(P[mi].replace(/-/g,'+').replace(/_/g,'/').replace(/~/g,'='));$('qMemo').value=new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0))).slice(0,80)}catch(e){}}}
   tab('home');qPreview();($('qAmt').value?$('qMemo'):$('qAmt')).focus();$('qAmt').scrollIntoView({block:'center'})}}
+// ショートカット用：#mail.<カード利用お知らせメールの本文をBase64にしたもの>
+// 本文から「利用日・利用先・利用金額」を読み取り、金額とお店を入れた状態で開く（書き方が少し違っても拾えるように）
+if(H0.startsWith('mail.')){
+  let txt='';try{const b=atob(H0.slice(5).replace(/%3D/gi,'=').replace(/-/g,'+').replace(/_/g,'/').replace(/~/g,'=').replace(/\s/g,''));txt=new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0)))}catch(e){}
+  txt=txt.replace(/[０-９：，]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
+  const am=txt.match(/利用金額[^0-9\n]{0,12}([0-9][0-9,]*)/)||txt.match(/([0-9][0-9,]*)\s*円/),
+    sh=txt.match(/利用先[\s:：■]*([^\n\r]+)/),dt=txt.match(/利用日[^0-9\n]{0,8}(\d{4})[\/年.-](\d{1,2})[\/月.-](\d{1,2})/);
+  QP=CARD;
+  if(am)$('qAmt').value=am[1].replace(/,/g,'');
+  if(sh)$('qMemo').value=sh[1].replace(/^[\s:：]+|\s+$/g,'').slice(0,80);
+  if(dt){const d=`${dt[1]}-${pad(+dt[2])}-${pad(+dt[3])}`;if(d<=TD)QD=d}
+  if(!am)toast('メールから金額を読み取れませんでした。金額を入れてください');
+  tab('home');qPreview();($('qAmt').value?$('qFoe'):$('qAmt')).scrollIntoView({block:'center'});if(!am)$('qAmt').focus();
+}
 boot();
 </script>
