@@ -1908,7 +1908,7 @@ if(H0=='add')openSheet();
 // ショートカット用：#mail.<カード利用お知らせメールの本文をBase64にしたもの>
 // 本文から「利用日・利用先・利用金額」を読み取り、金額とお店を入れた状態で開く（書き方が少し違っても拾えるように）
 if(H0.startsWith('mail.')){
-  let txt='';try{const b=atob(H0.slice(5).replace(/%3D/gi,'=').replace(/-/g,'+').replace(/_/g,'/').replace(/~/g,'=').replace(/\s/g,''));txt=new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0)))}catch(e){}
+  let txt='';try{let r=H0.slice(5);try{r=decodeURIComponent(r)}catch(e){}const b=atob(r.replace(/-/g,'+').replace(/_/g,'/').replace(/~/g,'=').replace(/\s/g,''));txt=new TextDecoder().decode(Uint8Array.from(b,c=>c.charCodeAt(0)))}catch(e){}
   txt=txt.replace(/[０-９：，]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0));
   const am=txt.match(/利用金額[^0-9\n]{0,12}([0-9][0-9,]*)/)||txt.match(/([0-9][0-9,]*)\s*円/),
     sh=txt.match(/利用先[\s:：■]*([^\n\r]+)/),dt=txt.match(/利用日[^0-9\n]{0,8}(\d{4})[\/年.-](\d{1,2})[\/月.-](\d{1,2})/);
